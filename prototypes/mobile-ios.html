@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>渔路 · 首页 · iOS</title>
+  <style>
+    :root {
+      --bg:      #f3f5f2;
+      --surface: #ffffff;
+      --fg:      #1a2420;
+      --muted:   #647a70;
+      --border:  #dce2dc;
+      --accent:  #2a8f7a;
+
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft:     color-mix(in oklch, var(--fg) 6%, transparent);
+
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+      --fs-h1: 26px;
+      --fs-h2: 20px;
+      --fs-h3: 16px;
+      --fs-body: 15px;
+      --fs-meta: 12px;
+
+      --radius-card: 18px;
+      --radius-pill: 999px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: radial-gradient(60% 80% at 50% 0%, color-mix(in oklch, var(--accent) 6%, var(--bg)) 0%, var(--bg) 60%);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: var(--fs-body);
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+    }
+
+    .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .caption {
+      font-family: var(--font-mono); font-size: 12px;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    }
+    .caption strong { color: var(--fg); font-weight: 500; }
+
+    .device {
+      position: relative; width: 390px; height: 844px;
+      border-radius: 56px; padding: 12px;
+      background: linear-gradient(160deg, #2a2a2c 0%, #1a1a1c 50%, #0e0e10 100%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 0 2px #000 inset,
+                  0 28px 60px -12px rgba(0,0,0,0.45), 0 8px 20px -8px rgba(0,0,0,0.35);
+      isolation: isolate;
+    }
+    .device::before, .device::after {
+      content: ''; position: absolute; width: 3px;
+      background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.06) 8%, transparent 16%, transparent 84%, rgba(255,255,255,0.04) 92%, transparent 100%);
+      top: 100px; bottom: 100px; pointer-events: none;
+    }
+    .device::before { left: -1px; }
+    .device::after  { right: -1px; }
+    .island {
+      position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+      width: 124px; height: 36px; background: #000; border-radius: 999px; z-index: 5;
+    }
+    .btn-rail { position: absolute; width: 4px; background: #0a0a0c; border-radius: 2px; }
+    .btn-rail.left-1  { left: -3px; top: 174px; height: 32px; }
+    .btn-rail.left-2  { left: -3px; top: 220px; height: 60px; }
+    .btn-rail.left-3  { left: -3px; top: 290px; height: 60px; }
+    .btn-rail.right-1 { right: -3px; top: 250px; height: 100px; }
+
+    .screen {
+      position: relative; width: 100%; height: 100%;
+      background: var(--bg); border-radius: 44px; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .statusbar {
+      flex: 0 0 47px; padding: 18px 26px 0;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      font-family: var(--font-body); font-size: 15px; font-weight: 600;
+    }
+    .statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
+    .statusbar svg { width: 17px; height: 11px; fill: var(--fg); }
+    .statusbar .battery { width: 25px; }
+
+    .content {
+      flex: 1 1 auto; overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch; padding: 4px 0 12px;
+    }
+    .content::-webkit-scrollbar { display: none; }
+
+    .home-indicator { flex: 0 0 28px; position: relative; }
+    .home-indicator::after {
+      content: ''; position: absolute; left: 50%; bottom: 8px;
+      transform: translateX(-50%); width: 134px; height: 5px;
+      background: var(--fg); border-radius: 999px; opacity: 0.85;
+    }
+
+    .pad     { padding-inline: 20px; }
+    .stack   { display: flex; flex-direction: column; gap: 16px; }
+    .row     { display: flex; align-items: center; gap: 12px; }
+    .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+    .header {
+      padding: 8px 20px 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .header h1 {
+      font-family: var(--font-display); font-size: var(--fs-h1);
+      letter-spacing: -0.02em; line-height: 1.1; margin: 0;
+    }
+    .header .icon-btn {
+      width: 36px; height: 36px; border-radius: 999px;
+      background: var(--surface); border: 1px solid var(--border);
+      display: grid; place-items: center; color: var(--fg);
+    }
+    .header .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+
+    .greeting {
+      font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); margin: 0 0 4px;
+    }
+    .h2  { font-family: var(--font-display); font-size: var(--fs-h2); letter-spacing: -0.015em; line-height: 1.2; margin: 0; }
+    .h3  { font-size: var(--fs-h3); font-weight: 600; line-height: 1.3; margin: 0; }
+    .meta { font-family: var(--font-mono); font-size: var(--fs-meta); color: var(--muted); }
+    .num  { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-card); padding: 16px;
+    }
+    .card.accent {
+      background: var(--accent); color: #fff; border-color: transparent;
+    }
+    .card.accent .meta { color: rgba(255,255,255,0.72); }
+    .card.flat { background: transparent; border: 0; padding: 12px 0; border-top: 1px solid var(--border); border-radius: 0; }
+
+    /* search bar */
+    .search-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 14px;
+      color: var(--muted); font-size: 14px;
+    }
+    .search-bar svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 1.8; flex-shrink: 0; }
+
+    /* horizontal scroll cards */
+    .h-scroll {
+      display: flex; gap: 10px; overflow-x: auto; padding: 2px 20px 4px;
+      -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
+    }
+    .h-scroll::-webkit-scrollbar { display: none; }
+    .h-scroll > .spot-card { scroll-snap-align: start; flex-shrink: 0; }
+
+    .spot-card {
+      width: 200px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 16px;
+      overflow: hidden;
+    }
+    .spot-card .spot-img {
+      height: 100px;
+      background: linear-gradient(135deg, var(--accent-soft), var(--fg-soft)), var(--surface);
+      display: grid; place-items: center;
+      color: var(--muted); font-family: var(--font-mono); font-size: 10px;
+    }
+    .spot-card .spot-info { padding: 10px 12px; }
+    .spot-card .spot-name { font-size: 14px; font-weight: 600; margin: 0 0 3px; }
+    .spot-card .spot-meta { font-size: 12px; color: var(--muted); margin: 0; }
+    .spot-card .spot-tags { display: flex; gap: 4px; margin-top: 6px; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; background: var(--accent-soft); color: var(--accent);
+      border-radius: 999px; font-family: var(--font-mono);
+      font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .tag {
+      display: inline-flex; padding: 3px 9px;
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 999px; font-size: 11px;
+    }
+
+    /* route list item */
+    .route-item {
+      display: grid; grid-template-columns: 44px 1fr auto;
+      align-items: center; gap: 12px; padding: 12px 0;
+      border-top: 1px solid var(--border);
+    }
+    .route-item:first-child { border-top: 0; }
+    .route-item .route-icon {
+      width: 44px; height: 44px; border-radius: 14px;
+      background: var(--accent-soft);
+      display: grid; place-items: center;
+    }
+    .route-item .route-icon svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 1.6; }
+    .route-item .route-body .route-name { font-size: 15px; font-weight: 500; }
+    .route-item .route-body .route-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* feed item */
+    .feed-item {
+      display: grid; grid-template-columns: 36px 1fr; gap: 10px;
+      padding: 10px 0; border-top: 1px solid var(--border);
+    }
+    .feed-item:first-child { border-top: 0; }
+    .feed-item .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-soft), var(--fg-soft)), var(--surface);
+      border: 1px solid var(--border);
+    }
+    .feed-item .feed-user { font-size: 13px; font-weight: 600; }
+    .feed-item .feed-text { font-size: 13px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+    .feed-item .feed-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* tab bar */
+    .tabbar {
+      flex: 0 0 auto;
+      display: grid; grid-template-columns: repeat(var(--tabs, 5), 1fr);
+      padding: 8px 8px 0;
+      border-top: 1px solid var(--border);
+      background: color-mix(in oklch, var(--surface) 92%, transparent);
+      backdrop-filter: blur(20px);
+    }
+    .tab {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 8px 0; color: var(--muted); font-size: 10px; letter-spacing: 0.02em;
+    }
+    .tab.active { color: var(--accent); }
+    .tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+    .tab.active svg { stroke-width: 2; }
+
+    .section-label {
+      font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
+      padding: 0 20px; margin: 0 0 10px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-label .more { font-size: 13px; color: var(--accent); font-weight: 500; }
+
+    /* weather card */
+    .weather-strip {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; margin: 0 20px 4px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .weather-strip .weather-icon {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: var(--accent-soft);
+      display: grid; place-items: center;
+    }
+    .weather-strip .weather-icon svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 1.6; }
+    .weather-strip .weather-text { font-size: 13px; }
+    .weather-strip .weather-text strong { font-weight: 600; }
+    .weather-strip .weather-text span { color: var(--muted); font-size: 12px; }
+
+    /* banner card */
+    .banner {
+      margin: 0 20px;
+      padding: 16px;
+      background: linear-gradient(135deg, color-mix(in oklch, var(--accent) 18%, var(--surface)), color-mix(in oklch, var(--accent) 8%, var(--surface)));
+      border: 1px solid color-mix(in oklch, var(--accent) 30%, var(--border));
+      border-radius: 16px;
+    }
+    .banner .banner-title { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+    .banner .banner-desc { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+    .banner .banner-btn {
+      display: inline-flex; padding: 7px 14px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption"><strong>渔路</strong> · iOS · 首页</div>
+    <div class="device" data-od-id="device">
+      <span class="btn-rail left-1" aria-hidden></span>
+      <span class="btn-rail left-2" aria-hidden></span>
+      <span class="btn-rail left-3" aria-hidden></span>
+      <span class="btn-rail right-1" aria-hidden></span>
+      <span class="island" aria-hidden></span>
+
+      <div class="screen">
+        <div class="statusbar">
+          <span class="num">9:41</span>
+          <span class="right">
+            <svg viewBox="0 0 17 11" aria-hidden>
+              <rect x="0" y="7" width="3" height="4" rx="0.6"/>
+              <rect x="4" y="5" width="3" height="6" rx="0.6"/>
+              <rect x="8" y="3" width="3" height="8" rx="0.6"/>
+              <rect x="12" y="0" width="3" height="11" rx="0.6"/>
+            </svg>
+            <svg viewBox="0 0 17 11" aria-hidden>
+              <path d="M8.5 1.5C5.5 1.5 2.7 2.6 0.5 4.6L2 6.1C3.8 4.5 6.1 3.6 8.5 3.6c2.4 0 4.7 0.9 6.5 2.5l1.5-1.5c-2.2-2-5-3.1-8-3.1zM3.5 7.6L5 9.1c1-0.9 2.2-1.4 3.5-1.4 1.3 0 2.5 0.5 3.5 1.4l1.5-1.5c-1.4-1.3-3.1-2-5-2-1.9 0-3.6 0.7-5 2zM6.5 10.6l2 2 2-2c-0.5-0.5-1.2-0.8-2-0.8s-1.5 0.3-2 0.8z"/>
+            </svg>
+            <svg class="battery" viewBox="0 0 25 11" aria-hidden>
+              <rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.45"/>
+              <rect x="22" y="3.5" width="1.5" height="4" rx="0.4" fill="currentColor" fill-opacity="0.45"/>
+              <rect x="2" y="2" width="18" height="7" rx="1.4"/>
+            </svg>
+          </span>
+        </div>
+
+        <main class="content" data-od-id="content">
+          <!-- Header -->
+          <div class="header" data-od-id="header">
+            <div>
+              <p class="greeting">周三 · 6月4日</p>
+              <h1>你好，钓友</h1>
+            </div>
+            <div class="row" style="gap:8px;">
+              <button class="icon-btn" aria-label="消息">
+                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="设置">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Weather -->
+          <div class="weather-strip">
+            <div class="weather-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </div>
+            <div class="weather-text">
+              <strong>晴 26°C</strong> <span>· 东南风 2级 · 气压 1013hPa</span>
+            </div>
+            <div style="margin-left:auto;">
+              <span class="pill">宜出钓</span>
+            </div>
+          </div>
+
+          <div style="height: 12px;"></div>
+
+          <!-- Search -->
+          <div class="pad">
+            <div class="search-bar">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <span>搜索钓点、路线、教程…</span>
+            </div>
+          </div>
+
+          <div style="height: 16px;"></div>
+
+          <!-- Banner: 商城入口 -->
+          <div class="banner">
+            <div class="banner-title">渔具商城上新</div>
+            <div class="banner-desc">夏季路亚竿专场，精选入门到竞技款</div>
+            <button class="banner-btn">去逛逛</button>
+          </div>
+
+          <div style="height: 18px;"></div>
+
+          <!-- Nearby spots -->
+          <div class="section-label">
+            附近热门钓点
+            <span class="more">查看全部 →</span>
+          </div>
+          <div class="h-scroll" data-od-id="nearby-spots">
+            <div class="spot-card">
+              <div class="spot-img">[ 钓点图片 ]</div>
+              <div class="spot-info">
+                <p class="spot-name">千岛湖 · 碧溪湾</p>
+                <p class="spot-meta">2.3km · 鲈鱼 · 路亚</p>
+                <div class="spot-tags">
+                  <span class="tag">深水</span>
+                  <span class="tag">岩石底</span>
+                </div>
+              </div>
+            </div>
+            <div class="spot-card">
+              <div class="spot-img">[ 钓点图片 ]</div>
+              <div class="spot-info">
+                <p class="spot-name">富春江 · 钓台</p>
+                <p class="spot-meta">5.1km · 鲫鱼 · 台钓</p>
+                <div class="spot-tags">
+                  <span class="tag">缓流</span>
+                  <span class="tag">沙底</span>
+                </div>
+              </div>
+            </div>
+            <div class="spot-card">
+              <div class="spot-img">[ 钓点图片 ]</div>
+              <div class="spot-info">
+                <p class="spot-name">太湖 · 东山半岛</p>
+                <p class="spot-meta">8.7km · 综合 · 湖钓</p>
+                <div class="spot-tags">
+                  <span class="tag">浅滩</span>
+                  <span class="tag">水草</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height: 18px;"></div>
+
+          <!-- Recent routes -->
+          <div class="pad stack" data-od-id="recent-routes">
+            <div class="section-label" style="padding:0;">
+              最新路线
+              <span class="more">更多 →</span>
+            </div>
+            <div>
+              <div class="route-item">
+                <div class="route-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                </div>
+                <div class="route-body">
+                  <div class="route-name">密云水库北岸环线</div>
+                  <div class="route-desc">12 坑点 · 18.5km · 上传者：老张</div>
+                </div>
+                <span class="pill" style="font-size:9px;">下载</span>
+              </div>
+              <div class="route-item">
+                <div class="route-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                </div>
+                <div class="route-body">
+                  <div class="route-name">太湖东山半岛路线</div>
+                  <div class="route-desc">8 坑点 · 9.2km · 上传者：小王</div>
+                </div>
+                <span class="pill" style="font-size:9px;">下载</span>
+              </div>
+              <div class="route-item">
+                <div class="route-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                </div>
+                <div class="route-body">
+                  <div class="route-name">千岛湖西南湾探钓路线</div>
+                  <div class="route-desc">6 坑点 · 7.8km · 上传者：阿杰</div>
+                </div>
+                <span class="pill" style="font-size:9px;">下载</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="height: 8px;"></div>
+
+          <!-- Community feed -->
+          <div class="pad stack" data-od-id="feed">
+            <div class="section-label" style="padding:0;">
+              钓友动态
+              <span class="more">更多 →</span>
+            </div>
+            <div>
+              <div class="feed-item">
+                <div class="avatar"></div>
+                <div>
+                  <div class="feed-user">路亚阿杰</div>
+                  <div class="feed-text">千岛湖碧溪湾今天爆护！用了亮片VIB，下午3点到5点连杆鲈鱼，最大的62cm。路线已分享。</div>
+                  <div class="feed-time">2 小时前 · 千岛湖</div>
+                </div>
+              </div>
+              <div class="feed-item">
+                <div class="avatar"></div>
+                <div>
+                  <div class="feed-user">台钓老张</div>
+                  <div class="feed-text">富春江钓台水位下降了半米，鲫鱼偏小，建议用 1.5 号线组。水深在 2.5-3 米比较好。</div>
+                  <div class="feed-time">5 小时前 · 富春江</div>
+                </div>
+              </div>
+              <div class="feed-item">
+                <div class="avatar"></div>
+                <div>
+                  <div class="feed-user">新手小王</div>
+                  <div class="feed-text">第一次去太湖东山，跟着下载的路线走，顺利找到三个坑点。感谢分享路线的前辈！</div>
+                  <div class="feed-time">昨天 · 太湖</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height: 16px;"></div>
+        </main>
+
+        <nav class="tabbar" style="--tabs: 5;" data-od-id="tabbar">
+          <a class="tab active">
+            <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+            首页
+          </a>
+          <a class="tab">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            坑点
+          </a>
+          <a class="tab">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            导航
+          </a>
+          <a class="tab">
+            <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            学习
+          </a>
+          <a class="tab">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+            我的
+          </a>
+        </nav>
+
+        <div class="home-indicator" aria-hidden></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>渔路 · 首页 · Android</title>
+  <style>
+    :root {
+      --bg: #f3f5f2; --surface: #ffffff; --fg: #1a2420; --muted: #647a70;
+      --border: #dce2dc; --accent: #2a8f7a;
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft: color-mix(in oklch, var(--fg) 6%, transparent);
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: radial-gradient(60% 80% at 50% 0%, color-mix(in oklch, var(--accent) 6%, var(--bg)) 0%, var(--bg) 60%);
+      color: var(--fg); font-family: var(--font-body); font-size: 15px;
+      line-height: 1.4; -webkit-font-smoothing: antialiased;
+      display: grid; place-items: center; padding: 32px;
+    }
+    .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .caption { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .caption strong { color: var(--fg); font-weight: 500; }
+
+    /* Android device frame */
+    .device {
+      position: relative; width: 412px; height: 900px;
+      border-radius: 44px; padding: 10px;
+      background: linear-gradient(160deg, #2a2a2c 0%, #1a1a1c 50%, #0e0e10 100%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 0 2px #000 inset,
+                  0 28px 60px -12px rgba(0,0,0,0.45), 0 8px 20px -8px rgba(0,0,0,0.35);
+      isolation: isolate;
+    }
+    /* Punch-hole camera */
+    .punch-hole {
+      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+      width: 14px; height: 14px; background: #000; border-radius: 50%; z-index: 5;
+      box-shadow: 0 0 0 2px #1a1a1c;
+    }
+    .screen {
+      position: relative; width: 100%; height: 100%;
+      background: var(--bg); border-radius: 36px; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    /* Android status bar */
+    .android-statusbar {
+      flex: 0 0 36px; padding: 12px 24px 0;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      font-size: 13px; font-weight: 600;
+    }
+    .android-statusbar .status-icons { display: flex; align-items: center; gap: 6px; }
+    .android-statusbar svg { width: 14px; height: 14px; fill: var(--fg); }
+    .content { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+    .content::-webkit-scrollbar { display: none; }
+
+    /* Android nav bar */
+    .android-navbar {
+      flex: 0 0 auto; display: flex; justify-content: center; gap: 60px;
+      padding: 10px 0 6px; border-top: 1px solid var(--border);
+      background: color-mix(in oklch, var(--surface) 92%, transparent);
+      backdrop-filter: blur(20px);
+    }
+    .android-navbar .nav-btn {
+      width: 40px; height: 40px; display: grid; place-items: center;
+      color: var(--muted);
+    }
+    .android-navbar .nav-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+    .android-navbar .nav-btn.back svg { fill: none; }
+    .android-navbar .nav-btn.recent svg { fill: currentColor; stroke: none; }
+
+    /* Android bottom sheet nav (Material 3) */
+    .material-nav {
+      flex: 0 0 auto;
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      padding: 4px 8px 0;
+      border-top: 1px solid var(--border);
+      background: color-mix(in oklch, var(--surface) 95%, transparent);
+      backdrop-filter: blur(20px);
+    }
+    .mat-tab {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 8px 0 6px; color: var(--muted); font-size: 11px; position: relative;
+    }
+    .mat-tab.active { color: var(--accent); }
+    .mat-tab .mat-icon {
+      width: 48px; height: 28px; border-radius: 14px;
+      display: grid; place-items: center;
+      transition: background 0.15s;
+    }
+    .mat-tab.active .mat-icon {
+      background: var(--accent-soft);
+    }
+    .mat-tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+    .mat-tab.active svg { stroke-width: 2; }
+
+    .home-indicator-android { flex: 0 0 20px; position: relative; }
+    .home-indicator-android::after {
+      content: ''; position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%);
+      width: 120px; height: 4px; background: var(--fg); border-radius: 999px; opacity: 0.4;
+    }
+
+    .pad { padding-inline: 20px; }
+    .stack { display: flex; flex-direction: column; gap: 16px; }
+    .row { display: flex; align-items: center; gap: 12px; }
+    .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .header { padding: 8px 20px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .header h1 { font-family: var(--font-display); font-size: 26px; letter-spacing: -0.02em; line-height: 1.1; margin: 0; }
+    .header .icon-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--surface); border: 1px solid var(--border);
+      display: grid; place-items: center; color: var(--fg);
+    }
+    .header .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+    .meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+    .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px;
+      background: var(--accent-soft); color: var(--accent);
+      border-radius: 999px; font-family: var(--font-mono);
+      font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .tag { display: inline-flex; padding: 3px 9px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; font-size: 11px; }
+
+    /* Weather strip (Material style) */
+    .weather-strip {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 18px; margin: 0 20px 4px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .weather-strip .weather-icon {
+      width: 36px; height: 36px; border-radius: 12px;
+      background: var(--accent-soft); display: grid; place-items: center;
+    }
+    .weather-strip .weather-icon svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 1.6; }
+    .weather-strip .weather-text { font-size: 14px; }
+    .weather-strip .weather-text strong { font-weight: 600; }
+    .weather-strip .weather-text span { color: var(--muted); font-size: 12px; }
+
+    /* Search (Material style) */
+    .search-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 28px;
+      color: var(--muted); font-size: 14px;
+    }
+    .search-bar svg { width: 18px; height: 18px; stroke: var(--muted); fill: none; stroke-width: 1.8; }
+
+    /* Horizontal scroll */
+    .h-scroll {
+      display: flex; gap: 12px; overflow-x: auto; padding: 2px 20px 4px;
+      -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
+    }
+    .h-scroll::-webkit-scrollbar { display: none; }
+    .h-scroll > .spot-card { scroll-snap-align: start; flex-shrink: 0; }
+    .spot-card {
+      width: 180px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+    }
+    .spot-card .spot-img {
+      height: 90px;
+      background: linear-gradient(135deg, var(--accent-soft), var(--fg-soft));
+      display: grid; place-items: center;
+      color: var(--muted); font-family: var(--font-mono); font-size: 10px;
+    }
+    .spot-card .spot-info { padding: 10px 12px; }
+    .spot-card .spot-name { font-size: 14px; font-weight: 600; margin: 0 0 3px; }
+    .spot-card .spot-meta { font-size: 12px; color: var(--muted); margin: 0; }
+
+    /* Banner (Material card) */
+    .banner {
+      margin: 0 20px; padding: 18px;
+      background: linear-gradient(135deg, color-mix(in oklch, var(--accent) 18%, var(--surface)), color-mix(in oklch, var(--accent) 8%, var(--surface)));
+      border: 1px solid color-mix(in oklch, var(--accent) 30%, var(--border));
+      border-radius: 20px;
+    }
+    .banner .banner-title { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+    .banner .banner-desc { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+    .banner .banner-btn {
+      display: inline-flex; padding: 8px 16px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+
+    .section-label {
+      font-size: 16px; font-weight: 600; padding: 0 20px; margin: 0 0 10px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-label .more { font-size: 13px; color: var(--accent); font-weight: 500; }
+
+    /* Route list */
+    .route-item {
+      display: grid; grid-template-columns: 48px 1fr auto;
+      align-items: center; gap: 12px; padding: 12px 0;
+      border-top: 1px solid var(--border);
+    }
+    .route-item:first-child { border-top: 0; }
+    .route-item .route-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: var(--accent-soft); display: grid; place-items: center;
+    }
+    .route-item .route-icon svg { width: 22px; height: 22px; stroke: var(--accent); fill: none; stroke-width: 1.6; }
+    .route-item .route-body .route-name { font-size: 15px; font-weight: 500; }
+    .route-item .route-body .route-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Feed */
+    .feed-item {
+      display: grid; grid-template-columns: 40px 1fr; gap: 10px;
+      padding: 10px 0; border-top: 1px solid var(--border);
+    }
+    .feed-item:first-child { border-top: 0; }
+    .feed-item .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-soft), var(--fg-soft));
+      border: 1px solid var(--border);
+    }
+    .feed-item .feed-user { font-size: 13px; font-weight: 600; }
+    .feed-item .feed-text { font-size: 13px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+    .feed-item .feed-time { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption"><strong>渔路</strong> · Android · 首页</div>
+    <div class="device">
+      <span class="punch-hole" aria-hidden></span>
+      <div class="screen">
+        <div class="android-statusbar">
+          <span class="num">9:41</span>
+          <span class="status-icons">
+            <svg viewBox="0 0 16 16" aria-hidden><path d="M1 12h2V7H1zm4 0h2V4H5zm4 0h2V1H9zm4 0h2V5h-2z"/></svg>
+            <svg viewBox="0 0 16 16" aria-hidden><path d="M8 2a7 7 0 100 14A7 7 0 008 2zm0 1.5c1.2 0 2.3.4 3.2 1L4.5 11.2A5.5 5.5 0 018 3.5zm0 11a5.5 5.5 0 01-3.2-1l6.7-6.7A5.5 5.5 0 018 14.5z"/></svg>
+            <svg viewBox="0 0 16 16" aria-hidden><rect x="1" y="3" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="3" y="5" width="8" height="6" rx="1"/><rect x="15" y="6" width="1.5" height="4" rx="0.5"/></svg>
+          </span>
+        </div>
+
+        <main class="content">
+          <div class="header">
+            <div>
+              <p class="meta" style="margin:0 0 4px; font-size:11px; letter-spacing:0.06em; text-transform:uppercase;">周三 · 6月4日</p>
+              <h1>你好，钓友</h1>
+            </div>
+            <div class="row" style="gap:8px;">
+              <button class="icon-btn" aria-label="消息">
+                <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="设置">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="weather-strip">
+            <div class="weather-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </div>
+            <div class="weather-text">
+              <strong>晴 26°C</strong> <span>· 东南风 2级</span>
+            </div>
+            <span class="pill" style="margin-left:auto;">宜出钓</span>
+          </div>
+
+          <div style="height:12px;"></div>
+          <div class="pad">
+            <div class="search-bar">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <span>搜索钓点、路线、教程…</span>
+            </div>
+          </div>
+
+          <div style="height:12px;"></div>
+          <div class="banner">
+            <div class="banner-title">渔具商城上新</div>
+            <div class="banner-desc">夏季路亚竿专场，精选入门到竞技款</div>
+            <button class="banner-btn">去逛逛</button>
+          </div>
+
+          <div style="height:16px;"></div>
+          <div class="section-label">附近热门钓点 <span class="more">查看全部 →</span></div>
+          <div class="h-scroll">
+            <div class="spot-card">
+              <div class="spot-img">[ 钓点图片 ]</div>
+              <div class="spot-info">
+                <p class="spot-name">千岛湖 · 碧溪湾</p>
+                <p class="spot-meta">2.3km · 鲈鱼 · 路亚</p>
+              </div>
+            </div>
+            <div class="spot-card">
+              <div class="spot-img">[ 钓点图片 ]</div>
+              <div class="spot-info">
+                <p class="spot-name">富春江 · 钓台</p>
+                <p class="spot-meta">5.1km · 鲫鱼 · 台钓</p>
+              </div>
+            </div>
+            <div class="spot-card">
+              <div class="spot-img">[ 钓点图片 ]</div>
+              <div class="spot-info">
+                <p class="spot-name">太湖 · 东山半岛</p>
+                <p class="spot-meta">8.7km · 综合 · 湖钓</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:16px;"></div>
+          <div class="pad stack" style="gap:8px;">
+            <div class="section-label" style="padding:0;">最新路线 <span class="more">更多 →</span></div>
+            <div>
+              <div class="route-item">
+                <div class="route-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+                <div class="route-body">
+                  <div class="route-name">密云水库北岸环线</div>
+                  <div class="route-desc">12 坑点 · 18.5km · 老张</div>
+                </div>
+                <span class="pill" style="font-size:9px;">下载</span>
+              </div>
+              <div class="route-item">
+                <div class="route-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+                <div class="route-body">
+                  <div class="route-name">太湖东山半岛路线</div>
+                  <div class="route-desc">8 坑点 · 9.2km · 小王</div>
+                </div>
+                <span class="pill" style="font-size:9px;">下载</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:8px;"></div>
+          <div class="pad stack" style="gap:8px;">
+            <div class="section-label" style="padding:0;">钓友动态 <span class="more">更多 →</span></div>
+            <div>
+              <div class="feed-item">
+                <div class="avatar"></div>
+                <div>
+                  <div class="feed-user">路亚阿杰</div>
+                  <div class="feed-text">千岛湖碧溪湾今天爆护！亮片VIB连杆鲈鱼，最大62cm。路线已分享。</div>
+                  <div class="feed-time">2 小时前 · 千岛湖</div>
+                </div>
+              </div>
+              <div class="feed-item">
+                <div class="avatar"></div>
+                <div>
+                  <div class="feed-user">台钓老张</div>
+                  <div class="feed-text">富春江钓台水位下降半米，鲫鱼偏小，建议1.5号线组。水深2.5-3米比较好。</div>
+                  <div class="feed-time">5 小时前 · 富春江</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="height:12px;"></div>
+        </main>
+
+        <!-- Material bottom nav -->
+        <nav class="material-nav">
+          <a class="mat-tab active">
+            <div class="mat-icon"><svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg></div>
+            首页
+          </a>
+          <a class="mat-tab">
+            <div class="mat-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            坑点
+          </a>
+          <a class="mat-tab">
+            <div class="mat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></div>
+            导航
+          </a>
+          <a class="mat-tab">
+            <div class="mat-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+            学习
+          </a>
+          <a class="mat-tab">
+            <div class="mat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg></div>
+            我的
+          </a>
+        </nav>
+        <div class="home-indicator-android" aria-hidden></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

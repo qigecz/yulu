@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>渔路 YULU · 设计总览</title>
+  <style>
+    :root {
+      --bg: #f3f5f2; --surface: #ffffff; --fg: #1a2420; --muted: #647a70;
+      --border: #dce2dc; --accent: #2a8f7a;
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft: color-mix(in oklch, var(--fg) 6%, transparent);
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    .topnav {
+      position: sticky; top: 0; z-index: 10;
+      background: color-mix(in oklch, var(--bg) 92%, transparent);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topnav-inner {
+      max-width: 1200px; margin-inline: auto; padding: 14px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .topnav .logo {
+      font-family: var(--font-display); font-size: 19px; font-weight: 600; letter-spacing: -0.01em;
+    }
+    .topnav .logo span { color: var(--accent); }
+
+    .hero {
+      max-width: 1200px; margin-inline: auto;
+      padding: 64px 32px 48px; text-align: center;
+    }
+    .hero h1 {
+      font-family: var(--font-display); font-size: clamp(36px, 5vw, 56px);
+      line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 16px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero .lead {
+      font-size: 18px; color: var(--muted); max-width: 48ch; margin: 0 auto 32px;
+    }
+
+    .palette-strip {
+      display: flex; gap: 8px; justify-content: center; margin-bottom: 16px;
+    }
+    .palette-swatch {
+      width: 36px; height: 36px; border-radius: 10px;
+      border: 1px solid var(--border);
+      display: grid; place-items: center;
+      font-family: var(--font-mono); font-size: 9px; color: var(--muted);
+    }
+
+    .meta-line {
+      font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+      letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 8px;
+    }
+
+    /* Screen grid */
+    .screens {
+      max-width: 1200px; margin-inline: auto; padding: 0 32px 64px;
+    }
+    .screen-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 32px;
+    }
+    .screen-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .screen-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12);
+    }
+    .screen-card a { display: block; }
+    .screen-preview {
+      height: 200px;
+      background: linear-gradient(135deg, var(--accent-soft), var(--fg-soft));
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .screen-preview .device-mini {
+      width: 100px; height: 180px; border-radius: 18px;
+      background: linear-gradient(160deg, #2a2a2c, #1a1a1c);
+      padding: 4px; box-shadow: 0 8px 20px -4px rgba(0,0,0,0.3);
+    }
+    .screen-preview .device-mini .mini-screen {
+      width: 100%; height: 100%; border-radius: 14px;
+      background: var(--bg); overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .screen-preview .mini-status {
+      flex: 0 0 16px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .screen-preview .mini-body {
+      flex: 1; padding: 4px;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .screen-preview .mini-line {
+      height: 4px; border-radius: 2px;
+      background: var(--border);
+    }
+    .screen-preview .mini-line.accent {
+      background: var(--accent-soft);
+      width: 60%;
+    }
+    .screen-preview .mini-line.short { width: 40%; }
+    .screen-preview .mini-block {
+      height: 20px; border-radius: 4px;
+      background: var(--surface); border: 1px solid var(--border);
+    }
+
+    .screen-card .screen-info { padding: 16px 20px; }
+    .screen-card .screen-platform {
+      font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--accent); margin: 0 0 4px;
+    }
+    .screen-card .screen-name {
+      font-size: 17px; font-weight: 600; margin: 0 0 4px;
+    }
+    .screen-card .screen-desc {
+      font-size: 13px; color: var(--muted); margin: 0;
+    }
+
+    /* Landing preview special */
+    .screen-preview.landing-preview {
+      flex-direction: column; gap: 0; padding: 0;
+    }
+    .screen-preview.landing-preview .lp-nav {
+      width: 100%; height: 16px; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 8px;
+    }
+    .screen-preview.landing-preview .lp-nav .lp-logo {
+      width: 20px; height: 4px; border-radius: 2px; background: var(--fg);
+    }
+    .screen-preview.landing-preview .lp-nav .lp-btn {
+      width: 16px; height: 4px; border-radius: 2px; background: var(--accent);
+    }
+    .screen-preview.landing-preview .lp-hero {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 4px; padding: 8px;
+    }
+    .screen-preview.landing-preview .lp-h1 {
+      width: 70%; height: 6px; border-radius: 3px; background: var(--fg);
+    }
+    .screen-preview.landing-preview .lp-p {
+      width: 50%; height: 3px; border-radius: 2px; background: var(--border);
+    }
+    .screen-preview.landing-preview .lp-btns {
+      display: flex; gap: 4px; margin-top: 2px;
+    }
+    .screen-preview.landing-preview .lp-btns span {
+      width: 20px; height: 5px; border-radius: 2px;
+    }
+    .screen-preview.landing-preview .lp-btns span:first-child { background: var(--accent); }
+    .screen-preview.landing-preview .lp-btns span:last-child { border: 1px solid var(--border); }
+
+    /* Widget preview */
+    .screen-preview.widget-preview {
+      gap: 12px;
+    }
+    .widget-mini {
+      width: 160px; height: 70px; border-radius: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 8px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .widget-mini .wm-title {
+      font-size: 8px; font-weight: 600; color: var(--accent);
+    }
+    .widget-mini .wm-text {
+      font-size: 6px; color: var(--muted);
+    }
+    .widget-mini-sm {
+      width: 70px; height: 70px; border-radius: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 6px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 3px;
+    }
+    .widget-mini-sm .wm-icon {
+      width: 16px; height: 16px; border-radius: 6px;
+      background: var(--accent-soft);
+    }
+    .widget-mini-sm .wm-count {
+      font-size: 10px; font-weight: 700; color: var(--fg);
+    }
+    .widget-mini-sm .wm-label {
+      font-size: 5px; color: var(--muted); text-align: center;
+    }
+
+    .pagefoot {
+      max-width: 1200px; margin-inline: auto;
+      padding: 32px; border-top: 1px solid var(--border);
+      color: var(--muted); font-size: 13px;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header class="topnav">
+    <div class="topnav-inner">
+      <span class="logo">渔路 <span>YULU</span></span>
+      <span style="font-family:var(--font-mono); font-size:12px; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase;">设计总览</span>
+    </div>
+  </header>
+
+  <div class="hero">
+    <p class="meta-line">Visual System</p>
+    <div class="palette-strip">
+      <div class="palette-swatch" style="background:var(--bg);">bg</div>
+      <div class="palette-swatch" style="background:var(--surface);">srf</div>
+      <div class="palette-swatch" style="background:var(--fg); color:var(--surface);">fg</div>
+      <div class="palette-swatch" style="background:var(--muted); color:var(--surface);">mut</div>
+      <div class="palette-swatch" style="background:var(--border);">bdr</div>
+      <div class="palette-swatch" style="background:var(--accent); color:#fff;">acc</div>
+    </div>
+    <h1>渔路 <span>YULU</span></h1>
+    <p class="lead">钓鱼地点分享社区 App。精准坑点标注、路线下载导航、钓技教学分享。目标用户：休闲钓友、竞技钓手、路亚爱好者。</p>
+  </div>
+
+  <div class="screens">
+    <div class="screen-grid">
+      <!-- Landing page -->
+      <div class="screen-card">
+        <a href="landing.html">
+          <div class="screen-preview landing-preview">
+            <div class="lp-nav">
+              <span class="lp-logo"></span>
+              <span class="lp-btn"></span>
+            </div>
+            <div class="lp-hero">
+              <div class="lp-h1"></div>
+              <div class="lp-p"></div>
+              <div class="lp-p" style="width:40%;"></div>
+              <div class="lp-btns">
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <p class="screen-platform">Responsive Web</p>
+            <p class="screen-name">营销落地页</p>
+            <p class="screen-desc">产品介绍、核心功能展示、下载引导。响应式布局适配桌面和平板。</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- iOS Home -->
+      <div class="screen-card">
+        <a href="mobile-ios.html">
+          <div class="screen-preview">
+            <div class="device-mini">
+              <div class="mini-screen">
+                <div class="mini-status"></div>
+                <div class="mini-body">
+                  <div class="mini-line accent" style="width:80%;"></div>
+                  <div class="mini-line short"></div>
+                  <div class="mini-block"></div>
+                  <div class="mini-line accent" style="width:40%;"></div>
+                  <div class="mini-block" style="height:14px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <p class="screen-platform">iOS · iPhone 15 Pro</p>
+            <p class="screen-name">首页</p>
+            <p class="screen-desc">天气、附近热门钓点、最新路线、钓友动态、商城入口。</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- iOS Route -->
+      <div class="screen-card">
+        <a href="screens/ios-route.html">
+          <div class="screen-preview">
+            <div class="device-mini">
+              <div class="mini-screen">
+                <div class="mini-status"></div>
+                <div class="mini-body">
+                  <div class="mini-block" style="height:40px; background:linear-gradient(135deg, var(--accent-soft), var(--fg-soft));"></div>
+                  <div class="mini-line accent" style="width:50%;"></div>
+                  <div class="mini-block" style="height:28px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <p class="screen-platform">iOS · 核心功能</p>
+            <p class="screen-name">坑点路线</p>
+            <p class="screen-desc">地图视图、坑点标注、路线详情、离线下载、坑点列表。</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- iOS Learn -->
+      <div class="screen-card">
+        <a href="screens/ios-learn.html">
+          <div class="screen-preview">
+            <div class="device-mini">
+              <div class="mini-screen">
+                <div class="mini-status"></div>
+                <div class="mini-body">
+                  <div class="mini-line short"></div>
+                  <div class="mini-block" style="height:24px;"></div>
+                  <div class="mini-line" style="width:90%;"></div>
+                  <div class="mini-line accent" style="width:60%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <p class="screen-platform">iOS · 学习</p>
+            <p class="screen-name">钓技教学</p>
+            <p class="screen-desc">视频教程、分类筛选、精选文章、钓技分享。</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- iOS Profile -->
+      <div class="screen-card">
+        <a href="screens/ios-profile.html">
+          <div class="screen-preview">
+            <div class="device-mini">
+              <div class="mini-screen">
+                <div class="mini-status"></div>
+                <div class="mini-body">
+                  <div style="width:20px; height:20px; border-radius:50%; background:var(--accent-soft); margin:0 auto;"></div>
+                  <div class="mini-line accent" style="width:50%; margin:2px auto;"></div>
+                  <div class="mini-line" style="width:70%; margin:0 auto;"></div>
+                  <div class="mini-block" style="height:14px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <p class="screen-platform">iOS · 我的</p>
+            <p class="screen-name">个人中心</p>
+            <p class="screen-desc">用户资料、分享的坑点和路线、技巧分享、收藏和设置。</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- Android Home -->
+      <div class="screen-card">
+        <a href="mobile-android.html">
+          <div class="screen-preview">
+            <div class="device-mini" style="border-radius:14px; width:96px; height:172px;">
+              <div class="mini-screen" style="border-radius:10px;">
+                <div class="mini-status"></div>
+                <div class="mini-body">
+                  <div class="mini-line accent" style="width:80%;"></div>
+                  <div class="mini-line short"></div>
+                  <div class="mini-block"></div>
+                  <div class="mini-line accent" style="width:40%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-info">
+            <p class="screen-platform">Android · Pixel</p>
+            <p class="screen-name">首页</p>
+            <p class="screen-desc">Android 原生设计风格适配，Material 导航和交互模式。</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- Widget -->
+      <div class="screen-card">
+        <a href="widget-ios.html">
+          <div class="screen-preview widget-preview">
+            <div class="widget-mini">
+              <span class="wm-title">渔路</span>
+              <span class="wm-text">晴 26°C · 宜出钓</span>
+              <span class="wm-text">碧溪湾 · 2.3km</span>
+            </div>
+            <div class="widget-mini-sm">
+              <div class="wm-icon"></div>
+              <span class="wm-count">3</span>
+              <span class="wm-label">附近钓点</span>
+            </div>
+          </div>
+          <div class="screen-info">
+            <p class="screen-platform">iOS · WidgetKit</p>
+            <p class="screen-name">桌面小组件</p>
+            <p class="screen-desc">主屏快捷查看天气、附近钓点、快速导航。</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="pagefoot">
+    <span>渔路 YULU · 设计原型 · 2026</span>
+    <span style="font-family:var(--font-mono);">Ocean Teal · #2a8f7a · 人性化 + 工具型</span>
+  </footer>
+</body>
+</html>
