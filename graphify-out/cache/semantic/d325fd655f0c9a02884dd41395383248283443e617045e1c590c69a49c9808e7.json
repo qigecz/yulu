@@ -1,0 +1,1 @@
+{"nodes": [{"id": "routes_weather_weatherrouter", "label": "Weather Routes (Mock MVP)", "file_type": "code", "source_file": "apps/api/src/routes/weather.ts", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}
