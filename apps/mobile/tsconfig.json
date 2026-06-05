@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "jsx": "react-jsx",
+    "declaration": false,
+    "declarationMap": false,
+    "paths": {
+      "@yulu/ui": ["../../packages/ui/src"],
+      "@yulu/shared": ["../../packages/shared/src"]
+    }
+  },
+  "include": ["src/**/*", "../../packages/ui/src", "../../packages/shared/src"]
+}

@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "渔路 YULU",
+    "slug": "yulu",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#f3f5f2"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.yulu.ios"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#f3f5f2"
+      },
+      "package": "app.yulu.android"
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ]
+  }
+}
