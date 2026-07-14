@@ -1,11 +1,22 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, fontSize, radius, WeatherStrip, SearchBar, SectionHeader, SpotCard, SpotCardList, RouteItem, FeedItem } from '@yulu/ui';
-import { mockWeather, mockSpots, mockRoutes, mockFeeds } from '../mock/data';
-import { formatRelativeTime } from '@yulu/shared';
-import { formatDistance } from '@yulu/shared';
+import { formatRelativeTime, formatDistance } from '@yulu/shared';
+import { useWeather, useNearbySpots, useRoutes, useFeeds, useToggleFeedLike, useToggleFavorite } from '../hooks/queries';
+import { QueryState } from '../components/QueryState';
+import { useUIStore } from '../store/ui';
 
 export function HomeScreen() {
+  const weather = useWeather();
+  const spots = useNearbySpots();
+  const routes = useRoutes();
+  const feeds = useFeeds();
+  const openComposeFeed = useUIStore((s) => s.openComposeFeed);
+  const openFeedDetail = useUIStore((s) => s.openFeedDetail);
+  const openUser = useUIStore((s) => s.openUser);
+  const toggleFeedLike = useToggleFeedLike();
+  const toggleFavorite = useToggleFavorite();
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
@@ -21,14 +32,18 @@ export function HomeScreen() {
       </View>
 
       {/* Weather */}
-      <WeatherStrip
-        temperature={mockWeather.temperature}
-        condition={mockWeather.condition}
-        windDirection={mockWeather.windDirection}
-        windLevel={mockWeather.windLevel}
-        pressure={mockWeather.pressure}
-        fishingAdvice={mockWeather.fishingAdvice}
-      />
+      <QueryState isLoading={weather.isLoading} isError={weather.isError} refetch={() => weather.refetch()} minHeight={64}>
+        {weather.data && (
+          <WeatherStrip
+            temperature={weather.data.temperature}
+            condition={weather.data.condition}
+            windDirection={weather.data.windDirection}
+            windLevel={weather.data.windLevel}
+            pressure={weather.data.pressure}
+            fishingAdvice={weather.data.fishingAdvice}
+          />
+        )}
+      </QueryState>
 
       <View style={styles.spacer} />
 
@@ -51,17 +66,25 @@ export function HomeScreen() {
       {/* Nearby spots */}
       <SectionHeader title="附近热门钓点" actionLabel="查看全部 →" />
       <View style={{ height: 10 }} />
-      <SpotCardList>
-        {mockSpots.map((spot) => (
-          <SpotCard
-            key={spot.id}
-            name={spot.name}
-            distance={spot.distance ? formatDistance(spot.distance) : ''}
-            fishInfo={`${spot.fishSpecies.join('/')} · ${spot.fishingMethod}`}
-            tags={spot.tags}
-          />
-        ))}
-      </SpotCardList>
+      <QueryState
+        isLoading={spots.isLoading}
+        isError={spots.isError}
+        refetch={() => spots.refetch()}
+        empty={!(spots.data && spots.data.length)}
+        emptyText="附近暂无钓点"
+      >
+        <SpotCardList>
+          {spots.data!.map((spot) => (
+            <SpotCard
+              key={spot.id}
+              name={spot.name}
+              distance={spot.distance ? formatDistance(spot.distance) : ''}
+              fishInfo={`${spot.fishSpecies.join('/')} · ${spot.fishingMethod}`}
+              tags={spot.tags}
+            />
+          ))}
+        </SpotCardList>
+      </QueryState>
 
       <View style={{ height: 18 }} />
 
@@ -69,30 +92,59 @@ export function HomeScreen() {
       <View style={styles.pad}>
         <SectionHeader title="最新路线" actionLabel="更多 →" />
         <View style={{ height: 8 }} />
-        {mockRoutes.map((route) => (
-          <RouteItem
-            key={route.id}
-            name={route.name}
-            description={`${route.spots?.length || 0} 坑点 · ${route.totalDistance}km · ${route.uploader?.nickname || '未知'}`}
-          />
-        ))}
+        <QueryState
+          isLoading={routes.isLoading}
+          isError={routes.isError}
+          refetch={() => routes.refetch()}
+          empty={!(routes.data && routes.data.length)}
+          emptyText="暂无路线"
+        >
+          {routes.data!.map((route) => (
+            <RouteItem
+              key={route.id}
+              name={route.name}
+              description={`${route.spots?.length || 0} 坑点 · ${route.totalDistance}km · ${route.uploader?.nickname || '未知'}`}
+            />
+          ))}
+        </QueryState>
       </View>
 
       <View style={{ height: 8 }} />
 
       {/* Community feed */}
       <View style={styles.pad}>
-        <SectionHeader title="钓友动态" actionLabel="更多 →" />
-        <View style={{ height: 8 }} />
-        {mockFeeds.map((feed) => (
-          <FeedItem
-            key={feed.id}
-            userName={feed.user?.nickname || ''}
-            content={feed.content}
-            time={formatRelativeTime(feed.createdAt)}
-            location={feed.location || ''}
-          />
-        ))}
+        <View style={styles.feedHeader}>
+          <SectionHeader title="钓友动态" actionLabel="更多 →" />
+        </View>
+        <TouchableOpacity style={styles.publishBtn} onPress={openComposeFeed} activeOpacity={0.7}>
+          <Text style={styles.publishBtnText}>＋ 分享你的作钓动态…</Text>
+        </TouchableOpacity>
+        <View style={{ height: 12 }} />
+        <QueryState
+          isLoading={feeds.isLoading}
+          isError={feeds.isError}
+          refetch={() => feeds.refetch()}
+          empty={!(feeds.data && feeds.data.length)}
+          emptyText="暂无动态"
+        >
+          {feeds.data!.map((feed) => (
+            <FeedItem
+              key={feed.id}
+              userName={feed.user?.nickname || ''}
+              content={feed.content}
+              time={formatRelativeTime(feed.createdAt)}
+              location={feed.location || ''}
+              image={feed.images?.[0]}
+              likesCount={feed.likesCount}
+              liked={feed.liked}
+              favorited={feed.favorited}
+              onToggleLike={() => toggleFeedLike.mutate({ id: feed.id, liked: !!feed.liked })}
+              onToggleFavorite={() => toggleFavorite.mutate({ type: 'feed', id: feed.id, favorited: !!feed.favorited })}
+              onOpenAuthor={() => openUser(feed.userId)}
+              onOpenFeed={() => openFeedDetail(feed.id)}
+            />
+          ))}
+        </QueryState>
       </View>
 
       <View style={{ height: 80 }} />
@@ -129,4 +181,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent, borderRadius: radius.sm,
   },
   bannerBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  feedHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  publishBtn: {
+    marginTop: 4, paddingVertical: 14, paddingHorizontal: 16,
+    borderRadius: radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  publishBtnText: { fontSize: 13, color: colors.muted },
 });

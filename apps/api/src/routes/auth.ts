@@ -5,7 +5,7 @@ import { query } from '../config/database';
 import { env } from '../config/env';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { validate } from '../middleware/validate';
-import { registerSchema, loginSchema } from '@yulu/shared/validators/auth';
+import { registerSchema, loginSchema, refreshTokenSchema } from '@yulu/shared/validators/auth';
 
 const router = Router();
 
@@ -40,6 +40,18 @@ router.post('/login', validate(loginSchema), async (req: Request, res: Response)
   const accessToken = jwt.sign({ userId: user.id }, env.JWT_SECRET, { expiresIn: '15m' });
   const refreshToken = jwt.sign({ userId: user.id }, env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
   res.json({ accessToken, refreshToken, user: { id: user.id, nickname: user.nickname } });
+});
+
+/** Exchange a valid refresh token for a fresh access token. */
+router.post('/refresh', validate(refreshTokenSchema), async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+  try {
+    const payload = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { userId: string };
+    const accessToken = jwt.sign({ userId: payload.userId }, env.JWT_SECRET, { expiresIn: '15m' });
+    res.json({ accessToken });
+  } catch {
+    return res.status(401).json({ error: 'Invalid refresh token' });
+  }
 });
 
 router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {

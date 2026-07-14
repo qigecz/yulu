@@ -8,5 +8,9 @@ export interface Feed {
   spotId?: string;
   spot?: { id: string; name: string };
   likesCount: number;
+  /** Whether the current user liked this feed (personalized). */
+  liked?: boolean;
+  /** Whether the current user favorited this feed. */
+  favorited?: boolean;
   createdAt: string;
 }

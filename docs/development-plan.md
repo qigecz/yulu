@@ -6,6 +6,35 @@
 
 ---
 
+## 进度状态（截至 2026-07-14）
+
+### ✅ Phase 1：基础 + 核心
+- **1A 基础设施**：pnpm monorepo、Expo/Next.js/Express 脚手架、shared 类型+Zod、ui Design Tokens、PostgreSQL+PostGIS 迁移（12 张表）
+- **1B Web 落地页**：`landing.html` → Next.js 单页（TopNav/Hero/Features/AppPreview/HowItWorks/Community/CTA/Footer）
+- **1C 后端 API**：auth/spots/routes/tutorials/feeds/weather 六模块 + JWT + Zod + 种子数据
+- **1D 移动端核心**：5 屏（Home/Spots/Navigation/Learn/Profile）+ **AuthScreen + 认证**（zustand auth store + axios 客户端 + AsyncStorage 持久化 + Mock 免登录）
+
+### ✅ Phase 2（部分）
+- **API 集成替换 Mock**：React Query 数据层 + snake/camel 映射 + `USE_MOCK` 开关（默认 Mock，可切真实 API）
+- **图片上传闭环**：后端 multer 本地存储 + `POST /uploads` + express.static；移动端 expo-image-picker 选图 + 上传；spots/feeds images 落库
+- **Refresh token 静默刷新**：后端 `POST /auth/refresh`；客户端 401 拦截器换 token + 重试 + 并发排队
+- ⬜ **Mapbox 地图/真实导航**（NavigationScreen 全屏地图）— 未开始，需 Mapbox key
+- ⬜ 离线路线下载、全局搜索 — 未开始
+
+### ✅ Phase 3：社区 + 社交
+- **UGC**：创建钓点（CreateSpotScreen）、发布动态（ComposeFeedScreen），overlay 浮层 + Mock/Real 双模式
+- **社交互动**：点赞（feeds/spots）、收藏（多态 favorites + 「我的收藏」页）、关注（follows + 用户主页）、评论（多态 comments + 动态详情页）
+- ⬜ 推送通知（Expo Push）— 未开始
+- ⬜ 下拉刷新 / 骨架屏 / 错误边界等体验打磨 — 未开始
+
+### ⬜ Phase 4：iOS 小组件 + 上架 — 未开始
+
+> 详细集成设计见 `docs/mobile-api-integration.md`。
+
+---
+
+---
+
 ## 项目结构：pnpm Monorepo
 
 ```

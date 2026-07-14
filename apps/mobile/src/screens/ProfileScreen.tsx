@@ -1,9 +1,23 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { colors, spacing, fontSize, radius, SectionHeader } from '@yulu/ui';
-import { mockUser, mockRoutes, mockTutorials } from '../mock/data';
+import { useAuthStore } from '../store/auth';
+import { useUIStore } from '../store/ui';
+import { useRoutes, useTutorials } from '../hooks/queries';
+import { QueryState } from '../components/QueryState';
 
 export function ProfileScreen() {
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const openCreateSpot = useUIStore((s) => s.openCreateSpot);
+  const openComposeFeed = useUIStore((s) => s.openComposeFeed);
+  const openFavorites = useUIStore((s) => s.openFavorites);
+  const routes = useRoutes();
+  const tutorials = useTutorials();
+
+  const myRoutes = routes.data ?? [];
+  const myTutorials = (tutorials.data ?? []).slice(0, 2);
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Profile header */}
@@ -11,19 +25,19 @@ export function ProfileScreen() {
         <View style={styles.avatar}>
           <Text style={styles.avatarIcon}>👤</Text>
         </View>
-        <View>
-          <Text style={styles.profileName}>{mockUser.nickname}</Text>
-          <Text style={styles.profileBio}>{mockUser.bio}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.profileName}>{user?.nickname ?? '钓友'}</Text>
+          <Text style={styles.profileBio}>{user?.bio ?? '还没有个人简介'}</Text>
         </View>
       </View>
 
       {/* Stats */}
       <View style={styles.statsRow}>
         {[
-          { value: mockUser.spotsCount, label: '分享坑点' },
-          { value: mockUser.routesCount, label: '分享路线' },
-          { value: mockUser.likesCount, label: '获赞' },
-          { value: mockUser.followersCount, label: '粉丝' },
+          { value: user?.spotsCount ?? 0, label: '分享坑点' },
+          { value: user?.routesCount ?? 0, label: '分享路线' },
+          { value: user?.likesCount ?? 0, label: '获赞' },
+          { value: user?.followersCount ?? 0, label: '粉丝' },
         ].map((stat) => (
           <View key={stat.label} style={styles.statCell}>
             <Text style={styles.statVal}>{stat.value}</Text>
@@ -34,11 +48,11 @@ export function ProfileScreen() {
 
       {/* Share actions */}
       <View style={styles.shareActions}>
-        <TouchableOpacity style={styles.shareBtnPrimary}>
+        <TouchableOpacity style={styles.shareBtnPrimary} onPress={openCreateSpot} activeOpacity={0.7}>
           <Text style={styles.shareBtnText}>📍 分享坑点</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.shareBtn}>
-          <Text style={styles.shareBtnTextDark}>🗺 分享路线</Text>
+        <TouchableOpacity style={styles.shareBtn} onPress={openComposeFeed} activeOpacity={0.7}>
+          <Text style={styles.shareBtnTextDark}>📝 发布动态</Text>
         </TouchableOpacity>
       </View>
 
@@ -47,16 +61,18 @@ export function ProfileScreen() {
       {/* My routes */}
       <View style={styles.pad}>
         <SectionHeader title="我的路线" actionLabel="全部 →" />
-        {mockRoutes.map((route) => (
-          <View key={route.id} style={styles.myItem}>
-            <View style={styles.itemIcon}><Text>🗺</Text></View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.itemTitle}>{route.name}</Text>
-              <Text style={styles.itemSub}>{route.totalDistance}km · {route.downloadsCount} 次下载</Text>
+        <QueryState isLoading={routes.isLoading} isError={routes.isError} refetch={() => routes.refetch()} empty={myRoutes.length === 0} emptyText="暂无分享路线">
+          {myRoutes.map((route) => (
+            <View key={route.id} style={styles.myItem}>
+              <View style={styles.itemIcon}><Text>🗺</Text></View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.itemTitle}>{route.name}</Text>
+                <Text style={styles.itemSub}>{route.totalDistance}km · {route.downloadsCount} 次下载</Text>
+              </View>
+              <Text style={styles.itemMeta}>3天前</Text>
             </View>
-            <Text style={styles.itemMeta}>3天前</Text>
-          </View>
-        ))}
+          ))}
+        </QueryState>
       </View>
 
       <View style={{ height: 14 }} />
@@ -64,36 +80,58 @@ export function ProfileScreen() {
       {/* My tips */}
       <View style={styles.pad}>
         <SectionHeader title="我的技巧分享" actionLabel="全部 →" />
-        {mockTutorials.slice(0, 2).map((tut) => (
-          <View key={tut.id} style={styles.myItem}>
-            <View style={styles.itemIcon}><Text>📖</Text></View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.itemTitle}>{tut.title}</Text>
-              <Text style={styles.itemSub}>128 次收藏 · 42 条评论</Text>
+        <QueryState isLoading={tutorials.isLoading} isError={tutorials.isError} refetch={() => tutorials.refetch()} empty={myTutorials.length === 0} emptyText="暂无技巧分享">
+          {myTutorials.map((tut) => (
+            <View key={tut.id} style={styles.myItem}>
+              <View style={styles.itemIcon}><Text>📖</Text></View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.itemTitle}>{tut.title}</Text>
+                <Text style={styles.itemSub}>128 次收藏 · 42 条评论</Text>
+              </View>
+              <Text style={styles.itemMeta}>5天前</Text>
             </View>
-            <Text style={styles.itemMeta}>5天前</Text>
-          </View>
-        ))}
+          ))}
+        </QueryState>
       </View>
 
       <View style={{ height: 14 }} />
 
       {/* Menu */}
       <View style={styles.pad}>
-        {[
-          { icon: '⭐', label: '我的收藏' },
+        {([
+          { icon: '⭐', label: '我的收藏', onPress: openFavorites },
           { icon: '📥', label: '离线路线' },
           { icon: '🛒', label: '渔具商城订单' },
           { icon: '⚙', label: '设置' },
-        ].map((item) => (
-          <View key={item.label} style={styles.menuItem}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Text>{item.icon}</Text>
-              <Text style={styles.menuLabel}>{item.label}</Text>
-            </View>
-            <Text style={styles.menuArrow}>›</Text>
-          </View>
-        ))}
+        ] as { icon: string; label: string; onPress?: () => void }[]).map((item) => {
+          const Row = (
+            <>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Text>{item.icon}</Text>
+                <Text style={styles.menuLabel}>{item.label}</Text>
+              </View>
+              <Text style={styles.menuArrow}>›</Text>
+            </>
+          );
+          return item.onPress ? (
+            <TouchableOpacity key={item.label} style={styles.menuItem} onPress={item.onPress} activeOpacity={0.6}>
+              {Row}
+            </TouchableOpacity>
+          ) : (
+            <View key={item.label} style={styles.menuItem}>{Row}</View>
+          );
+        })}
+
+        {/* Logout */}
+        <TouchableOpacity
+          style={styles.logoutRow}
+          onPress={() => Alert.alert('退出登录', '确定要退出当前账号吗？', [
+            { text: '取消', style: 'cancel' },
+            { text: '退出', style: 'destructive', onPress: () => void logout() },
+          ])}
+        >
+          <Text style={styles.logoutText}>退出登录</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={{ height: 80 }} />
@@ -153,4 +191,9 @@ const styles = StyleSheet.create({
   },
   menuLabel: { fontSize: 15, color: colors.fg },
   menuArrow: { color: colors.muted, fontSize: 18 },
+  logoutRow: {
+    paddingVertical: 13, marginTop: 4, alignItems: 'center',
+    borderTopWidth: 1, borderTopColor: colors.border,
+  },
+  logoutText: { fontSize: 15, color: colors.danger, fontWeight: '500' },
 });

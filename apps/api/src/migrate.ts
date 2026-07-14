@@ -127,6 +127,47 @@ async function migrate() {
     )
   `);
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS feed_likes (
+      user_id UUID REFERENCES users(id),
+      feed_id UUID REFERENCES feeds(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY(user_id, feed_id)
+    )
+  `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS favorites (
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      target_type VARCHAR(20) NOT NULL CHECK(target_type IN ('spot','feed','route')),
+      target_id UUID NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY(user_id, target_type, target_id)
+    )
+  `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS follows (
+      follower_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      following_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY(follower_id, following_id),
+      CHECK (follower_id <> following_id)
+    )
+  `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS comments (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      target_type VARCHAR(20) NOT NULL CHECK(target_type IN ('feed','spot')),
+      target_id UUID NOT NULL,
+      content TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await query(`CREATE INDEX IF NOT EXISTS idx_comments_target ON comments(target_type, target_id, created_at DESC)`);
+
   console.log('Migrations complete!');
   process.exit(0);
 }

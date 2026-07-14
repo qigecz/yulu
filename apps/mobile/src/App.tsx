@@ -1,12 +1,29 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, fontSize, spacing, TabBar } from '@yulu/ui';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { colors, spacing, TabBar } from '@yulu/ui';
 import type { Tab } from '@yulu/ui';
+import { useAuthStore } from './store/auth';
+import { useUIStore } from './store/ui';
+import { setOnUnauthorized, setRefreshHandler } from './api/client';
+import { forceLogout, refreshAccessToken } from './store/auth';
+import { AuthScreen } from './screens/AuthScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { SpotsScreen } from './screens/SpotsScreen';
 import { NavigationScreen } from './screens/NavigationScreen';
 import { LearnScreen } from './screens/LearnScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
+import { CreateSpotScreen } from './screens/CreateSpotScreen';
+import { ComposeFeedScreen } from './screens/ComposeFeedScreen';
+import { FavoritesScreen } from './screens/FavoritesScreen';
+import { FeedDetailScreen } from './screens/FeedDetailScreen';
+import { UserScreen } from './screens/UserScreen';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, refetchOnWindowFocus: false },
+  },
+});
 
 const tabs: Tab[] = [
   { key: 'home', label: '首页', icon: '🏠' },
@@ -17,7 +34,16 @@ const tabs: Tab[] = [
 ];
 
 export default function App() {
+  const status = useAuthStore((s) => s.status);
+  const hydrate = useAuthStore((s) => s.hydrate);
   const [activeTab, setActiveTab] = useState('home');
+
+  // Restore session on boot and wire the API client's 401 handlers.
+  useEffect(() => {
+    setOnUnauthorized(() => forceLogout());
+    setRefreshHandler(refreshAccessToken);
+    void hydrate();
+  }, [hydrate]);
 
   const renderScreen = () => {
     switch (activeTab) {
@@ -30,22 +56,69 @@ export default function App() {
     }
   };
 
+  if (status === 'loading') {
+    return (
+      <View style={styles.boot}>
+        <ActivityIndicator color={colors.accent} />
+      </View>
+    );
+  }
+
+  if (status === 'unauthenticated') {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <AuthScreen />
+      </QueryClientProvider>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      {activeTab !== 'nav' && (
-        <View style={styles.statusBar}>
-          <Text style={styles.statusText}>9:41</Text>
-          <Text style={styles.statusText}>WiFi</Text>
-        </View>
+    <QueryClientProvider client={queryClient}>
+      <View style={styles.container}>
+        {activeTab !== 'nav' && (
+          <View style={styles.statusBar}>
+            <Text style={styles.statusText}>9:41</Text>
+            <Text style={styles.statusText}>WiFi</Text>
+          </View>
+        )}
+        <View style={styles.screen}>{renderScreen()}</View>
+        <TabBar tabs={tabs} activeKey={activeTab} onTabPress={setActiveTab} />
+        <View style={styles.homeIndicator} />
+        <Overlay />
+      </View>
+    </QueryClientProvider>
+  );
+}
+
+/** Full-screen create/compose flows rendered above the tab shell. */
+function Overlay() {
+  const overlay = useUIStore((s) => s.overlay);
+  const close = useUIStore((s) => s.closeOverlay);
+  if (!overlay) return null;
+
+  return (
+    <View style={styles.overlay}>
+      {/* Floating close (top-right); screens carry their own header & scroll. */}
+      <TouchableOpacity onPress={close} style={styles.overlayClose} activeOpacity={0.7}>
+        <Text style={styles.overlayCloseText}>✕</Text>
+      </TouchableOpacity>
+      {overlay === 'create-spot' ? (
+        <CreateSpotScreen />
+      ) : overlay === 'compose-feed' ? (
+        <ComposeFeedScreen />
+      ) : overlay === 'favorites' ? (
+        <FavoritesScreen />
+      ) : overlay === 'feed-detail' ? (
+        <FeedDetailScreen />
+      ) : (
+        <UserScreen />
       )}
-      <View style={styles.screen}>{renderScreen()}</View>
-      <TabBar tabs={tabs} activeKey={activeTab} onTabPress={setActiveTab} />
-      <View style={styles.homeIndicator} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  boot: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
   container: { flex: 1, backgroundColor: colors.bg },
   statusBar: {
     flexDirection: 'row', justifyContent: 'space-between',
@@ -56,4 +129,15 @@ const styles = StyleSheet.create({
   homeIndicator: {
     height: 28, alignItems: 'center', justifyContent: 'flex-end',
   },
+  overlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: colors.bg, zIndex: 10,
+  },
+  overlayClose: {
+    position: 'absolute', top: 16, right: spacing.screenPadding,
+    width: 38, height: 38, borderRadius: 19, zIndex: 20,
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  overlayCloseText: { fontSize: 16, color: colors.fg },
 });

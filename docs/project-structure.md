@@ -28,17 +28,19 @@ yulu/
 ```
 packages/shared/src/
 ├── types/
-│   ├── user.ts        # User, UserProfile, AuthTokens, AuthUser
-│   ├── spot.ts        # Spot, SpotFilter（含地理坐标、鱼种、钓法）
+│   ├── user.ts        # User(含 followingCount), UserProfile(isFollowing), AuthTokens, AuthUser
+│   ├── spot.ts        # Spot(含 liked/favorited), SpotFilter
 │   ├── route.ts       # Route, RouteSpot, RouteFilter
 │   ├── tutorial.ts    # Tutorial, TutorialFilter, TutorialType
-│   ├── feed.ts        # Feed（社区动态）
+│   ├── feed.ts        # Feed(含 liked/favorited)
 │   ├── weather.ts     # Weather（含 fishingAdvice 钓鱼建议）
+│   ├── comment.ts     # Comment, CommentTargetType（多态评论）
 │   └── index.ts       # 统一导出
 ├── validators/
-│   ├── auth.ts        # registerSchema, loginSchema（手机号+密码）
-│   ├── spot.ts        # createSpotSchema, spotFilterSchema（含经纬度+半径）
-│   ├── route.ts       # createRouteSchema（含坑点数组）
+│   ├── auth.ts        # registerSchema, loginSchema, refreshTokenSchema
+│   ├── spot.ts        # createSpotSchema(含 images), spotFilterSchema
+│   ├── route.ts       # createRouteSchema
+│   ├── feed.ts        # createFeedSchema（含 images）
 │   └── index.ts       # 统一导出
 ├── utils/
 │   ├── geo.ts         # haversineDistance(), formatDistance() 距离计算
@@ -67,7 +69,7 @@ packages/ui/src/
 │   ├── WeatherStrip.tsx   # 天气条（温度/风向/气压/钓鱼建议）
 │   ├── SpotCard.tsx   # 钓点卡片 + SpotCardList 横向滚动容器
 │   ├── RouteItem.tsx  # 路线列表项
-│   ├── FeedItem.tsx   # 社区动态项
+│   ├── FeedItem.tsx   # 社区动态项（点赞/收藏/作者/内容可点）
 │   ├── TabBar.tsx     # 5-Tab 底部导航栏
 │   └── FilterChips.tsx # 横向滚动筛选标签
 └── index.ts           # 统一导出所有组件和 tokens
@@ -77,24 +79,46 @@ packages/ui/src/
 
 ## apps/mobile — @yulu/mobile
 
-React Native 移动端应用，基于 Expo。
+React Native 移动端应用，基于 Expo。数据层默认走 Mock，`app.json` 的 `extra.useMock` 可切换真实 API（详见 `docs/mobile-api-integration.md`）。
 
 ```
 apps/mobile/
-├── app.json           # Expo 配置（应用名、Bundle ID）
+├── app.json           # Expo 配置 + extra.apiBaseUrl / extra.useMock
 ├── metro.config.js    # Metro 打包配置（monorepo 支持）
 ├── package.json
 ├── tsconfig.json
 └── src/
-    ├── App.tsx        # 应用入口：状态栏 + Tab 导航 + 5 个页面
+    ├── App.tsx        # 入口：QueryClientProvider + 认证分流 + Tab + Overlay 浮层
+    ├── config.ts      # 读取 apiBaseUrl / useMock
+    ├── api/           # API 客户端层
+    │   ├── client.ts        # axios + JWT + 401 静默刷新/重试
+    │   ├── authToken.ts     # 解耦的 token holder（破除循环依赖）
+    │   ├── transforms.ts    # snake_case DB 行 → camelCase shared 类型
+    │   └── endpoints.ts     # authApi/spotsApi/routesApi/tutorialsApi/feedsApi/
+    │                        # weatherApi/uploadsApi/usersApi/commentsApi/favoritesApi
+    ├── store/
+    │   ├── auth.ts    # zustand 认证：login/register/logout/hydrate/refreshAccessToken
+    │   └── ui.ts      # zustand overlay 状态（含 feedId/userId payload）
+    ├── hooks/
+    │   └── queries.ts # React Query 查询 + mutation hooks（USE_MOCK 分支 + 乐观更新）
+    ├── components/
+    │   ├── QueryState.tsx     # loading/error/空态 复用
+    │   ├── FormControls.tsx   # Field/TextField/MultilineField/TagInput/SubmitButton/Header
+    │   └── ImagePicker.tsx    # 多图选择（expo-image-picker）
     ├── screens/
     │   ├── HomeScreen.tsx       # 首页：天气、搜索、Banner、附近钓点、路线、动态
-    │   ├── SpotsScreen.tsx      # 坑点：地图占位、筛选、路线详情、坑点列表
+    │   ├── SpotsScreen.tsx      # 坑点：地图占位、筛选、路线详情、坑点列表（点赞+收藏）
     │   ├── NavigationScreen.tsx # 导航：全屏地图、转向提示、ETA、路点时间线
     │   ├── LearnScreen.tsx      # 学习：分类筛选、精选视频、教程列表、文章
-    │   └── ProfileScreen.tsx    # 我的：头像统计、分享按钮、我的内容、菜单
+    │   ├── ProfileScreen.tsx    # 我的：头像统计、分享按钮、我的内容、收藏/退出登录
+    │   ├── AuthScreen.tsx       # 登录/注册（手机号+密码）
+    │   ├── CreateSpotScreen.tsx # 分享钓点表单（含选图上传）
+    │   ├── ComposeFeedScreen.tsx# 发布动态表单（含选图上传）
+    │   ├── FeedDetailScreen.tsx # 动态详情 + 评论列表 + 评论输入
+    │   ├── UserScreen.tsx       # 用户主页 + 关注 + 其动态
+    │   └── FavoritesScreen.tsx  # 我的收藏（钓点/动态）
     └── mock/
-        └── data.ts    # Mock 数据（匹配原型内容，无需 API 即可运行）
+        └── data.ts    # Mock 数据（USE_MOCK=true 时作为数据源）
 ```
 
 ---
@@ -122,22 +146,27 @@ Express 后端 REST API。
 
 ```
 apps/api/src/
-├── index.ts           # Express 入口，挂载所有路由到 /api/*
+├── index.ts           # Express 入口，挂载所有路由到 /api/* + /uploads 静态服务
 ├── config/
 │   ├── env.ts         # 环境变量加载（JWT 密钥、数据库连接等）
-│   └── database.ts    # PostgreSQL 连接池（pg Pool）
+│   ├── database.ts    # PostgreSQL 连接池（pg Pool）
+│   └── storage.ts     # multer 本地磁盘存储配置（可换 S3/Supabase）
 ├── middleware/
-│   ├── auth.ts        # JWT Bearer Token 认证中间件
+│   ├── auth.ts        # authMiddleware（强制）+ optionalAuth（有 token 才注入）
 │   ├── validate.ts    # Zod Schema 验证中间件工厂
 │   └── errorHandler.ts # 全局错误处理
 ├── routes/
-│   ├── auth.ts        # POST register/login, GET /me
-│   ├── spots.ts       # GET nearby（PostGIS 空间查询）, GET/:id, POST
+│   ├── auth.ts        # POST register/login/refresh, GET /me
+│   ├── spots.ts       # GET nearby（liked/favorited 个性化）, GET/:id, POST, POST /:id/like
 │   ├── routes.ts      # GET list, GET/:id（含有序坑点）, POST download
 │   ├── tutorials.ts   # GET list（分类筛选）, GET/:id
-│   ├── feeds.ts       # GET feed, POST create
-│   └── weather.ts     # GET weather（目前 mock，后续接第三方 API）
-├── migrate.ts         # 数据库迁移：创建 8 张表（含 PostGIS 空间索引）
+│   ├── feeds.ts       # GET feed（liked/favorited）, POST, POST /:id/like
+│   ├── weather.ts     # GET weather（目前 mock，后续接第三方 API）
+│   ├── uploads.ts     # POST /api/uploads（multer，返回图片 URL）
+│   ├── users.ts       # GET /:id（主页）, POST/DELETE /:id/follow, GET /:id/feeds
+│   ├── comments.ts    # GET ?targetType=&targetId=, POST（多态评论）
+│   └── favorites.ts   # POST, DELETE /:type/:id, GET ?type=
+├── migrate.ts         # 数据库迁移：12 张表（含 PostGIS 空间索引 + feed_likes/follows/comments/favorites）
 └── seed.ts            # 种子数据：测试用户、钓点、路线、教程、动态
 ```
 
@@ -147,9 +176,11 @@ apps/api/src/
 
 | 文件 | 内容 |
 |------|------|
-| `development-plan.md` | 全栈 MVP 开发计划（4 个 Phase） |
+| `development-plan.md` | 全栈 MVP 开发计划（4 个 Phase + 进度状态） |
 | `project-structure.md` | 本文件 — 项目目录结构说明 |
 | `project-architecture.md` | 项目技术架构说明 |
+| `mobile-api-integration.md` | 移动端数据/认证/UGC/图片上传/社交互动 集成层说明 |
+| `server-setup-guide.md` | 后端部署与数据库初始化指南 |
 
 ---
 

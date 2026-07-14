@@ -10,6 +10,7 @@ export const createSpotSchema = z.object({
   waterDepth: z.string().optional(),
   bottomType: z.string().optional(),
   tags: z.array(z.string()).default([]),
+  images: z.array(z.string().url().or(z.string().startsWith('/'))).default([]),
 });
 
 export const spotFilterSchema = z.object({

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, fontSize, radius, SearchBar, Tag, SectionHeader } from '@yulu/ui';
-import { mockTutorials } from '../mock/data';
 import { formatViewCount } from '@yulu/shared';
+import { useTutorials } from '../hooks/queries';
+import { QueryState } from '../components/QueryState';
 
 const categories = [
   { icon: '📚', label: '全部' },
@@ -33,8 +34,18 @@ const articles = [
   },
 ];
 
+type FlatTutorial = { id: string; title: string; authorName: string; views: number; duration: string; time: string };
+
 export function LearnScreen() {
   const [activeCategory, setActiveCategory] = useState(0);
+  const tutorials = useTutorials();
+
+  const featured = tutorials.data?.[0];
+  const fromData: FlatTutorial[] = (tutorials.data?.slice(1) ?? []).map((t) => ({
+    id: t.id, title: t.title, authorName: t.author?.nickname || '',
+    views: t.viewsCount, duration: t.duration || '', time: '1周前',
+  }));
+  const list: FlatTutorial[] = [...fromData, ...extraTutorials];
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -70,23 +81,27 @@ export function LearnScreen() {
       <View style={{ height: 16 }} />
 
       {/* Featured video */}
-      <View style={styles.featuredCard}>
-        <View style={styles.featuredThumb}>
-          <View style={styles.playBtn}><Text style={styles.playIcon}>▶</Text></View>
-          <View style={styles.durationBadge}>
-            <Text style={styles.durationText}>{mockTutorials[0].duration}</Text>
+      <QueryState isLoading={tutorials.isLoading} isError={tutorials.isError} refetch={() => tutorials.refetch()} minHeight={220}>
+        {featured && (
+          <View style={styles.featuredCard}>
+            <View style={styles.featuredThumb}>
+              <View style={styles.playBtn}><Text style={styles.playIcon}>▶</Text></View>
+              <View style={styles.durationBadge}>
+                <Text style={styles.durationText}>{featured.duration}</Text>
+              </View>
+            </View>
+            <View style={{ padding: 14 }}>
+              <Text style={styles.featuredTitle}>{featured.title}</Text>
+              <Text style={styles.featuredMeta}>
+                {featured.author?.nickname} · {formatViewCount(featured.viewsCount)}次观看 · 3天前
+              </Text>
+              <View style={styles.tagRow}>
+                {featured.tags.map((t) => <Tag key={t} label={t} />)}
+              </View>
+            </View>
           </View>
-        </View>
-        <View style={{ padding: 14 }}>
-          <Text style={styles.featuredTitle}>{mockTutorials[0].title}</Text>
-          <Text style={styles.featuredMeta}>
-            {mockTutorials[0].author?.nickname} · {formatViewCount(mockTutorials[0].viewsCount)}次观看 · 3天前
-          </Text>
-          <View style={styles.tagRow}>
-            {mockTutorials[0].tags.map((t) => <Tag key={t} label={t} />)}
-          </View>
-        </View>
-      </View>
+        )}
+      </QueryState>
 
       <View style={{ height: 18 }} />
 
@@ -94,13 +109,7 @@ export function LearnScreen() {
       <View style={styles.pad}>
         <SectionHeader title="热门教程" actionLabel="更多 →" />
         <View style={{ height: 8 }} />
-        {((): { id: string; title: string; authorName: string; views: number; duration: string; time: string }[] => {
-          const fromMock = mockTutorials.slice(1).map((t) => ({
-            id: t.id, title: t.title, authorName: t.author?.nickname || '',
-            views: t.viewsCount, duration: t.duration || '', time: '1周前',
-          }));
-          return [...fromMock, ...extraTutorials];
-        })().map((tut) => (
+        {list.map((tut) => (
           <View key={tut.id} style={styles.tutItem}>
             <View style={styles.tutThumb}>
               <View style={styles.tutPlayBtn}><Text style={styles.tutPlayIcon}>▶</Text></View>

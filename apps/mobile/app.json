@@ -22,6 +22,10 @@
     "plugins": [
       "expo-asset",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "apiBaseUrl": "http://localhost:3001/api",
+      "useMock": true
+    }
   }
 }

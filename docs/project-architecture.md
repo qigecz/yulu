@@ -232,7 +232,9 @@ App.tsx (入口)
 └── Home Indicator
 ```
 
-当前使用 Mock 数据（`src/mock/data.ts`），无需 API 即可运行。Phase 2 将替换为真实 API 调用。
+当前默认走 Mock 数据（`src/mock/data.ts`），无需 API 即可运行。数据通过 React Query hooks（`src/hooks/queries.ts`）获取，按 `app.json` 的 `extra.useMock` 开关切换真实 API（详见 `docs/mobile-api-integration.md`）。
+
+认证：未登录时 `App.tsx` 渲染 `AuthScreen`；zustand auth store（`src/store/auth.ts`）管理 token 与用户态，AsyncStorage 持久化。API 客户端（`src/api/client.ts`）自动注入 JWT，401 触发登出。
 
 ---
 

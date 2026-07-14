@@ -15,6 +15,10 @@ export interface Spot {
   likesCount: number;
   downloadsCount: number;
   distance?: number;
+  /** Whether the current user liked this spot (personalized). */
+  liked?: boolean;
+  /** Whether the current user favorited this spot. */
+  favorited?: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -9,6 +9,8 @@ export interface User {
   routesCount: number;
   likesCount: number;
   followersCount: number;
+  /** Derived count of users this user follows (profile endpoint). */
+  followingCount?: number;
   createdAt: string;
   updatedAt: string;
 }
