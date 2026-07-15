@@ -1,12 +1,14 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { colors, spacing, fontSize, radius, WeatherStrip, SearchBar, SectionHeader, SpotCard, SpotCardList, RouteItem, FeedItem } from '@yulu/ui';
 import { formatRelativeTime, formatDistance } from '@yulu/shared';
 import { useWeather, useNearbySpots, useRoutes, useFeeds, useToggleFeedLike, useToggleFavorite } from '../hooks/queries';
 import { QueryState } from '../components/QueryState';
+import { SpotListSkeleton, RouteListSkeleton, FeedSkeleton } from '../components/Skeletons';
 import { useUIStore } from '../store/ui';
 
 export function HomeScreen() {
+  const [refreshing, setRefreshing] = useState(false);
   const weather = useWeather();
   const spots = useNearbySpots();
   const routes = useRoutes();
@@ -14,11 +16,24 @@ export function HomeScreen() {
   const openComposeFeed = useUIStore((s) => s.openComposeFeed);
   const openFeedDetail = useUIStore((s) => s.openFeedDetail);
   const openUser = useUIStore((s) => s.openUser);
+  const openSearch = useUIStore((s) => s.openSearch);
   const toggleFeedLike = useToggleFeedLike();
   const toggleFavorite = useToggleFavorite();
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all(
+      [weather.refetch(), spots.refetch(), routes.refetch(), feeds.refetch()].map((p) => p.catch(() => undefined)),
+    );
+    setRefreshing(false);
+  };
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+    >
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -49,7 +64,9 @@ export function HomeScreen() {
 
       {/* Search */}
       <View style={styles.pad}>
-        <SearchBar />
+        <TouchableOpacity onPress={openSearch} activeOpacity={0.8}>
+          <SearchBar />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.spacer} />
@@ -66,8 +83,11 @@ export function HomeScreen() {
       {/* Nearby spots */}
       <SectionHeader title="附近热门钓点" actionLabel="查看全部 →" />
       <View style={{ height: 10 }} />
+      {spots.isLoading ? (
+        <SpotListSkeleton count={3} />
+      ) : (
       <QueryState
-        isLoading={spots.isLoading}
+        isLoading={false}
         isError={spots.isError}
         refetch={() => spots.refetch()}
         empty={!(spots.data && spots.data.length)}
@@ -85,6 +105,7 @@ export function HomeScreen() {
           ))}
         </SpotCardList>
       </QueryState>
+      )}
 
       <View style={{ height: 18 }} />
 
@@ -92,8 +113,11 @@ export function HomeScreen() {
       <View style={styles.pad}>
         <SectionHeader title="最新路线" actionLabel="更多 →" />
         <View style={{ height: 8 }} />
+        {routes.isLoading ? (
+          <RouteListSkeleton count={3} />
+        ) : (
         <QueryState
-          isLoading={routes.isLoading}
+          isLoading={false}
           isError={routes.isError}
           refetch={() => routes.refetch()}
           empty={!(routes.data && routes.data.length)}
@@ -107,6 +131,7 @@ export function HomeScreen() {
             />
           ))}
         </QueryState>
+        )}
       </View>
 
       <View style={{ height: 8 }} />
@@ -120,8 +145,11 @@ export function HomeScreen() {
           <Text style={styles.publishBtnText}>＋ 分享你的作钓动态…</Text>
         </TouchableOpacity>
         <View style={{ height: 12 }} />
+        {feeds.isLoading ? (
+          <FeedSkeleton count={2} />
+        ) : (
         <QueryState
-          isLoading={feeds.isLoading}
+          isLoading={false}
           isError={feeds.isError}
           refetch={() => feeds.refetch()}
           empty={!(feeds.data && feeds.data.length)}
@@ -145,6 +173,7 @@ export function HomeScreen() {
             />
           ))}
         </QueryState>
+        )}
       </View>
 
       <View style={{ height: 80 }} />

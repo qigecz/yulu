@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { colors, spacing, fontSize, radius, SectionHeader } from '@yulu/ui';
 import { useAuthStore } from '../store/auth';
 import { useUIStore } from '../store/ui';
@@ -12,14 +12,26 @@ export function ProfileScreen() {
   const openCreateSpot = useUIStore((s) => s.openCreateSpot);
   const openComposeFeed = useUIStore((s) => s.openComposeFeed);
   const openFavorites = useUIStore((s) => s.openFavorites);
+  const openOfflineRoutes = useUIStore((s) => s.openOfflineRoutes);
   const routes = useRoutes();
   const tutorials = useTutorials();
+  const [refreshing, setRefreshing] = useState(false);
 
   const myRoutes = routes.data ?? [];
   const myTutorials = (tutorials.data ?? []).slice(0, 2);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([routes.refetch(), tutorials.refetch()].map((p) => p.catch(() => undefined)));
+    setRefreshing(false);
+  };
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+    >
       {/* Profile header */}
       <View style={styles.profileHeader}>
         <View style={styles.avatar}>
@@ -100,7 +112,7 @@ export function ProfileScreen() {
       <View style={styles.pad}>
         {([
           { icon: '⭐', label: '我的收藏', onPress: openFavorites },
-          { icon: '📥', label: '离线路线' },
+          { icon: '📥', label: '离线路线', onPress: openOfflineRoutes },
           { icon: '🛒', label: '渔具商城订单' },
           { icon: '⚙', label: '设置' },
         ] as { icon: string; label: string; onPress?: () => void }[]).map((item) => {

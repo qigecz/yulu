@@ -18,6 +18,9 @@ import { ComposeFeedScreen } from './screens/ComposeFeedScreen';
 import { FavoritesScreen } from './screens/FavoritesScreen';
 import { FeedDetailScreen } from './screens/FeedDetailScreen';
 import { UserScreen } from './screens/UserScreen';
+import { SearchScreen } from './screens/SearchScreen';
+import { OfflineRoutesScreen } from './screens/OfflineRoutesScreen';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,7 +36,16 @@ const tabs: Tab[] = [
   { key: 'profile', label: '我的', icon: '👤' },
 ];
 
+/** Top-level guard so a render error shows a recoverable fallback, not a crash. */
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppInner />
+    </ErrorBoundary>
+  );
+}
+
+function AppInner() {
   const status = useAuthStore((s) => s.status);
   const hydrate = useAuthStore((s) => s.hydrate);
   const [activeTab, setActiveTab] = useState('home');
@@ -110,6 +122,10 @@ function Overlay() {
         <FavoritesScreen />
       ) : overlay === 'feed-detail' ? (
         <FeedDetailScreen />
+      ) : overlay === 'search' ? (
+        <SearchScreen />
+      ) : overlay === 'offline-routes' ? (
+        <OfflineRoutesScreen />
       ) : (
         <UserScreen />
       )}

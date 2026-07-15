@@ -15,3 +15,4 @@ export { FeedItem } from './components/FeedItem';
 export { TabBar } from './components/TabBar';
 export type { Tab } from './components/TabBar';
 export { FilterChips } from './components/FilterChips';
+export { Skeleton, SkeletonText } from './components/Skeleton';

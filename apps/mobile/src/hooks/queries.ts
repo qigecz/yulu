@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { USE_MOCK } from '../config';
 import {
@@ -9,6 +10,7 @@ import {
   favoritesApi,
   usersApi,
   commentsApi,
+  searchApi,
   type CreateSpotInput,
   type CreateFeedInput,
   type FavoriteType,
@@ -22,7 +24,8 @@ import {
   mockUser,
 } from '../mock/data';
 import { useAuthStore } from '../store/auth';
-import type { Spot, Route, Feed, Tutorial, Weather, User, UserProfile, Comment, CommentTargetType } from '@yulu/shared';
+import type { Spot, Route, Feed, Tutorial, Weather, User, UserProfile, Comment, CommentTargetType, SearchResults } from '@yulu/shared';
+import { useOfflineStore } from '../store/offline';
 
 /**
  * Data hooks. Each queryFn branches on USE_MOCK:
@@ -381,6 +384,67 @@ export function useAddComment() {
       qc.setQueryData<Comment[]>(['comments', comment.targetType, comment.targetId], (old) =>
         old ? [...old, comment] : [comment],
       );
+    },
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Global search + offline route downloads                             */
+/* ------------------------------------------------------------------ */
+
+/** Debounced query term; returns grouped results across spots/routes/tutorials. */
+export function useSearch(q: string) {
+  const term = q.trim();
+  const [debounced, setDebounced] = useState(term);
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(term), 300);
+    return () => clearTimeout(id);
+  }, [term]);
+
+  return useQuery<SearchResults>({
+    queryKey: ['search', debounced],
+    queryFn: async () => {
+      if (USE_MOCK) {
+        const needle = debounced.toLowerCase();
+        const match = (s?: string) => !!s && s.toLowerCase().includes(needle);
+        return {
+          spots: mockSpots.filter(
+            (s) => match(s.name) || match(s.fishingMethod) || s.fishSpecies.some(match) || s.tags.some(match),
+          ),
+          routes: mockRoutes.filter(
+            (r) => match(r.name) || match(r.description) || r.tags.some(match),
+          ),
+          tutorials: mockTutorials.filter(
+            (t) => match(t.title) || match(t.category) || t.tags.some(match),
+          ),
+        };
+      }
+      return searchApi.search(debounced);
+    },
+    enabled: debounced.length > 0,
+    staleTime: 30_000,
+  });
+}
+
+/**
+ * Persist a route for offline use. In real mode it fetches the full detail
+ * (ordered spots) and records the download; in mock mode it uses the mock
+ * route directly. Either way the payload lands in the offline store.
+ */
+export function useDownloadRoute() {
+  return useMutation<Route, Error, { id: string; stub?: Route }>({
+    mutationFn: async ({ id, stub }) => {
+      let route: Route;
+      if (USE_MOCK) {
+        route = stub ?? mockRoutes.find((r) => r.id === id) ?? mockRoutes[0];
+      } else {
+        // Fetch full detail (ordered spots) before recording the download.
+        route = await routesApi.detail(id);
+        await routesApi.download(id).catch(() => undefined);
+      }
+      useOfflineStore.getState().downloadRoute(route);
+      return route;
     },
   });
 }

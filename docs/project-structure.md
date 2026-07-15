@@ -35,6 +35,7 @@ packages/shared/src/
 │   ├── feed.ts        # Feed(含 liked/favorited)
 │   ├── weather.ts     # Weather（含 fishingAdvice 钓鱼建议）
 │   ├── comment.ts     # Comment, CommentTargetType（多态评论）
+│   ├── search.ts      # SearchResults（全局搜索分组结果集）
 │   └── index.ts       # 统一导出
 ├── validators/
 │   ├── auth.ts        # registerSchema, loginSchema, refreshTokenSchema
@@ -71,7 +72,8 @@ packages/ui/src/
 │   ├── RouteItem.tsx  # 路线列表项
 │   ├── FeedItem.tsx   # 社区动态项（点赞/收藏/作者/内容可点）
 │   ├── TabBar.tsx     # 5-Tab 底部导航栏
-│   └── FilterChips.tsx # 横向滚动筛选标签
+│   ├── FilterChips.tsx # 横向滚动筛选标签
+│   └── Skeleton.tsx   # 骨架占位（Skeleton + SkeletonText，pulse 动画）
 └── index.ts           # 统一导出所有组件和 tokens
 ```
 
@@ -95,28 +97,33 @@ apps/mobile/
     │   ├── authToken.ts     # 解耦的 token holder（破除循环依赖）
     │   ├── transforms.ts    # snake_case DB 行 → camelCase shared 类型
     │   └── endpoints.ts     # authApi/spotsApi/routesApi/tutorialsApi/feedsApi/
-    │                        # weatherApi/uploadsApi/usersApi/commentsApi/favoritesApi
+    │                        # weatherApi/uploadsApi/usersApi/commentsApi/favoritesApi/searchApi
     ├── store/
     │   ├── auth.ts    # zustand 认证：login/register/logout/hydrate/refreshAccessToken
-    │   └── ui.ts      # zustand overlay 状态（含 feedId/userId payload）
+    │   ├── ui.ts      # zustand overlay 状态（含 feedId/userId payload）
+    │   └── offline.ts # zustand persist + AsyncStorage 离线路线缓存
     ├── hooks/
     │   └── queries.ts # React Query 查询 + mutation hooks（USE_MOCK 分支 + 乐观更新）
     ├── components/
     │   ├── QueryState.tsx     # loading/error/空态 复用
+    │   ├── ErrorBoundary.tsx  # 顶层渲染错误兜底（防白屏）
+    │   ├── Skeletons.tsx      # 屏级骨架（SpotListSkeleton/RouteListSkeleton/FeedSkeleton）
     │   ├── FormControls.tsx   # Field/TextField/MultilineField/TagInput/SubmitButton/Header
     │   └── ImagePicker.tsx    # 多图选择（expo-image-picker）
     ├── screens/
-    │   ├── HomeScreen.tsx       # 首页：天气、搜索、Banner、附近钓点、路线、动态
-    │   ├── SpotsScreen.tsx      # 坑点：地图占位、筛选、路线详情、坑点列表（点赞+收藏）
+    │   ├── HomeScreen.tsx       # 首页：天气、搜索、Banner、附近钓点、路线、动态（下拉刷新+骨架）
+    │   ├── SpotsScreen.tsx      # 坑点：地图占位、筛选、路线详情、坑点列表、离线下载（下拉刷新）
     │   ├── NavigationScreen.tsx # 导航：全屏地图、转向提示、ETA、路点时间线
-    │   ├── LearnScreen.tsx      # 学习：分类筛选、精选视频、教程列表、文章
-    │   ├── ProfileScreen.tsx    # 我的：头像统计、分享按钮、我的内容、收藏/退出登录
+    │   ├── LearnScreen.tsx      # 学习：分类筛选、精选视频、教程列表、文章（下拉刷新）
+    │   ├── ProfileScreen.tsx    # 我的：头像统计、分享按钮、我的内容、收藏/离线路线/退出登录
     │   ├── AuthScreen.tsx       # 登录/注册（手机号+密码）
     │   ├── CreateSpotScreen.tsx # 分享钓点表单（含选图上传）
     │   ├── ComposeFeedScreen.tsx# 发布动态表单（含选图上传）
     │   ├── FeedDetailScreen.tsx # 动态详情 + 评论列表 + 评论输入
     │   ├── UserScreen.tsx       # 用户主页 + 关注 + 其动态
-    │   └── FavoritesScreen.tsx  # 我的收藏（钓点/动态）
+    │   ├── FavoritesScreen.tsx  # 我的收藏（钓点/动态）
+    │   ├── SearchScreen.tsx     # 全局搜索 overlay（防抖 + 钓点/路线/教程分组）
+    │   └── OfflineRoutesScreen.tsx # 离线路线列表 + 删除
     └── mock/
         └── data.ts    # Mock 数据（USE_MOCK=true 时作为数据源）
 ```
@@ -165,7 +172,8 @@ apps/api/src/
 │   ├── uploads.ts     # POST /api/uploads（multer，返回图片 URL）
 │   ├── users.ts       # GET /:id（主页）, POST/DELETE /:id/follow, GET /:id/feeds
 │   ├── comments.ts    # GET ?targetType=&targetId=, POST（多态评论）
-│   └── favorites.ts   # POST, DELETE /:type/:id, GET ?type=
+│   ├── favorites.ts   # POST, DELETE /:type/:id, GET ?type=
+│   └── search.ts      # GET ?q=（spots/routes/tutorials 三段 ILIKE 分组搜索）
 ├── migrate.ts         # 数据库迁移：12 张表（含 PostGIS 空间索引 + feed_likes/follows/comments/favorites）
 └── seed.ts            # 种子数据：测试用户、钓点、路线、教程、动态
 ```

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { colors, spacing, fontSize, radius, SearchBar, Tag, SectionHeader } from '@yulu/ui';
 import { formatViewCount } from '@yulu/shared';
 import { useTutorials } from '../hooks/queries';
 import { QueryState } from '../components/QueryState';
+import { useUIStore } from '../store/ui';
 
 const categories = [
   { icon: '📚', label: '全部' },
@@ -38,7 +39,15 @@ type FlatTutorial = { id: string; title: string; authorName: string; views: numb
 
 export function LearnScreen() {
   const [activeCategory, setActiveCategory] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const tutorials = useTutorials();
+  const openSearch = useUIStore((s) => s.openSearch);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await tutorials.refetch().catch(() => undefined);
+    setRefreshing(false);
+  };
 
   const featured = tutorials.data?.[0];
   const fromData: FlatTutorial[] = (tutorials.data?.slice(1) ?? []).map((t) => ({
@@ -48,16 +57,24 @@ export function LearnScreen() {
   const list: FlatTutorial[] = [...fromData, ...extraTutorials];
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>学习</Text>
-        <View style={styles.iconBtn}><Text>🔍</Text></View>
+        <TouchableOpacity style={styles.iconBtn} onPress={openSearch} activeOpacity={0.7}>
+          <Text>🔍</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Search */}
       <View style={styles.pad}>
-        <SearchBar placeholder="搜索教程、技巧…" />
+        <TouchableOpacity onPress={openSearch} activeOpacity={0.8}>
+          <SearchBar placeholder="搜索教程、技巧…" />
+        </TouchableOpacity>
       </View>
 
       <View style={{ height: 14 }} />

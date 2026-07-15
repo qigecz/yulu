@@ -13,6 +13,7 @@ import favoriteRoutes from './routes/favorites';
 import userRoutes from './routes/users';
 import commentRoutes from './routes/comments';
 import uploadRoutes from './routes/uploads';
+import searchRoutes from './routes/search';
 import { PUBLIC_PATH, UPLOAD_DIR } from './config/storage';
 import fs from 'fs';
 
@@ -38,6 +39,7 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/search', searchRoutes);
 
 app.use(errorHandler);
 

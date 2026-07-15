@@ -1,35 +1,62 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { colors, spacing, fontSize, radius, SearchBar, FilterChips, Pill, Tag } from '@yulu/ui';
 import { formatDistance } from '@yulu/shared';
-import { useRoutes, useNearbySpots, useToggleSpotLike, useToggleFavorite } from '../hooks/queries';
+import { useRoutes, useNearbySpots, useToggleSpotLike, useToggleFavorite, useDownloadRoute } from '../hooks/queries';
+import { useOfflineStore } from '../store/offline';
 import { QueryState } from '../components/QueryState';
+import { RouteListSkeleton } from '../components/Skeletons';
 import { useUIStore } from '../store/ui';
 
 export function SpotsScreen() {
   const [activeFilter, setActiveFilter] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const filters = ['全部', '路线', '坑点', '路亚', '台钓', '湖钓', '溪流'];
 
   const routes = useRoutes();
   const spots = useNearbySpots();
   const openCreateSpot = useUIStore((s) => s.openCreateSpot);
+  const openSearch = useUIStore((s) => s.openSearch);
   const toggleSpotLike = useToggleSpotLike();
   const toggleFavorite = useToggleFavorite();
+  const downloadRoute = useDownloadRoute();
   // Featured (or first) route drives the detail card.
   const featuredRoute = routes.data?.find((r) => r.featured) ?? routes.data?.[0];
+  const downloaded = useOfflineStore((s) => (featuredRoute ? s.has(featuredRoute.id) : false));
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([routes.refetch(), spots.refetch()].map((p) => p.catch(() => undefined)));
+    setRefreshing(false);
+  };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>坑点路线</Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <View style={styles.iconBtn}><Text>🔍</Text></View>
+          <TouchableOpacity style={styles.iconBtn} onPress={openSearch} activeOpacity={0.7}>
+            <Text>🔍</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn} onPress={openCreateSpot} activeOpacity={0.7}>
             <Text>➕</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Search (tappable → search overlay) */}
+      <View style={styles.pad}>
+        <TouchableOpacity onPress={openSearch} activeOpacity={0.8}>
+          <SearchBar />
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ height: 12 }} />
 
       {/* Map placeholder */}
       <View style={styles.mapArea}>
@@ -56,33 +83,42 @@ export function SpotsScreen() {
       <View style={{ height: 14 }} />
 
       {/* Route detail card */}
-      <QueryState isLoading={routes.isLoading} isError={routes.isError} refetch={() => routes.refetch()} minHeight={180}>
-        {featuredRoute && (
-          <View style={styles.routeCard}>
-            <View style={styles.routeHeader}>
-              <View>
-                <Text style={styles.routeTitle}>{featuredRoute.name}</Text>
-                <Text style={styles.routeAuthor}>上传者：{featuredRoute.uploader?.nickname || '未知'}</Text>
+      {routes.isLoading ? (
+        <View style={{ paddingHorizontal: spacing.screenPadding }}>
+          <RouteListSkeleton count={1} />
+        </View>
+      ) : (
+        <QueryState isLoading={false} isError={routes.isError} refetch={() => routes.refetch()} minHeight={180}>
+          {featuredRoute && (
+            <View style={styles.routeCard}>
+              <View style={styles.routeHeader}>
+                <View>
+                  <Text style={styles.routeTitle}>{featuredRoute.name}</Text>
+                  <Text style={styles.routeAuthor}>上传者：{featuredRoute.uploader?.nickname || '未知'}</Text>
+                </View>
+                {featuredRoute.featured && <Pill label="精选路线" />}
               </View>
-              {featuredRoute.featured && <Pill label="精选路线" />}
+              <View style={styles.routeStats}>
+                <Text style={styles.routeStat}>📍 {featuredRoute.spots?.length || 0} 坑点</Text>
+                <Text style={styles.routeStat}>⚡ {featuredRoute.totalDistance ?? '-'} km</Text>
+                <Text style={styles.routeStat}>👁 {featuredRoute.downloadsCount.toLocaleString()} 次下载</Text>
+              </View>
+              <View style={styles.routeTags}>
+                {featuredRoute.tags.map((t) => <Tag key={t} label={t} />)}
+              </View>
+              {featuredRoute.description ? (
+                <Text style={styles.routeDesc}>{featuredRoute.description}</Text>
+              ) : null}
+              <DownloadButton
+                state={downloaded ? 'done' : downloadRoute.isPending ? 'loading' : 'idle'}
+                onPress={() =>
+                  downloadRoute.mutate({ id: featuredRoute.id, stub: featuredRoute })
+                }
+              />
             </View>
-            <View style={styles.routeStats}>
-              <Text style={styles.routeStat}>📍 {featuredRoute.spots?.length || 0} 坑点</Text>
-              <Text style={styles.routeStat}>⚡ {featuredRoute.totalDistance ?? '-'} km</Text>
-              <Text style={styles.routeStat}>👁 {featuredRoute.downloadsCount.toLocaleString()} 次下载</Text>
-            </View>
-            <View style={styles.routeTags}>
-              {featuredRoute.tags.map((t) => <Tag key={t} label={t} />)}
-            </View>
-            {featuredRoute.description ? (
-              <Text style={styles.routeDesc}>{featuredRoute.description}</Text>
-            ) : null}
-            <View style={styles.downloadBtn}>
-              <Text style={styles.downloadBtnText}>⬇ 下载路线 · 离线可用</Text>
-            </View>
-          </View>
-        )}
-      </QueryState>
+          )}
+        </QueryState>
+      )}
 
       <View style={{ height: 14 }} />
 
@@ -131,6 +167,20 @@ export function SpotsScreen() {
   );
 }
 
+function DownloadButton({ state, onPress }: { state: 'idle' | 'loading' | 'done'; onPress: () => void }) {
+  const label = state === 'loading' ? '下载中…' : state === 'done' ? '✓ 已离线下载' : '⬇ 下载路线 · 离线可用';
+  return (
+    <TouchableOpacity
+      style={[styles.downloadBtn, state === 'done' && { backgroundColor: colors.accentSoft }]}
+      onPress={onPress}
+      disabled={state !== 'idle'}
+      activeOpacity={0.7}
+    >
+      <Text style={[styles.downloadBtnText, state === 'done' && { color: colors.accent }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
@@ -143,6 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
     alignItems: 'center', justifyContent: 'center',
   },
+  pad: { paddingHorizontal: spacing.screenPadding },
   mapArea: {
     height: 260, marginHorizontal: spacing.screenPadding,
     backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.border,
@@ -175,7 +226,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent, alignItems: 'center',
   },
   downloadBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  pad: { paddingHorizontal: spacing.screenPadding },
   sectionTitle: { fontSize: 15, fontWeight: '600', marginBottom: 10 },
   sectionCount: { fontSize: 13, color: colors.accent },
   spotItem: {

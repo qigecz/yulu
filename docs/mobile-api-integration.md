@@ -138,7 +138,23 @@ Token：access 15min / refresh 7day（与后端一致）。
 
 **静默刷新**：access token 过期时不再强制登出。axios 响应拦截器（`src/api/client.ts`）在收到 401 后调用注册的 `refreshAccessToken`（`src/store/auth.ts`），用 refresh token 换新 access token 并重试原请求；并发 401 排队在同一个刷新 Promise 上。仅当 refresh token 也失效（`/auth/refresh` 返回 401）时才 `forceLogout()` 回登录页。后端 `POST /auth/refresh` 验 refresh token 并签发新 access token。Mock 模式 token 为占位值，不触发真实刷新。
 
-## 已知限制（后续迭代）
+## 全局搜索
+
+三处搜索框（Home/Spots/Learn）点击均打开 `SearchScreen` overlay（搜索框本身不内联输入，避免键盘与列表布局冲突）。
+
+- **Hook**：`useSearch(q)` — 输入防抖 300ms，`enabled: q.trim().length > 0`，`staleTime: 30s`。
+- **Real 模式**：调 `GET /api/search?q=`，后端对 spots/routes/tutorials 三段并行 `ILIKE`（名称/标签/描述/分类），返回 `SearchResults` 分组，客户端用现有 `toSpot/toRoute/toTutorial` 映射。
+- **Mock 模式**：对 `mockSpots/mockRoutes/mockTutorials` 做客户端 `filter`（匹配 name/tags/title/category/fishingMethod），无需后端。
+- 结果分组渲染，复用 `SpotCard`/`RouteItem`；点路线/教程项当前仅关闭 overlay，详情跳转留待后续。
+
+## 离线路线
+
+- **Store**：`store/offline.ts` — `zustand persist` + AsyncStorage（key `yulu-offline`），存完整 `Route`（含 `spots` 有序坑点）。`downloadRoute/removeRoute/has/get`。
+- **下载 Hook**：`useDownloadRoute()` — Real 模式先 `routesApi.detail(id)` 取完整路线再 `routesApi.download(id)` 记录下载量；Mock 模式直接持久化 mock route。两种模式结果都写入 offline store。
+- **入口**：SpotsScreen 路线详情卡的下载按钮（三态：`下载路线` → `下载中…` → `✓ 已离线下载`）；列表见 `OfflineRoutesScreen`，从 ProfileScreen「离线路线」菜单进入，支持删除确认。
+- 当前为"缓存路线元数据+坑点列表"层面的离线；Mapbox 离线地图瓦片随 Phase 2 导航一起接入。
+
+
 
 - **Refresh token 不轮换**：`/auth/refresh` 仅签发新 access token，不签发新 refresh token（不实现滑动会话）。refresh token 7 天后固定过期。
 - **spots 列表不返回经纬度**：API 当前只 SELECT `distance`（PostGIS 几何列未拆分）。显示类屏幕不受影响；导航/地图需要时再在 SQL 加 `ST_X/ST_Y` 并在 `toSpot` 映射。

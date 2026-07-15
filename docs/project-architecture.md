@@ -167,6 +167,12 @@
 |------|------|------|------|
 | GET | / | 否 | 天气+钓鱼建议 |
 
+### 搜索 `/api/search`
+
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| GET | / | 否 | 全局搜索 `?q=`，spots/routes/tutorials 三段 ILIKE 分组返回 |
+
 ---
 
 ## 数据库设计
@@ -233,6 +239,12 @@ App.tsx (入口)
 ```
 
 当前默认走 Mock 数据（`src/mock/data.ts`），无需 API 即可运行。数据通过 React Query hooks（`src/hooks/queries.ts`）获取，按 `app.json` 的 `extra.useMock` 开关切换真实 API（详见 `docs/mobile-api-integration.md`）。
+
+**体验层**：四屏（Home/Spots/Learn/Profile）支持 `RefreshControl` 下拉刷新；加载态由 `Skeleton`/`SkeletonText` 骨架屏替代转圈（屏级组合见 `components/Skeletons.tsx`）；顶层 `ErrorBoundary` 防止渲染崩溃白屏。
+
+**Overlay 浮层**（`store/ui.ts` 管理，`App.tsx` 渲染器统一挂载）：创建钓点 / 发布动态 / 我的收藏 / 动态详情 / 用户主页 / **全局搜索**（`SearchScreen`，`useSearch` 防抖 + 钓点/路线/教程分组）/ **离线路线**（`OfflineRoutesScreen`）。
+
+**离线**：`store/offline.ts`（zustand persist + AsyncStorage）持久化已下载的完整路线（含有序坑点），重启不丢；SpotsScreen 的下载按钮通过 `useDownloadRoute` 写入。
 
 认证：未登录时 `App.tsx` 渲染 `AuthScreen`；zustand auth store（`src/store/auth.ts`）管理 token 与用户态，AsyncStorage 持久化。API 客户端（`src/api/client.ts`）自动注入 JWT，401 触发登出。
 

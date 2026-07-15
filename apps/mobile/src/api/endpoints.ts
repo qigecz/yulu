@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { toSpot, toRoute, toFeed, toTutorial, toUser, toUserProfile, toComment } from './transforms';
-import type { Spot, Route, Feed, Tutorial, User, UserProfile, Comment, Weather, CommentTargetType } from '@yulu/shared';
+import type { Spot, Route, Feed, Tutorial, User, UserProfile, Comment, Weather, CommentTargetType, SearchResults } from '@yulu/shared';
 
 type Row = Record<string, any>;
 
@@ -186,3 +186,19 @@ export const commentsApi = {
 
 // Re-export types for convenience
 export type { Spot, Route, Feed, Tutorial, User };
+
+export const searchApi = {
+  /** Global grouped search across spots / routes / tutorials. */
+  search: async (q: string): Promise<SearchResults> => {
+    const { data } = await apiClient.get<{
+      spots: Row[];
+      routes: Row[];
+      tutorials: Row[];
+    }>('/search', { params: { q } });
+    return {
+      spots: data.spots.map(toSpot),
+      routes: data.routes.map(toRoute),
+      tutorials: data.tutorials.map(toTutorial),
+    };
+  },
+};

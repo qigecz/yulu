@@ -5,3 +5,4 @@ export * from './tutorial';
 export * from './feed';
 export * from './weather';
 export * from './comment';
+export * from './search';

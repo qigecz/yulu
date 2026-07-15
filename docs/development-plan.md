@@ -18,14 +18,15 @@
 - **API 集成替换 Mock**：React Query 数据层 + snake/camel 映射 + `USE_MOCK` 开关（默认 Mock，可切真实 API）
 - **图片上传闭环**：后端 multer 本地存储 + `POST /uploads` + express.static；移动端 expo-image-picker 选图 + 上传；spots/feeds images 落库
 - **Refresh token 静默刷新**：后端 `POST /auth/refresh`；客户端 401 拦截器换 token + 重试 + 并发排队
+- ✅ **全局搜索**：后端 `GET /api/search?q=`（spots/routes/tutorials 三段 ILIKE）；移动端 `SearchScreen` overlay（防抖 + 分组结果，复用 SpotCard/RouteItem），Home/Spots/Learn 搜索框点击进入；mock 模式客户端过滤
+- ✅ **离线路线下载**：`store/offline.ts`（zustand persist + AsyncStorage）持久化完整路线；SpotsScreen 下载按钮接 `useDownloadRoute`（real 取 detail+download，mock 直存）；`OfflineRoutesScreen` 列表 + 删除，ProfileScreen 菜单接入
 - ⬜ **Mapbox 地图/真实导航**（NavigationScreen 全屏地图）— 未开始，需 Mapbox key
-- ⬜ 离线路线下载、全局搜索 — 未开始
 
 ### ✅ Phase 3：社区 + 社交
 - **UGC**：创建钓点（CreateSpotScreen）、发布动态（ComposeFeedScreen），overlay 浮层 + Mock/Real 双模式
 - **社交互动**：点赞（feeds/spots）、收藏（多态 favorites + 「我的收藏」页）、关注（follows + 用户主页）、评论（多态 comments + 动态详情页）
 - ⬜ 推送通知（Expo Push）— 未开始
-- ⬜ 下拉刷新 / 骨架屏 / 错误边界等体验打磨 — 未开始
+- ✅ **体验打磨**：`Skeleton`/`SkeletonText` 骨架组件（pulse）+ 屏级 `SpotListSkeleton/RouteListSkeleton/FeedSkeleton` 替代 spinner；Home/Spots/Learn/Profile 四屏接 `RefreshControl` 下拉刷新；`ErrorBoundary` 包裹 App 顶层防白屏
 
 ### ⬜ Phase 4：iOS 小组件 + 上架 — 未开始
 

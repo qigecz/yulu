@@ -8,7 +8,7 @@ import { create } from 'zustand';
  * selected target for detail screens. This store lets any screen trigger a
  * flow without prop-drilling.
  */
-export type Overlay = 'create-spot' | 'compose-feed' | 'favorites' | 'feed-detail' | 'user' | null;
+export type Overlay = 'create-spot' | 'compose-feed' | 'favorites' | 'feed-detail' | 'user' | 'search' | 'offline-routes' | null;
 
 interface UIState {
   overlay: Overlay;
@@ -19,6 +19,8 @@ interface UIState {
   openFavorites: () => void;
   openFeedDetail: (feedId: string) => void;
   openUser: (userId: string) => void;
+  openSearch: () => void;
+  openOfflineRoutes: () => void;
   closeOverlay: () => void;
 }
 
@@ -31,5 +33,7 @@ export const useUIStore = create<UIState>((set) => ({
   openFavorites: () => set({ overlay: 'favorites' }),
   openFeedDetail: (feedId) => set({ overlay: 'feed-detail', feedId }),
   openUser: (userId) => set({ overlay: 'user', userId }),
+  openSearch: () => set({ overlay: 'search' }),
+  openOfflineRoutes: () => set({ overlay: 'offline-routes' }),
   closeOverlay: () => set({ overlay: null, feedId: null, userId: null }),
 }));
