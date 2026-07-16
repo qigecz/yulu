@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Mapbox from '@rnmapbox/maps';
 import { colors, spacing, TabBar } from '@yulu/ui';
@@ -9,6 +9,8 @@ import { useAuthStore } from './store/auth';
 import { useUIStore } from './store/ui';
 import { setOnUnauthorized, setRefreshHandler } from './api/client';
 import { forceLogout, refreshAccessToken } from './store/auth';
+import { usePushNotifications } from './hooks/usePushNotifications';
+import { dispatchDeepLink } from './utils/deeplink';
 import { AuthScreen } from './screens/AuthScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { SpotsScreen } from './screens/SpotsScreen';
@@ -52,6 +54,17 @@ function AppInner() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const activeTab = useUIStore((s) => s.activeTab);
   const setActiveTab = useUIStore((s) => s.setActiveTab);
+
+  // Push permissions + token registration (only when authenticated), and tap
+  // routing handled inside the hook.
+  usePushNotifications(status === 'authenticated');
+
+  // Deep links (yulu://...) from cold start and while running.
+  useEffect(() => {
+    void Linking.getInitialURL().then(dispatchDeepLink);
+    const sub = Linking.addEventListener('url', ({ url }) => dispatchDeepLink(url));
+    return () => sub.remove();
+  }, []);
 
   // Restore session on boot and wire the API client's 401 handlers.
   useEffect(() => {

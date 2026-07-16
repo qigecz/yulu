@@ -6,4 +6,6 @@ export const env = {
   DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/yulu',
   JWT_SECRET: process.env.JWT_SECRET || 'dev-jwt-secret-change-in-production',
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-in-production',
+  // Expo push access token (server sends pushes). Empty = pushes skipped with a warning.
+  EXPO_ACCESS_TOKEN: process.env.EXPO_ACCESS_TOKEN || '',
 };

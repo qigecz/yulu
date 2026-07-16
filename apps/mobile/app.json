@@ -9,11 +9,17 @@
     "splash": {
       "backgroundColor": "#f3f5f2"
     },
+    "scheme": "yulu",
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#2a8f7a"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "app.yulu.ios",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "渔路需要您的位置来显示您在钓点路线上的位置并推进航点导航。"
+        "NSLocationWhenInUseUsageDescription": "渔路需要您的位置来显示您在钓点路线上的位置并推进航点导航。",
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
@@ -40,6 +46,12 @@
         {
           "RNMapboxMapsImpl": "mapbox",
           "RNMapboxMapsDownloadToken": ""
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2a8f7a"
         }
       ]
     ],

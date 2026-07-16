@@ -168,6 +168,18 @@ async function migrate() {
   `);
   await query(`CREATE INDEX IF NOT EXISTS idx_comments_target ON comments(target_type, target_id, created_at DESC)`);
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS push_tokens (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token TEXT NOT NULL,
+      platform VARCHAR(10) CHECK(platform IN ('ios','android','web')),
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, token)
+    )
+  `);
+  await query(`CREATE INDEX IF NOT EXISTS idx_push_tokens_user ON push_tokens(user_id)`);
+
   console.log('Migrations complete!');
   process.exit(0);
 }

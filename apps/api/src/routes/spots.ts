@@ -3,6 +3,7 @@ import { query } from '../config/database';
 import { authMiddleware, optionalAuth, AuthRequest } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { createSpotSchema } from '@yulu/shared/validators/spot';
+import { notifyUser, getUserNickname } from '../services/notifications';
 
 const router = Router();
 
@@ -91,6 +92,22 @@ router.post('/:id/like', authMiddleware, async (req: AuthRequest, res: Response)
     liked = true;
   }
   const count = await query('SELECT likes_count FROM spots WHERE id = $1', [req.params.id]);
+  if (liked) {
+    // Notify the spot uploader (skips if uploader is the actor). Fire-and-forget.
+    void (async () => {
+      const owner = await query('SELECT uploader_id, name FROM spots WHERE id = $1', [req.params.id]);
+      const ownerId = owner.rows[0]?.uploader_id;
+      const spotName = owner.rows[0]?.name;
+      if (!ownerId) return;
+      const actor = await getUserNickname(req.userId!);
+      void notifyUser(ownerId, req.userId, {
+        type: 'like-spot',
+        title: '有人赞了你的钓点',
+        body: `${actor} 赞了你的钓点${spotName ? `「${spotName}」` : ''}`,
+        data: { type: 'spot', targetId: req.params.id },
+      });
+    })();
+  }
   res.json({ liked, likesCount: count.rows[0]?.likes_count ?? 0 });
 });
 

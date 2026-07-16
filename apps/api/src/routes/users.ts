@@ -1,8 +1,22 @@
 import { Router, Response } from 'express';
 import { query } from '../config/database';
 import { authMiddleware, optionalAuth, AuthRequest } from '../middleware/auth';
+import { validate } from '../middleware/validate';
+import { pushTokenSchema } from '@yulu/shared';
+import { notifyUser, getUserNickname } from '../services/notifications';
 
 const router = Router();
+
+/** Register (or refresh) the caller's Expo push token. Idempotent. */
+router.post('/push-token', authMiddleware, validate(pushTokenSchema), async (req: AuthRequest, res: Response) => {
+  const { token, platform } = req.body;
+  await query(
+    `INSERT INTO push_tokens (user_id, token, platform) VALUES ($1, $2, $3)
+     ON CONFLICT (user_id, token) DO NOTHING`,
+    [req.userId, token, platform],
+  );
+  res.status(201).json({ ok: true });
+});
 
 /** User profile with personalized follow state and following count. */
 router.get('/:id', optionalAuth, async (req: AuthRequest, res: Response) => {
@@ -30,6 +44,16 @@ router.post('/:id/follow', authMiddleware, async (req: AuthRequest, res: Respons
   if (inserted.rows.length > 0) {
     await query('UPDATE users SET followers_count = followers_count + 1 WHERE id = $1', [req.params.id]);
     // following_count is derived (COUNT over follows), no column to maintain.
+    // Notify the newly-followed user (skips self). Fire-and-forget.
+    void (async () => {
+      const actor = await getUserNickname(req.userId!);
+      void notifyUser(req.params.id, req.userId, {
+        type: 'follow',
+        title: '你有了新的关注者',
+        body: `${actor} 关注了你`,
+        data: { type: 'user', targetId: req.userId! },
+      });
+    })();
   }
   res.json({ following: true });
 });

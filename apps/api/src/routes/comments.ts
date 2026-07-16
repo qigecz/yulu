@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query } from '../config/database';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { notifyUser, getUserNickname } from '../services/notifications';
 
 const router = Router();
 
@@ -37,6 +38,22 @@ router.post('/', authMiddleware, validate(createCommentSchema), async (req: Auth
     [req.userId, targetType, targetId, content],
   );
   const row = result.rows[0];
+  // Notify the target owner of the comment (skips if owner is the actor).
+  void (async () => {
+    const ownerQ =
+      targetType === 'feed'
+        ? await query('SELECT user_id FROM feeds WHERE id = $1', [targetId])
+        : await query('SELECT uploader_id FROM spots WHERE id = $1', [targetId]);
+    const ownerId = ownerQ.rows[0]?.user_id ?? ownerQ.rows[0]?.uploader_id;
+    if (!ownerId) return;
+    const actor = await getUserNickname(req.userId!);
+    void notifyUser(ownerId, req.userId, {
+      type: 'comment',
+      title: `${actor} 评论了你`,
+      body: content.length > 40 ? `${content.slice(0, 40)}…` : content,
+      data: { type: targetType, targetId },
+    });
+  })();
   res.status(201).json({
     ...row,
     user: { id: req.userId },

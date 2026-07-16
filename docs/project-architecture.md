@@ -244,6 +244,17 @@
 
 ---
 
+## 推送通知与深度链接
+
+**推送（Expo Push，全流程）**：
+- **后端**：`push_tokens` 表（user_id+token 唯一）；`POST /api/users/push-token` 注册（`authMiddleware`+Zod）；`services/notifications.ts` 的 `notifyUser(recipientId, actorId, payload)` 调 Expo v2/send（`EXPO_ACCESS_TOKEN`）——**尽力而为**，未配置 token/无设备/本人均静默跳过，失败不抛、不阻塞请求。
+- **触发点**：spot 点赞（`routes/spots.ts`）、feed 点赞（`routes/feeds.ts`）、评论（`routes/comments.ts`）、关注（`routes/users.ts`）——写操作成功后 `void notifyUser(...)` 异步触发，`data` 载 `{type,targetId}` 供深链。
+- **移动端**：`expo-notifications` + `usePushNotifications(status)`——`authenticated` 时请求权限、`getExpoPushTokenAsync`、`usersApi.registerPushToken`；前台横幅 + 点击响应监听转深链。
+
+**深度链接**：scheme `yulu://`（app.json `scheme`）。`utils/deeplink.ts` 的 `dispatchDeepLink(url)` 解析 `<type>/<id>` 调 UI store（nav/route→`openNavigation`、feed→`openFeedDetail`、user→`openUser`、spot→切 spots tab）。App.tsx 接 `Linking.getInitialURL` + `addEventListener('url')`；推送点击经 `buildDeepLink(data)` 转同一路径。
+
+---
+
 ## 移动端页面架构
 
 ```

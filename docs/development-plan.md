@@ -25,12 +25,48 @@
 ### ✅ Phase 3：社区 + 社交
 - **UGC**：创建钓点（CreateSpotScreen）、发布动态（ComposeFeedScreen），overlay 浮层 + Mock/Real 双模式
 - **社交互动**：点赞（feeds/spots）、收藏（多态 favorites + 「我的收藏」页）、关注（follows + 用户主页）、评论（多态 comments + 动态详情页）
-- ⬜ 推送通知（Expo Push）— 未开始
+- ✅ **推送通知（Expo Push，全流程）**：后端 `push_tokens` 表 + `POST /users/push-token` + `services/notifications.ts`（调 Expo v2/send，尽力而为不阻塞）；社交事件触发推送——spot/feed 点赞、评论、关注（跳过本人）；移动端 `expo-notifications` + `usePushNotifications`（请求权限/注册 token/前台横幅/点击跳转）。详见 `docs/push-deeplink.md`
 - ✅ **体验打磨**：`Skeleton`/`SkeletonText` 骨架组件（pulse）+ 屏级 `SpotListSkeleton/RouteListSkeleton/FeedSkeleton` 替代 spinner；Home/Spots/Learn/Profile 四屏接 `RefreshControl` 下拉刷新；`ErrorBoundary` 包裹 App 顶层防白屏
 
-### ⬜ Phase 4：iOS 小组件 + 上架 — 未开始
+### ✅ Phase 4（部分）：iOS 小组件 + 深链
+- ✅ **深度链接**：scheme `yulu://`；`utils/deeplink.ts` 分发（nav/route/feed/user/spot/home）；App.tsx 接 `Linking` 冷启动+运行时 URL；推送点击复用同一分发器（`buildDeepLink`）
+- ✅ **iOS Widget 骨架**（`apps/mobile/ios-widget/`，Swift/WidgetKit）：Medium+Small 两尺寸、读 weather/附近钓点、`widgetURL` 深链；对照 `widget-ios.html`。**待 Mac/Xcode 编译验证**（见该目录 README）
+- ⬜ TestFlight/上架 — 发布流程，需 Apple 开发者账号 + Xcode + App Store Connect
 
 > 详细集成设计见 `docs/mobile-api-integration.md`。
+
+---
+
+## 🚀 部署进展（截至 2026-07-16）
+
+### ✅ 已部署（开发/预览环境）
+全栈已部署到阿里云 ECS `47.98.105.25`（Ubuntu 22.04 · 1.6G RAM + 4G swap）：
+
+- **代码**：本地最新版（含 Mapbox）已 push 到 `github.com/qigecz/yulu`（commit `bd0a89c`），服务器从 GitHub clone 到 `/var/www/yulu`。
+- **数据库**：PostgreSQL 16 + PostGIS 3.6，`yulu` 库，迁移建表 + 种子数据完成；`spots`/`routes` 接口返回真实经纬度（PostGIS `ST_Y/ST_X`）。
+- **API**：pm2 托管 `yulu-api`（tsx 运行，开机自启 + 崩溃自动重启，~88MB），Nginx 反代 `/api/` → `127.0.0.1:3001`。
+- **Web**：Next.js 静态导出（`output: 'export'`），Nginx 直接伺服 `apps/web/out/`。
+- **安全**：UFW 仅开 22/80/443；DB 密码与 JWT 密钥随机生成，存于服务器 `/root/.yulu-secrets`（600 权限）。
+
+**当前访问（HTTP 明文，按 IP）**：
+- 落地页：`http://47.98.105.25/`
+- API：`http://47.98.105.25/api/health`、`http://47.98.105.25/api/spots`
+
+### ⬜ 待办：域名 + ICP 备案 + HTTPS（用户后续处理）
+
+当前是 **HTTP 明文 + IP 访问** 的预览部署，**未上域名、未备案、无 HTTPS**。正式上线前需完成：
+
+1. **购买域名**（`.com`/`.cn`）并完成实名认证。
+2. **ICP 备案**（中国大陆服务器提供 Web 服务必须）：阿里云备案系统代办，约 7-20 工作日。**备案期间不得通过域名对外访问**，可继续用 IP 调试。
+3. **DNS 解析**：A 记录 `@` / `www` / `api` → `47.98.105.25`。
+4. **SSL 证书**：阿里云免费 DV 证书，Nginx 配 443 + HTTP→HTTPS 跳转。
+5. **Nginx server_name 改域名**，API 的 `CORS_ORIGIN` 收窄到正式域名。
+6. 备案通过后网站底部需展示 ICP 备案号并链 `https://beian.miit.gov.cn`。
+
+> 完整步骤见 `docs/server-setup-guide.md`（购买清单、备案流程、Nginx HTTPS 配置）。
+
+### 📌 部署相关待同步项
+- 本地有 1 个 `apps/web/next.config.js`（启用静态导出）的 commit 因 GitHub 网络抖动未 push 成功，待网络恢复后 `git push`（服务器已用相同配置重建，不影响线上）。
 
 ---
 

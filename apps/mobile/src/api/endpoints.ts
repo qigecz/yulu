@@ -171,6 +171,10 @@ export const usersApi = {
     const { data } = await apiClient.get<{ data: Row[] }>(`/users/${id}/feeds`);
     return data.data.map(toFeed);
   },
+  /** Register the device's Expo push token so the server can send pushes. */
+  registerPushToken: async (token: string, platform: 'ios' | 'android' | 'web') => {
+    await apiClient.post('/users/push-token', { token, platform });
+  },
 };
 
 export const commentsApi = {
