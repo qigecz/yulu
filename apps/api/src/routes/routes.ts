@@ -22,8 +22,10 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
   if (routeRes.rows.length === 0) return res.status(404).json({ error: 'Route not found' });
 
   const spotsRes = await query(
-    `SELECT s.*, rs.sort_order,
-      ST_Distance(s.location, ST_SetSRID(ST_MakePoint(0, 0), 4326)::geography) as distance
+    `SELECT s.id, s.name, s.description, s.fish_species, s.fishing_method, s.water_depth, s.bottom_type, s.tags,
+       s.uploader_id, s.images, s.likes_count, s.downloads_count, s.created_at, s.updated_at,
+       ST_Y(s.location) AS latitude, ST_X(s.location) AS longitude,
+       rs.sort_order
      FROM route_spots rs JOIN spots s ON rs.spot_id = s.id
      WHERE rs.route_id = $1 ORDER BY rs.sort_order`,
     [req.params.id]

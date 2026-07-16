@@ -40,6 +40,37 @@ export const mockSpots: Spot[] = [
     tags: ['浅滩', '水草'], uploaderId: 'u1', images: [], likesCount: 28,
     downloadsCount: 67, distance: 8700, createdAt: '', updatedAt: '',
   },
+  // 密云水库北岸环线航点集群（导航演示用，坐标紧凑成一条路线）
+  {
+    id: 's4', name: '密云水库 · 碧溪湾东岸', latitude: 40.50, longitude: 116.90,
+    fishSpecies: ['鲈鱼', '翘嘴'], fishingMethod: '路亚', waterDepth: '4-6m', bottomType: '岩石底',
+    tags: ['深水', '岩石底'], uploaderId: 'u2', images: [], likesCount: 51,
+    downloadsCount: 210, distance: 3200, createdAt: '', updatedAt: '',
+  },
+  {
+    id: 's5', name: '密云水库 · 北岸碎石滩', latitude: 40.52, longitude: 116.92,
+    fishSpecies: ['翘嘴'], fishingMethod: '路亚', waterDepth: '3-5m', bottomType: '碎石',
+    tags: ['碎石', '缓坡'], uploaderId: 'u2', images: [], likesCount: 38,
+    downloadsCount: 160, distance: 4100, createdAt: '', updatedAt: '',
+  },
+  {
+    id: 's6', name: '密云水库 · 杨树林浅滩', latitude: 40.54, longitude: 116.94,
+    fishSpecies: ['鲫鱼', '白条'], fishingMethod: '台钓', waterDepth: '1-2m', bottomType: '泥底',
+    tags: ['浅滩', '水草'], uploaderId: 'u2', images: [], likesCount: 44,
+    downloadsCount: 180, distance: 5300, createdAt: '', updatedAt: '',
+  },
+  {
+    id: 's7', name: '密云水库 · 西汊深潭', latitude: 40.53, longitude: 116.97,
+    fishSpecies: ['鲈鱼'], fishingMethod: '路亚', waterDepth: '6-8m', bottomType: '岩石底',
+    tags: ['深潭', '深水'], uploaderId: 'u2', images: [], likesCount: 33,
+    downloadsCount: 140, distance: 6200, createdAt: '', updatedAt: '',
+  },
+  {
+    id: 's8', name: '密云水库 · 出水口洄湾', latitude: 40.51, longitude: 116.99,
+    fishSpecies: ['翘嘴', '鳜鱼'], fishingMethod: '路亚', waterDepth: '3-4m', bottomType: '碎石',
+    tags: ['洄湾', '流水'], uploaderId: 'u2', images: [], likesCount: 29,
+    downloadsCount: 120, distance: 7400, createdAt: '', updatedAt: '',
+  },
 ];
 
 export const mockRoutes: Route[] = [
@@ -49,7 +80,11 @@ export const mockRoutes: Route[] = [
     uploaderId: 'u1', uploader: { id: 'u2', nickname: '老张' },
     downloadsCount: 2340, likesCount: 180, featured: true,
     spots: [
-      { spot: mockSpots[3] || mockSpots[0], sortOrder: 1, distance: 800 },
+      { spot: mockSpots.find(s => s.id === 's4')!, sortOrder: 1, distance: 0 },
+      { spot: mockSpots.find(s => s.id === 's5')!, sortOrder: 2, distance: 0 },
+      { spot: mockSpots.find(s => s.id === 's6')!, sortOrder: 3, distance: 0 },
+      { spot: mockSpots.find(s => s.id === 's7')!, sortOrder: 4, distance: 0 },
+      { spot: mockSpots.find(s => s.id === 's8')!, sortOrder: 5, distance: 0 },
     ],
     createdAt: '', updatedAt: '',
   },

@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Mapbox from '@rnmapbox/maps';
 import { colors, spacing, TabBar } from '@yulu/ui';
+import { MAPBOX_TOKEN } from './config';
 import type { Tab } from '@yulu/ui';
 import { useAuthStore } from './store/auth';
 import { useUIStore } from './store/ui';
@@ -48,12 +50,16 @@ export default function App() {
 function AppInner() {
   const status = useAuthStore((s) => s.status);
   const hydrate = useAuthStore((s) => s.hydrate);
-  const [activeTab, setActiveTab] = useState('home');
+  const activeTab = useUIStore((s) => s.activeTab);
+  const setActiveTab = useUIStore((s) => s.setActiveTab);
 
   // Restore session on boot and wire the API client's 401 handlers.
   useEffect(() => {
     setOnUnauthorized(() => forceLogout());
     setRefreshHandler(refreshAccessToken);
+    // Configure the Mapbox access token once. Without a token the base map is
+    // blank (pins and route lines still render).
+    if (MAPBOX_TOKEN) Mapbox.setAccessToken(MAPBOX_TOKEN);
     void hydrate();
   }, [hydrate]);
 
@@ -94,7 +100,7 @@ function AppInner() {
           </View>
         )}
         <View style={styles.screen}>{renderScreen()}</View>
-        <TabBar tabs={tabs} activeKey={activeTab} onTabPress={setActiveTab} />
+        <TabBar tabs={tabs} activeKey={activeTab} onTabPress={(k) => setActiveTab(k as typeof activeTab)} />
         <View style={styles.homeIndicator} />
         <Overlay />
       </View>

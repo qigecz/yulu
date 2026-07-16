@@ -6,6 +6,7 @@ import { useRoutes, useNearbySpots, useToggleSpotLike, useToggleFavorite, useDow
 import { useOfflineStore } from '../store/offline';
 import { QueryState } from '../components/QueryState';
 import { RouteListSkeleton } from '../components/Skeletons';
+import { SpotsMap } from '../components/map/SpotsMap';
 import { useUIStore } from '../store/ui';
 
 export function SpotsScreen() {
@@ -17,6 +18,7 @@ export function SpotsScreen() {
   const spots = useNearbySpots();
   const openCreateSpot = useUIStore((s) => s.openCreateSpot);
   const openSearch = useUIStore((s) => s.openSearch);
+  const openNavigation = useUIStore((s) => s.openNavigation);
   const toggleSpotLike = useToggleSpotLike();
   const toggleFavorite = useToggleFavorite();
   const downloadRoute = useDownloadRoute();
@@ -58,21 +60,9 @@ export function SpotsScreen() {
 
       <View style={{ height: 12 }} />
 
-      {/* Map placeholder */}
+      {/* Map of nearby spots */}
       <View style={styles.mapArea}>
-        <View style={styles.mapGrid} />
-        <View style={[styles.mapPin, { top: '28%', left: '22%' }]}>
-          <View style={styles.pinDot}><Text style={styles.pinDotText}>📍</Text></View>
-          <Text style={styles.pinLabel}>碧溪湾</Text>
-        </View>
-        <View style={[styles.mapPin, { top: '50%', left: '55%' }]}>
-          <View style={styles.pinDot}><Text style={styles.pinDotText}>📍</Text></View>
-          <Text style={styles.pinLabel}>富春江钓台</Text>
-        </View>
-        <View style={[styles.mapPin, { top: '65%', left: '30%' }]}>
-          <View style={styles.pinDot}><Text style={styles.pinDotText}>📍</Text></View>
-          <Text style={styles.pinLabel}>东山半岛</Text>
-        </View>
+        <SpotsMap spots={spots.data ?? []} />
       </View>
 
       <View style={{ height: 12 }} />
@@ -115,6 +105,15 @@ export function SpotsScreen() {
                   downloadRoute.mutate({ id: featuredRoute.id, stub: featuredRoute })
                 }
               />
+              {downloaded && (
+                <TouchableOpacity
+                  style={styles.navBtn}
+                  onPress={() => openNavigation(featuredRoute.id)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.navBtnText}>🧭 开始导航</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </QueryState>
@@ -199,17 +198,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.border,
     borderRadius: radius.lg, overflow: 'hidden', position: 'relative',
   },
-  mapGrid: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.3,
-    borderColor: colors.border,
+  navBtn: {
+    marginTop: 10, paddingVertical: 12, borderRadius: radius.md,
+    borderWidth: 1.5, borderColor: colors.accent, alignItems: 'center',
   },
-  mapPin: { position: 'absolute', alignItems: 'center' },
-  pinDot: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  pinDotText: { fontSize: 14 },
-  pinLabel: {
-    fontSize: 10, fontWeight: '600', color: colors.fg, backgroundColor: colors.surface,
-    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: colors.border, marginTop: 2,
-  },
+  navBtnText: { color: colors.accent, fontSize: 15, fontWeight: '600' },
   routeCard: {
     marginHorizontal: spacing.screenPadding, padding: 16,
     backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg,

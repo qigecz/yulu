@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { colors, spacing, fontSize, radius } from '@yulu/ui';
 import { useOfflineStore } from '../store/offline';
+import { useUIStore } from '../store/ui';
 
 /**
  * Lists routes the user has downloaded for offline use (persisted in
@@ -10,6 +11,7 @@ import { useOfflineStore } from '../store/offline';
 export function OfflineRoutesScreen() {
   const routes = useOfflineStore((s) => s.routes);
   const removeRoute = useOfflineStore((s) => s.removeRoute);
+  const openNavigation = useUIStore((s) => s.openNavigation);
 
   const confirmRemove = (id: string, name: string) => {
     Alert.alert('删除离线路线', `确定从离线缓存移除「${name}」吗？`, [
@@ -43,13 +45,22 @@ export function OfflineRoutesScreen() {
                   <Text style={styles.offlineTagText}>✓ 离线可用</Text>
                 </View>
               </View>
-              <TouchableOpacity
-                style={styles.removeBtn}
-                onPress={() => confirmRemove(route.id, route.name)}
-                activeOpacity={0.6}
-              >
-                <Text style={styles.removeText}>删除</Text>
-              </TouchableOpacity>
+              <View style={styles.actions}>
+                <TouchableOpacity
+                  style={styles.navBtn}
+                  onPress={() => openNavigation(route.id)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.navText}>🧭 导航</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.removeBtn}
+                  onPress={() => confirmRemove(route.id, route.name)}
+                  activeOpacity={0.6}
+                >
+                  <Text style={styles.removeText}>删除</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ))}
         </View>
@@ -90,4 +101,10 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border,
   },
   removeText: { fontSize: fontSize.meta, color: colors.danger, fontWeight: '600' },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  navBtn: {
+    paddingHorizontal: 14, paddingVertical: 6, borderRadius: radius.sm,
+    backgroundColor: colors.accent,
+  },
+  navText: { fontSize: fontSize.meta, color: '#fff', fontWeight: '600' },
 });

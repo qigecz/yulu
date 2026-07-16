@@ -11,21 +11,42 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.yulu.ios"
+      "bundleIdentifier": "app.yulu.ios",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "渔路需要您的位置来显示您在钓点路线上的位置并推进航点导航。"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#f3f5f2"
       },
-      "package": "app.yulu.android"
+      "package": "app.yulu.android",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "plugins": [
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "显示您在钓点路线上的位置"
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsImpl": "mapbox",
+          "RNMapboxMapsDownloadToken": ""
+        }
+      ]
     ],
     "extra": {
       "apiBaseUrl": "http://localhost:3001/api",
-      "useMock": true
+      "useMock": true,
+      "mapboxAccessToken": ""
     }
   }
 }

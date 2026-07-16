@@ -1,75 +1,123 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { colors, spacing, fontSize, radius } from '@yulu/ui';
+import type { Route } from '@yulu/shared';
+import { haversineDistance, formatDistance } from '@yulu/shared';
+import { useUIStore } from '../store/ui';
+import { useOfflineStore } from '../store/offline';
+import { useRouteDetail } from '../hooks/queries';
+import { useLocation } from '../hooks/useLocation';
+import { RouteMap } from '../components/map/RouteMap';
+import type { RouteMapHandle } from '../components/map/RouteMap';
+import {
+  getWaypoints,
+  computeProgress,
+  estimateEta,
+  formatClock,
+  routeTotalMeters,
+} from '../utils/navigation';
 
-type WaypointStatus = 'done' | 'current' | 'upcoming';
-type Waypoint = { id: number; name: string; desc: string; dist?: string; status: WaypointStatus };
-
-const waypoints: Waypoint[] = [
-  { id: 1, name: '碧溪湾东岸深水区', desc: '水深 4-6m · 岩石底 · 鲈鱼', status: 'done' },
-  { id: 2, name: '北岸碎石滩', desc: '水深 2-3m · 碎石 · 翘嘴', status: 'done' },
-  { id: 3, name: '杨树林浅滩', desc: '水深 1-2m · 水草 · 鲫鱼', dist: '350m', status: 'current' },
-  { id: 4, name: '大坝西侧暗礁', desc: '水深 5-8m · 暗礁 · 鲈鱼/鳜鱼', dist: '1.8km', status: 'upcoming' },
-];
+/** Meters within which a waypoint is considered "reached" (auto-advance). */
+const ARRIVAL_THRESHOLD_M = 30;
 
 export function NavigationScreen() {
+  const navRouteId = useUIStore((s) => s.navRouteId);
+  const setActiveTab = useUIStore((s) => s.setActiveTab);
+  const openCreateSpotAt = useUIStore((s) => s.openCreateSpotAt);
+
+  // Resolve the route to navigate: prefer the offline copy (works with no
+  // network), otherwise fetch detail; fall back to the first offline route.
+  const offlineRoute = useOfflineStore((s) =>
+    navRouteId ? s.get(navRouteId) : s.routes[0],
+  );
+  const detail = useRouteDetail(offlineRoute ? null : navRouteId);
+  const route: Route | undefined = offlineRoute ?? detail.data;
+
+  const waypoints = useMemo(() => getWaypoints(route), [route]);
+  const totalMeters = routeTotalMeters(waypoints);
+
+  // `currentIndex` is the index of the NEXT waypoint the user is heading to.
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const mapRef = useRef<RouteMapHandle>(null);
+
+  const { coords } = useLocation(!!route);
+
+  // Distance from the user to the current waypoint (for the turn card + ETA).
+  const distToCurrent = useMemo(() => {
+    const target = waypoints[currentIndex];
+    if (!target || !coords) return null;
+    return haversineDistance(coords.latitude, coords.longitude, target.latitude, target.longitude);
+  }, [waypoints, currentIndex, coords]);
+
+  // Auto-advance when the user is within the arrival threshold of the current
+  // waypoint (and it's not the last one).
+  useEffect(() => {
+    if (distToCurrent != null && distToCurrent < ARRIVAL_THRESHOLD_M && currentIndex < waypoints.length - 1) {
+      setCurrentIndex((i) => Math.min(i + 1, waypoints.length - 1));
+    }
+  }, [distToCurrent, currentIndex, waypoints.length]);
+
+  const current = waypoints[currentIndex];
+  const progress = computeProgress(waypoints, currentIndex, distToCurrent ?? 0);
+  const eta = estimateEta(progress.remainingMeters);
+  const finished = currentIndex >= waypoints.length - 1 && distToCurrent != null && distToCurrent < ARRIVAL_THRESHOLD_M;
+
+  const endNav = () => {
+    Alert.alert('结束导航', '已退出路线导航。', [{ text: '好的', onPress: () => setActiveTab('spots') }]);
+  };
+
+  const markSpot = () => {
+    const lat = coords?.latitude ?? current?.latitude;
+    const lng = coords?.longitude ?? current?.longitude;
+    if (lat == null || lng == null) return;
+    openCreateSpotAt(lat, lng);
+  };
+
+  if (!route || waypoints.length === 0) {
+    return (
+      <View style={styles.empty}>
+        <Text style={styles.emptyTitle}>暂无可导航的路线</Text>
+        <Text style={styles.emptyHint}>先在「坑点」页下载一条路线，再来这里开始航点引导。</Text>
+        <TouchableOpacity style={styles.emptyBtn} onPress={() => setActiveTab('spots')}>
+          <Text style={styles.emptyBtnText}>去坑点页</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Map placeholder */}
-      <View style={styles.mapArea}>
-        <View style={styles.mapGrid} />
-        {/* Water shapes */}
-        <View style={[styles.waterShape, { width: 280, height: 180, top: '30%', left: '8%' }]} />
-        <View style={[styles.waterShape, { width: 80, height: 60, top: '55%', right: '15%', opacity: 0.08 }]} />
-
-        {/* Route line placeholder */}
-        <View style={styles.routeLine}>
-          <View style={styles.routeDone} />
-          <View style={styles.routeRemaining} />
-        </View>
-
-        {/* User position */}
-        <View style={[styles.userPos, { top: '48%', left: '42%' }]}>
-          <View style={styles.userDot} />
-        </View>
-
-        {/* Pins */}
-        <View style={[styles.pin, { top: '47%', left: '33%' }]}>
-          <View style={styles.pinDone}><Text style={styles.pinDoneIcon}>✓</Text></View>
-        </View>
-        <View style={[styles.pin, { top: '40%', left: '50%' }]}>
-          <View style={styles.pinDone}><Text style={styles.pinDoneIcon}>✓</Text></View>
-        </View>
-        <View style={[styles.pin, { top: '35%', left: '60%' }]}>
-          <View style={styles.pinCurrent} />
-          <Text style={styles.pinCurrentLabel}>杨树林浅滩</Text>
-        </View>
-        <View style={[styles.pin, { top: '28%', left: '72%' }]}>
-          <View style={styles.pinDefault}><Text style={styles.pinDefaultText}>4</Text></View>
-        </View>
-        <View style={[styles.pin, { top: '22%', left: '82%' }]}>
-          <View style={styles.pinDefault}><Text style={styles.pinDefaultText}>5</Text></View>
-        </View>
-      </View>
+      <RouteMap ref={mapRef} waypoints={waypoints} currentIndex={currentIndex} userCoords={coords} />
 
       {/* Turn instruction card */}
       <View style={styles.turnCard}>
         <View style={styles.turnIcon}>
-          <Text style={{ fontSize: 20 }}>↗</Text>
+          <Text style={{ fontSize: 20 }}>{finished ? '🏁' : '↗'}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.turnDist}>350 <Text style={styles.turnDistUnit}>m</Text></Text>
-          <Text style={styles.turnText}>沿北岸小路右转，前往杨树林浅滩</Text>
+          {finished ? (
+            <Text style={styles.turnText}>已到达终点坑点，路线导航完成！</Text>
+          ) : (
+            <>
+              <Text style={styles.turnDist}>
+                {distToCurrent != null ? Math.round(distToCurrent) : '—'}{' '}
+                <Text style={styles.turnDistUnit}>m</Text>
+              </Text>
+              <Text style={styles.turnText} numberOfLines={1}>
+                前往 {current?.name}
+              </Text>
+            </>
+          )}
         </View>
       </View>
 
       {/* ETA bar */}
       <View style={styles.etaBar}>
         {[
-          { value: '14:32', label: '到达时间' },
-          { value: '23 min', label: '剩余时间' },
-          { value: '4.6 km', label: '剩余距离' },
-          { value: '3/12', label: '坑点进度', accent: true },
+          { value: formatClock(eta.arrival), label: '到达时间' },
+          { value: `${eta.minutes} min`, label: '剩余时间' },
+          { value: formatDistance(progress.remainingMeters), label: '剩余距离' },
+          { value: `${currentIndex}/${waypoints.length}`, label: '坑点进度', accent: true },
         ].map((item, i) => (
           <React.Fragment key={item.label}>
             {i > 0 && <View style={styles.etaDivider} />}
@@ -83,62 +131,84 @@ export function NavigationScreen() {
 
       {/* Map controls */}
       <View style={styles.mapControls}>
-        <TouchableOpacity style={styles.ctrlBtn}><Text style={styles.ctrlBtnText}>+</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.ctrlBtn}><Text style={styles.ctrlBtnText}>−</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.locateBtn}><Text style={styles.locateBtnText}>⊕</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.ctrlBtn} onPress={() => mapRef.current?.zoomBy(1)}>
+          <Text style={styles.ctrlBtnText}>+</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.ctrlBtn} onPress={() => mapRef.current?.zoomBy(-1)}>
+          <Text style={styles.ctrlBtnText}>−</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.locateBtn}
+          onPress={() => coords && mapRef.current?.flyTo([coords.longitude, coords.latitude])}
+        >
+          <Text style={styles.locateBtnText}>⊕</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Bottom sheet */}
       <View style={styles.bottomSheet}>
         <View style={styles.sheetHandle} />
-        <Text style={styles.sheetTitle}>密云水库北岸环线</Text>
-        <Text style={styles.sheetMeta}>共 12 个坑点 · 18.5 km · 上传者：老张</Text>
+        <Text style={styles.sheetTitle}>{route.name}</Text>
+        <Text style={styles.sheetMeta}>
+          共 {route.spots.length} 个坑点 · {formatDistance(totalMeters)} · 上传者：
+          {route.uploader?.nickname ?? '钓友'}
+        </Text>
 
         {/* Progress bar */}
         <View style={styles.progressTrack}>
-          <View style={styles.progressFill} />
+          <View style={[styles.progressFill, { width: `${Math.round(progress.ratio * 100)}%` }]} />
         </View>
         <View style={styles.progressLabels}>
-          <Text style={styles.progressLabel}>已走 5.2 km</Text>
-          <Text style={styles.progressLabel}>剩余 13.3 km</Text>
+          <Text style={styles.progressLabel}>已走 {formatDistance(progress.doneMeters)}</Text>
+          <Text style={styles.progressLabel}>剩余 {formatDistance(progress.remainingMeters)}</Text>
         </View>
 
         {/* Waypoints */}
         <ScrollView style={styles.waypointList} showsVerticalScrollIndicator={false}>
-          {waypoints.map((wp) => (
-            <View key={wp.id} style={styles.waypoint}>
-              {wp.status === 'done' ? (
-                <View style={styles.wpDone}><Text style={styles.wpDoneIcon}>✓</Text></View>
-              ) : wp.status === 'current' ? (
-                <View style={styles.wpCurrent}><Text style={styles.wpCurrentText}>{wp.id}</Text></View>
-              ) : (
-                <View style={styles.wpDefault}><Text style={styles.wpDefaultText}>{wp.id}</Text></View>
-              )}
-              <View style={{ flex: 1 }}>
-                <Text style={styles.wpName}>{wp.name}</Text>
-                <Text style={styles.wpDesc} numberOfLines={1}>
-                  {wp.desc}{wp.dist ? ` · ` : ''}{wp.dist ?? ''}
-                </Text>
+          {waypoints.map((wp, i) => {
+            const status: 'done' | 'current' | 'upcoming' =
+              i < currentIndex ? 'done' : i === currentIndex ? 'current' : 'upcoming';
+            const rs = route.spots.find((s) => s.spot.id === wp.id)?.spot;
+            return (
+              <View key={wp.id} style={styles.waypoint}>
+                {status === 'done' ? (
+                  <View style={styles.wpDone}><Text style={styles.wpDoneIcon}>✓</Text></View>
+                ) : status === 'current' ? (
+                  <View style={styles.wpCurrent}><Text style={styles.wpCurrentText}>{wp.sortOrder}</Text></View>
+                ) : (
+                  <View style={styles.wpDefault}><Text style={styles.wpDefaultText}>{wp.sortOrder}</Text></View>
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.wpName}>{wp.name}</Text>
+                  <Text style={styles.wpDesc} numberOfLines={1}>
+                    {rs ? `水深 ${rs.waterDepth ?? '—'} · ${rs.bottomType ?? '—'} · ${(rs.fishSpecies ?? []).join('/')}` : ''}
+                  </Text>
+                </View>
+                {status === 'done' && <Text style={styles.wpDoneLabel}>已完成</Text>}
+                {status === 'current' && distToCurrent != null && (
+                  <Text style={styles.wpDistCurrent}>{formatDistance(distToCurrent)}</Text>
+                )}
+                {status === 'upcoming' && <Text style={styles.wpDist}>{formatDistance(wp.cumulative)}</Text>}
               </View>
-              {wp.status === 'done' && <Text style={styles.wpDoneLabel}>已完成</Text>}
-              {wp.dist != null && wp.status !== ('done' as WaypointStatus) && <Text style={[styles.wpDist, wp.status === 'current' && { color: colors.accent }]}>{wp.dist}</Text>}
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
 
         {/* Action buttons */}
         <View style={styles.actionRow}>
-          <TouchableOpacity
-            style={styles.endNavBtn}
-            onPress={() => Alert.alert('导航已结束', '返回路线详情。')}
-          >
+          <TouchableOpacity style={styles.endNavBtn} onPress={endNav}>
             <Text style={styles.endNavText}>■ 结束导航</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.markBtn}
-            onPress={() => Alert.alert('标记坑点', '已标记当前位置为新坑点，可编辑坑点信息后分享。')}
-          >
-            <Text style={styles.markBtnText}>✎ 标记坑点</Text>
+          {!finished && (
+            <TouchableOpacity
+              style={styles.advanceBtn}
+              onPress={() => setCurrentIndex((i) => Math.min(i + 1, waypoints.length - 1))}
+            >
+              <Text style={styles.advanceBtnText}>到达此坑点</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.markBtn} onPress={markSpot}>
+            <Text style={styles.markBtnText}>✎ 标记</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -148,50 +218,14 @@ export function NavigationScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  mapArea: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: '#e8ede8',
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.screenPadding },
+  emptyTitle: { fontFamily: 'Georgia', fontSize: fontSize.h2, fontWeight: '600', color: colors.fg },
+  emptyHint: { fontSize: fontSize.body, color: colors.muted, textAlign: 'center', marginTop: 8 },
+  emptyBtn: {
+    marginTop: 20, height: 44, paddingHorizontal: 24, borderRadius: radius.md,
+    backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',
   },
-  mapGrid: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.15,
-    borderColor: colors.border, borderWidth: 1,
-  },
-  waterShape: {
-    position: 'absolute',
-    backgroundColor: colors.accent,
-    borderRadius: 90,
-    opacity: 0.12,
-  },
-  routeLine: { position: 'absolute', top: '35%', left: '20%', right: '30%', height: 2 },
-  routeDone: { position: 'absolute', left: 0, top: 0, width: '45%', height: 2, backgroundColor: colors.muted, opacity: 0.35 },
-  routeRemaining: { position: 'absolute', right: 0, top: 0, width: '55%', height: 2, backgroundColor: colors.accent },
-  userPos: { position: 'absolute' },
-  userDot: {
-    width: 18, height: 18, borderRadius: 9,
-    backgroundColor: colors.accent, borderWidth: 3, borderColor: '#fff',
-    shadowColor: colors.accent, shadowOffset: { width: 0, height: 0 }, shadowRadius: 6, shadowOpacity: 0.3,
-  },
-  pin: { position: 'absolute', alignItems: 'center' },
-  pinDone: {
-    width: 24, height: 24, borderRadius: 12, backgroundColor: colors.accent,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  pinDoneIcon: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  pinCurrent: {
-    width: 30, height: 30, borderRadius: 15, backgroundColor: colors.accentSoft,
-    borderWidth: 3, borderColor: colors.accent,
-    shadowColor: colors.accent, shadowOffset: { width: 0, height: 0 }, shadowRadius: 8, shadowOpacity: 0.3,
-  },
-  pinCurrentLabel: {
-    fontSize: 10, fontWeight: '600', color: '#fff', backgroundColor: colors.accent,
-    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 2,
-  },
-  pinDefault: {
-    width: 20, height: 20, borderRadius: 10, backgroundColor: '#fff',
-    borderWidth: 2, borderColor: colors.border,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  pinDefaultText: { fontSize: 10, fontWeight: '600', color: colors.muted },
+  emptyBtnText: { color: '#fff', fontSize: fontSize.body, fontWeight: '600' },
   turnCard: {
     position: 'absolute', top: 60, left: spacing.screenPadding, right: spacing.screenPadding,
     flexDirection: 'row', alignItems: 'center', gap: 12,
@@ -240,7 +274,7 @@ const styles = StyleSheet.create({
   sheetTitle: { fontFamily: 'Georgia', fontSize: 18, fontWeight: '600', color: colors.fg },
   sheetMeta: { fontSize: 12, color: colors.muted, marginTop: 3 },
   progressTrack: { height: 6, borderRadius: 3, backgroundColor: colors.accentSoft, marginTop: 12 },
-  progressFill: { width: '28%', height: 6, borderRadius: 3, backgroundColor: colors.accent },
+  progressFill: { height: 6, borderRadius: 3, backgroundColor: colors.accent },
   progressLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   progressLabel: { fontSize: 11, color: colors.muted },
   waypointList: { maxHeight: 200, marginTop: 8 },
@@ -265,6 +299,7 @@ const styles = StyleSheet.create({
   wpName: { fontSize: 14, fontWeight: '500', color: colors.fg },
   wpDesc: { fontSize: 11, color: colors.muted, marginTop: 1 },
   wpDoneLabel: { fontSize: 11, color: colors.accent, fontWeight: '500' },
+  wpDistCurrent: { fontSize: 11, color: colors.accent, fontFamily: 'monospace', fontWeight: '600' },
   wpDist: { fontSize: 11, color: colors.muted, fontFamily: 'monospace' },
   actionRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
   endNavBtn: {
@@ -272,6 +307,11 @@ const styles = StyleSheet.create({
     borderColor: '#c0392b', alignItems: 'center', justifyContent: 'center',
   },
   endNavText: { color: '#c0392b', fontSize: 14, fontWeight: '600' },
+  advanceBtn: {
+    flex: 1, height: 44, borderRadius: 14, borderWidth: 1.5,
+    borderColor: colors.accent, alignItems: 'center', justifyContent: 'center',
+  },
+  advanceBtnText: { color: colors.accent, fontSize: 13, fontWeight: '600' },
   markBtn: {
     flex: 1, height: 44, borderRadius: 14,
     backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',

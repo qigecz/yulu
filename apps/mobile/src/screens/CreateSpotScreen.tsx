@@ -7,6 +7,7 @@ import { uploadsApi } from '../api/endpoints';
 import { USE_MOCK } from '../config';
 import { Field, TextField, MultilineField, TagInput, SubmitButton, Header } from '../components/FormControls';
 import { ImagePickerInput } from '../components/ImagePicker';
+import { useUIStore } from '../store/ui';
 
 // Common quick-pick options for faster entry.
 const FISH_OPTIONS = ['鲈鱼', '鲫鱼', '翘嘴', '鳜鱼', '鲤鱼', '草鱼'];
@@ -15,11 +16,12 @@ const BOTTOM_OPTIONS = ['岩石底', '沙底', '水草', '碎石', '暗礁'];
 
 export function CreateSpotScreen() {
   const createSpot = useCreateSpot();
+  const prefill = useUIStore((s) => s.createSpotCoords);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [latitude, setLatitude] = useState('29.6');
-  const [longitude, setLongitude] = useState('118.9');
+  const [latitude, setLatitude] = useState(prefill ? String(prefill.latitude) : '29.6');
+  const [longitude, setLongitude] = useState(prefill ? String(prefill.longitude) : '118.9');
   const [fishSpecies, setFishSpecies] = useState<string[]>([]);
   const [fishingMethod, setFishingMethod] = useState('');
   const [waterDepth, setWaterDepth] = useState('');

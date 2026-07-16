@@ -223,6 +223,27 @@
 
 ---
 
+## 地图与航点导航（Mapbox）
+
+**SDK**：`@rnmapbox/maps`（Mapbox）。需 `expo prebuild` 转开发构建（不再用 Expo Go）；token 通过 `app.json` 的 `extra.mapboxAccessToken` 注入，`App.tsx` 启动时 `Mapbox.setAccessToken`。未填 token 则底图空白（pin 与连线仍渲染）。
+
+**数据层**：
+- `Spot.latitude/longitude` 为真实数值；`Route.spots[]` 有序含 `sortOrder`。
+- 真实 API 经 PostGIS `ST_Y(location)/ST_X(location)` 拆出经纬度（`spots.ts`、`routes.ts`）；航段距离由客户端 `haversineDistance` 算连续点（后端不再返回空值的 distance）。
+- 离线导航优先读 `store/offline.ts` 的 `get(routeId)`，无网络亦可用。
+
+**核心模块**：
+| 模块 | 作用 |
+|------|------|
+| `components/map/RouteMap.tsx` | 全屏地图：done/remaining 双色连线、三态航点 pin（visited/current/upcoming）、用户位置点；`forwardRef` 暴露 `zoomBy/flyTo/fitRoute` |
+| `components/map/SpotsMap.tsx` | SpotsScreen 260px 地图：附近坑点真实坐标 pin |
+| `hooks/useLocation.ts` | expo-location 权限 + `watchPositionAsync`，返回实时 `{coords, granted}` |
+| `utils/navigation.ts` | `getWaypoints` / `computeProgress` / `estimateEta` / `formatClock`（复用 shared `haversineDistance`/`formatDistance`） |
+
+**导航参数流**：`useUIStore.openNavigation(routeId)` 设 `navRouteId` 并切到 `nav` tab（`activeTab` 已上提进 store）。`NavigationScreen` 解析 route → `RouteMap` + ETA/进度/转向文案/航点列表；GPS 接近当前航点 <30m 自动推进，或「到达此坑点」手动推进；「标记坑点」调 `openCreateSpotAt(lat,lng)` 预填坐标。ETA 用固定速度假设（6km/h 步/船），非路况。
+
+---
+
 ## 移动端页面架构
 
 ```

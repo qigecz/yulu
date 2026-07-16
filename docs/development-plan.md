@@ -20,7 +20,7 @@
 - **Refresh token 静默刷新**：后端 `POST /auth/refresh`；客户端 401 拦截器换 token + 重试 + 并发排队
 - ✅ **全局搜索**：后端 `GET /api/search?q=`（spots/routes/tutorials 三段 ILIKE）；移动端 `SearchScreen` overlay（防抖 + 分组结果，复用 SpotCard/RouteItem），Home/Spots/Learn 搜索框点击进入；mock 模式客户端过滤
 - ✅ **离线路线下载**：`store/offline.ts`（zustand persist + AsyncStorage）持久化完整路线；SpotsScreen 下载按钮接 `useDownloadRoute`（real 取 detail+download，mock 直存）；`OfflineRoutesScreen` 列表 + 删除，ProfileScreen 菜单接入
-- ⬜ **Mapbox 地图/真实导航**（NavigationScreen 全屏地图）— 未开始，需 Mapbox key
+- ✅ **Mapbox 地图 + 航点引导**：接入 `@rnmapbox/maps`（开发构建），`RouteMap` 组件（路线 done/remaining 双色连线 + 三态航点 pin + 用户位置点）、`SpotsMap`（附近坑点真实坐标 pin）；`NavigationScreen` 重写为数据驱动航点引导（ETA/进度/转向文案/航点推进：GPS 接近自动推进 + 手动「到达此坑点」）；`useLocation` hook（expo-location）；路线入口（SpotsScreen「开始导航」、OfflineRoutesScreen「导航」）；`utils/navigation.ts`（waypoints/progress/ETA）。详见 `docs/mapbox-setup.md`
 
 ### ✅ Phase 3：社区 + 社交
 - **UGC**：创建钓点（CreateSpotScreen）、发布动态（ComposeFeedScreen），overlay 浮层 + Mock/Real 双模式

@@ -18,6 +18,7 @@ router.get('/', optionalAuth, async (req: AuthRequest, res: Response) => {
   let sql = `
     SELECT s.id, s.name, s.fish_species, s.fishing_method, s.water_depth, s.bottom_type, s.tags,
       s.uploader_id, s.images, s.likes_count, s.downloads_count, s.created_at,
+      ST_Y(s.location) AS latitude, ST_X(s.location) AS longitude,
       (sl.user_id IS NOT NULL) AS liked,
       (fav.user_id IS NOT NULL) AS favorited,
       ST_Distance(s.location, ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography) AS distance
@@ -47,7 +48,10 @@ router.get('/', optionalAuth, async (req: AuthRequest, res: Response) => {
 
 router.get('/:id', optionalAuth, async (req: AuthRequest, res: Response) => {
   const result = await query(
-    `SELECT s.*, u.nickname as uploader_name, u.avatar_url as uploader_avatar,
+    `SELECT s.id, s.name, s.description, s.fish_species, s.fishing_method, s.water_depth, s.bottom_type, s.tags,
+       s.uploader_id, s.images, s.likes_count, s.downloads_count, s.created_at, s.updated_at,
+       ST_Y(s.location) AS latitude, ST_X(s.location) AS longitude,
+       u.nickname as uploader_name, u.avatar_url as uploader_avatar,
        (sl.user_id IS NOT NULL) AS liked,
        (fav.user_id IS NOT NULL) AS favorited
      FROM spots s
