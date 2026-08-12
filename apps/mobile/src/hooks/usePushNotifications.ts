@@ -5,13 +5,22 @@ import { usersApi } from '../api/endpoints';
 import { dispatchDeepLink, buildDeepLink } from '../utils/deeplink';
 
 // Foreground notifications: show an in-app banner rather than silently dropping.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// Configured inside the hook (not at module top level) so a failure to access
+// the expo-notifications native module during JS bundle load can't abort JS
+// initialization before AppRegistry.registerComponent runs.
+function configureForegroundNotifications() {
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+  } catch {
+    // Native module not ready — push is best-effort, never block app boot.
+  }
+}
 
 /**
  * Register the device for Expo push notifications when authenticated, and
@@ -22,6 +31,8 @@ export function usePushNotifications(authenticated: boolean): void {
   const registered = useRef(false);
 
   useEffect(() => {
+    configureForegroundNotifications();
+
     if (!authenticated) {
       registered.current = false;
       return;

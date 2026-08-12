@@ -1,15 +1,16 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Mapbox from '@rnmapbox/maps';
 import { colors, spacing, TabBar } from '@yulu/ui';
-import { MAPBOX_TOKEN } from './config';
 import type { Tab } from '@yulu/ui';
 import { useAuthStore } from './store/auth';
 import { useUIStore } from './store/ui';
 import { setOnUnauthorized, setRefreshHandler } from './api/client';
 import { forceLogout, refreshAccessToken } from './store/auth';
-import { usePushNotifications } from './hooks/usePushNotifications';
+// import { usePushNotifications } from './hooks/usePushNotifications';
+// NOTE: push temporarily disabled — diagnosing release-only startup crash
+// where importing expo-notifications triggers requireNativeModule at bundle
+// load time, before AppRegistry.registerComponent can run.
 import { dispatchDeepLink } from './utils/deeplink';
 import { AuthScreen } from './screens/AuthScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -52,12 +53,13 @@ export default function App() {
 function AppInner() {
   const status = useAuthStore((s) => s.status);
   const hydrate = useAuthStore((s) => s.hydrate);
+  const forceBootBail = useAuthStore((s) => s.forceBootBail);
   const activeTab = useUIStore((s) => s.activeTab);
   const setActiveTab = useUIStore((s) => s.setActiveTab);
 
   // Push permissions + token registration (only when authenticated), and tap
   // routing handled inside the hook.
-  usePushNotifications(status === 'authenticated');
+  // usePushNotifications(status === 'authenticated'); // disabled for crash diagnosis
 
   // Deep links (yulu://...) from cold start and while running.
   useEffect(() => {
@@ -70,11 +72,16 @@ function AppInner() {
   useEffect(() => {
     setOnUnauthorized(() => forceLogout());
     setRefreshHandler(refreshAccessToken);
-    // Configure the Mapbox access token once. Without a token the base map is
-    // blank (pins and route lines still render).
-    if (MAPBOX_TOKEN) Mapbox.setAccessToken(MAPBOX_TOKEN);
     void hydrate();
   }, [hydrate]);
+
+  // Safety net: if hydrate never resolves (e.g. a storage call hangs), don't
+  // leave the user on a blank loading screen forever.
+  useEffect(() => {
+    if (status !== 'loading') return;
+    const t = setTimeout(() => forceBootBail(), 5000);
+    return () => clearTimeout(t);
+  }, [status, forceBootBail]);
 
   const renderScreen = () => {
     switch (activeTab) {
@@ -90,7 +97,10 @@ function AppInner() {
   if (status === 'loading') {
     return (
       <View style={styles.boot}>
-        <ActivityIndicator color={colors.accent} />
+        <Text style={styles.bootEmoji}>🎣</Text>
+        <Text style={styles.bootTitle}>渔路 YULU</Text>
+        <ActivityIndicator color={colors.accent} style={{ marginTop: 12 }} />
+        <Text style={styles.bootHint}>加载中…</Text>
       </View>
     );
   }
@@ -154,6 +164,9 @@ function Overlay() {
 
 const styles = StyleSheet.create({
   boot: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
+  bootEmoji: { fontSize: 56 },
+  bootTitle: { fontFamily: 'Georgia', fontSize: 22, fontWeight: '700', color: colors.fg, marginTop: 12 },
+  bootHint: { fontSize: 13, color: colors.muted, marginTop: 10 },
   container: { flex: 1, backgroundColor: colors.bg },
   statusBar: {
     flexDirection: 'row', justifyContent: 'space-between',
