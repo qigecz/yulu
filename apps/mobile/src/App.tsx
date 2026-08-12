@@ -7,10 +7,7 @@ import { useAuthStore } from './store/auth';
 import { useUIStore } from './store/ui';
 import { setOnUnauthorized, setRefreshHandler } from './api/client';
 import { forceLogout, refreshAccessToken } from './store/auth';
-// import { usePushNotifications } from './hooks/usePushNotifications';
-// NOTE: push temporarily disabled — diagnosing release-only startup crash
-// where importing expo-notifications triggers requireNativeModule at bundle
-// load time, before AppRegistry.registerComponent can run.
+import { usePushNotifications } from './hooks/usePushNotifications';
 import { dispatchDeepLink } from './utils/deeplink';
 import { AuthScreen } from './screens/AuthScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -59,7 +56,7 @@ function AppInner() {
 
   // Push permissions + token registration (only when authenticated), and tap
   // routing handled inside the hook.
-  // usePushNotifications(status === 'authenticated'); // disabled for crash diagnosis
+  usePushNotifications(status === 'authenticated');
 
   // Deep links (yulu://...) from cold start and while running.
   useEffect(() => {
