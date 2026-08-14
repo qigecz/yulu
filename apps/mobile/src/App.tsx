@@ -69,7 +69,10 @@ function AppInner() {
   useEffect(() => {
     setOnUnauthorized(() => forceLogout());
     setRefreshHandler(refreshAccessToken);
-    void hydrate();
+    void hydrate().then(() => {
+      // eslint-disable-next-line no-console
+      console.log('YULU_AUTH', 'hydrate done, status=', useAuthStore.getState().status);
+    });
   }, [hydrate]);
 
   // Safety net: if hydrate never resolves (e.g. a storage call hangs), don't

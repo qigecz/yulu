@@ -13,6 +13,9 @@ type Extra = {
 
 const extra = (Constants.expoConfig?.extra ?? {}) as Extra;
 
+// eslint-disable-next-line no-console
+console.log('YULU_CONFIG', JSON.stringify({ hasExpoConfig: !!Constants.expoConfig, extra, USE_MOCK: (extra.useMock ?? true) }));
+
 export const API_BASE_URL: string =
   extra.apiBaseUrl ?? 'http://localhost:3001/api';
 
