@@ -1,5 +1,6 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+nodeLinker: hoisted
 allowBuilds:
   esbuild: true

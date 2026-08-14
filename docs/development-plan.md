@@ -37,6 +37,22 @@
 
 ---
 
+## 📱 Android 真机测试进展（截至 2026-08-14）
+
+### ✅ Release APK 已可正常启动运行
+真机（vivo V2136A · Android 14）上从「安装即闪退」到「正常进首页」的修复记录，详见 `docs/build-android-device.md` 的「启动崩溃排查」：
+
+- **真根因**：pnpm monorepo 下 `@yulu/ui` 的 dependencies 误装独立 react-native 0.74.7（mobile 为 0.74.5），bundle 内双 AppRegistry 实例 → release 启动 `n=0` 崩溃（开发模式不复现，极隐蔽）。修复：ui 只留 peerDependencies + metro `extraNodeModules` 强制单一副本 + `registerRootComponent`。
+- 连带修复：标准 `index.js` 入口、expo-notifications 动态 import、启动期全局错误捕获。
+- **底部 tab 图标**：emoji → Ionicons 线性图标（按 mobile-android.html 原型）。
+
+### 真机测试工作流
+- 出包：`eas build --platform android --profile preview --non-interactive --no-wait --json`（Windows 下必须 `--json`，否则卡死）
+- 安装：adb push 到 `/sdcard/Download/` + VIEW intent 触发安装界面（vivo 对 adb install 有弹窗拦截）
+- 反馈问题：现象 + 复现步骤 + 截图；崩溃类抓 `adb logcat -b crash -d`
+
+---
+
 ## 🚀 部署进展（截至 2026-07-16）
 
 ### ✅ 已部署（开发/预览环境）

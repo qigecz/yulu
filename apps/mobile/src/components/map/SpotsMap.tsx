@@ -1,6 +1,5 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Mapbox from '@rnmapbox/maps';
 import { colors } from '@yulu/ui';
 import type { Spot } from '@yulu/shared';
 
@@ -12,84 +11,44 @@ interface Props {
 }
 
 /**
- * Compact Mapbox map for the SpotsScreen — renders the nearby spots as pins
- * positioned by their real lat/lng (replacing the old hardcoded percentage
- * pins). The camera fits all visible spots.
+ * Placeholder spots map. The native Mapbox implementation was temporarily
+ * disabled for this test build (see docs/build-android-device.md). Nearby
+ * spots are shown as a tappable list instead of map pins.
  */
 export function SpotsMap({ spots, onSelect, style }: Props) {
   const valid = spots.filter(
     (s) => typeof s.latitude === 'number' && typeof s.longitude === 'number',
   );
 
-  const bounds = useMemo(() => {
-    if (valid.length < 2) return null;
-    const lngs = valid.map((s) => s.longitude);
-    const lats = valid.map((s) => s.latitude);
-    return {
-      ne: [Math.max(...lngs), Math.max(...lats)] as [number, number],
-      sw: [Math.min(...lngs), Math.min(...lats)] as [number, number],
-    };
-  }, [valid]);
-
-  const center: [number, number] = valid[0]
-    ? [valid[0].longitude, valid[0].latitude]
-    : [116.92, 40.52];
-
   return (
     <View style={[styles.container, style]}>
-      <Mapbox.MapView style={styles.map} logoEnabled={false} pitchEnabled={false} rotateEnabled={false}>
-        <Mapbox.Camera
-          defaultSettings={{ centerCoordinate: center, zoomLevel: 11 }}
-          bounds={
-            bounds
-              ? { ...bounds, paddingTop: 40, paddingBottom: 40, paddingLeft: 40, paddingRight: 40 }
-              : undefined
-          }
-        />
-        {valid.map((spot, i) => (
-          <Mapbox.MarkerView key={spot.id} coordinate={[spot.longitude, spot.latitude]}>
-            <TouchableOpacity style={styles.pinWrap} onPress={() => onSelect?.(spot)} activeOpacity={0.8}>
-              <View style={styles.pin}>
-                <Text style={styles.pinIcon}>📍</Text>
-              </View>
-              <Text style={styles.pinLabel} numberOfLines={1}>
-                {spot.name.split('·').pop()?.trim() ?? spot.name}
-              </Text>
-            </TouchableOpacity>
-          </Mapbox.MarkerView>
-        ))}
-      </Mapbox.MapView>
+      <Text style={styles.banner}>🗺️ 地图（测试构建暂未包含底图）· 附近 {valid.length} 个钓点</Text>
+      {valid.slice(0, 6).map((spot) => (
+        <TouchableOpacity
+          key={spot.id}
+          style={styles.row}
+          onPress={() => onSelect?.(spot)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.pinIcon}>📍</Text>
+          <Text style={styles.rowLabel} numberOfLines={1}>
+            {spot.name.split('·').pop()?.trim() ?? spot.name}
+          </Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { overflow: 'hidden', borderRadius: 16, backgroundColor: colors.accentSoft },
-  map: { flex: 1 },
-  pinWrap: { alignItems: 'center', maxWidth: 96 },
-  pin: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 3,
-    shadowOpacity: 0.15,
+  container: {
+    overflow: 'hidden',
+    borderRadius: 16,
+    backgroundColor: colors.accentSoft,
+    padding: 12,
   },
-  pinIcon: { fontSize: 13 },
-  pinLabel: {
-    fontSize: 10,
-    color: colors.fg,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginTop: 2,
-    fontWeight: '500',
-  },
+  banner: { fontSize: 12, color: colors.muted, marginBottom: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
+  pinIcon: { fontSize: 14, marginRight: 8 },
+  rowLabel: { fontSize: 13, color: colors.fg, fontWeight: '500', flex: 1 },
 });

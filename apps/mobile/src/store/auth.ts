@@ -22,6 +22,8 @@ interface AuthState {
   logout: () => Promise<void>;
   /** Restore session from storage (or seed mock user in mock mode). */
   hydrate: () => Promise<void>;
+  /** Safety net: if hydrate never resolves, leave the loading screen anyway. */
+  forceBootBail: () => void;
 }
 
 async function persistSession(res: AuthResponse): Promise<User> {
@@ -79,31 +81,58 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   hydrate: async () => {
-    // Mock mode: seed a mock user so the app is explorable without a backend.
+    try {
+      // Mock mode: seed a mock user so the app is explorable without a backend.
+      if (USE_MOCK) {
+        const mockWithId: User = { ...mockUser };
+        await AsyncStorage.setItem(USER_KEY, JSON.stringify(mockWithId)).catch(() => {});
+        setTokens('mock', 'mock');
+        set({ user: mockWithId, accessToken: 'mock', refreshToken: 'mock', status: 'authenticated' });
+        return;
+      }
+
+      const [token, refresh, userRaw] = await AsyncStorage.multiGet([TOKEN_KEY, REFRESH_KEY, USER_KEY]);
+      const accessToken = token[1];
+      const refreshToken = refresh[1];
+      const userJson = userRaw[1];
+
+      if (accessToken && userJson) {
+        setTokens(accessToken, refreshToken);
+        set({
+          user: JSON.parse(userJson) as User,
+          accessToken,
+          refreshToken,
+          status: 'authenticated',
+        });
+        return;
+      }
+      set({ status: 'unauthenticated' });
+    } catch (e) {
+      // Storage failures (or anything else) must never strand the app on the
+      // loading screen. In mock mode drop straight into the mock user; else go
+      // to login so the UI is always reachable.
+      if (USE_MOCK) {
+        const mockWithId: User = { ...mockUser };
+        setTokens('mock', 'mock');
+        set({ user: mockWithId, accessToken: 'mock', refreshToken: 'mock', status: 'authenticated' });
+      } else {
+        set({ status: 'unauthenticated' });
+      }
+      // eslint-disable-next-line no-console
+      console.warn('[auth] hydrate failed, using fallback:', e);
+    }
+  },
+
+  forceBootBail: () => {
+    // Only meaningful if still loading.
+    if (useAuthStore.getState().status !== 'loading') return;
     if (USE_MOCK) {
       const mockWithId: User = { ...mockUser };
-      await AsyncStorage.setItem(USER_KEY, JSON.stringify(mockWithId));
       setTokens('mock', 'mock');
       set({ user: mockWithId, accessToken: 'mock', refreshToken: 'mock', status: 'authenticated' });
-      return;
+    } else {
+      set({ status: 'unauthenticated' });
     }
-
-    const [token, refresh, userRaw] = await AsyncStorage.multiGet([TOKEN_KEY, REFRESH_KEY, USER_KEY]);
-    const accessToken = token[1];
-    const refreshToken = refresh[1];
-    const userJson = userRaw[1];
-
-    if (accessToken && userJson) {
-      setTokens(accessToken, refreshToken);
-      set({
-        user: JSON.parse(userJson) as User,
-        accessToken,
-        refreshToken,
-        status: 'authenticated',
-      });
-      return;
-    }
-    set({ status: 'unauthenticated' });
   },
 }));
 
