@@ -27,7 +27,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon-fg.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0E7C86"
       },
       "package": "app.yulu.android",
       "permissions": [
