@@ -14,5 +14,7 @@ export { RouteItem } from './components/RouteItem';
 export { FeedItem } from './components/FeedItem';
 export { TabBar } from './components/TabBar';
 export type { Tab } from './components/TabBar';
+export { TabIcon } from './components/TabIcon';
+export type { TabIconName } from './components/TabIcon';
 export { FilterChips } from './components/FilterChips';
 export { Skeleton, SkeletonText } from './components/Skeleton';

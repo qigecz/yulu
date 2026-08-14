@@ -31,11 +31,11 @@ const queryClient = new QueryClient({
 });
 
 const tabs: Tab[] = [
-  { key: 'home', label: '首页', icon: '🏠' },
-  { key: 'spots', label: '坑点', icon: '📍' },
-  { key: 'nav', label: '导航', icon: '🧭' },
-  { key: 'learn', label: '学习', icon: '📖' },
-  { key: 'profile', label: '我的', icon: '👤' },
+  { key: 'home', label: '首页', icon: 'home' },
+  { key: 'spots', label: '坑点', icon: 'spots' },
+  { key: 'nav', label: '导航', icon: 'nav' },
+  { key: 'learn', label: '学习', icon: 'learn' },
+  { key: 'profile', label: '我的', icon: 'profile' },
 ];
 
 /** Top-level guard so a render error shows a recoverable fallback, not a crash. */
@@ -69,10 +69,7 @@ function AppInner() {
   useEffect(() => {
     setOnUnauthorized(() => forceLogout());
     setRefreshHandler(refreshAccessToken);
-    void hydrate().then(() => {
-      // eslint-disable-next-line no-console
-      console.log('YULU_AUTH', 'hydrate done, status=', useAuthStore.getState().status);
-    });
+    void hydrate();
   }, [hydrate]);
 
   // Safety net: if hydrate never resolves (e.g. a storage call hangs), don't
