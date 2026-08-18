@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180" role="img" aria-label="渔路 YULU 图标">
+  <!-- 一笔路径线（渔之路） -->
+  <path d="M20,150 C58,150 70,120 84,104" fill="none" stroke="#3DD9A0" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 13"/>
+  <!-- 鱼身 -->
+  <path d="M206,96 C196,82 172,76 142,76 C108,76 82,86 82,100 C82,114 108,124 142,124 C172,124 196,118 206,104 C210,100 210,100 206,96 Z" fill="#0E7C86"/>
+  <!-- 鱼尾 -->
+  <path d="M82,100 L54,82 Q66,100 54,118 Z" fill="#0E7C86"/>
+  <!-- 鱼眼 -->
+  <circle cx="186" cy="92" r="4.2" fill="#FFFFFF"/>
+  <circle cx="187.2" cy="90.8" r="1.7" fill="#0E7C86"/>
+</svg>

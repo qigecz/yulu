@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 200" width="560" height="200" role="img" aria-label="渔路 YULU 品牌标志">
+  <!-- 图标：一条鱼 + 一笔路径 -->
+  <g transform="translate(0,10) scale(0.95)">
+    <path d="M20,150 C58,150 70,120 84,104" fill="none" stroke="#3DD9A0" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 13"/>
+    <path d="M206,96 C196,82 172,76 142,76 C108,76 82,86 82,100 C82,114 108,124 142,124 C172,124 196,118 206,104 C210,100 210,100 206,96 Z" fill="#0E7C86"/>
+    <path d="M82,100 L54,82 Q66,100 54,118 Z" fill="#0E7C86"/>
+    <circle cx="186" cy="92" r="4.2" fill="#FFFFFF"/>
+    <circle cx="187.2" cy="90.8" r="1.7" fill="#0E7C86"/>
+  </g>
+  <!-- 中文「渔路」 -->
+  <text x="250" y="112" font-family="PingFang SC, Microsoft YaHei, Source Han Sans SC, sans-serif" font-size="80" font-weight="800" fill="#0E7C86" letter-spacing="4">渔路</text>
+  <!-- 英文「YULU」 -->
+  <text x="252" y="156" font-family="Poppins, Helvetica Neue, Arial, sans-serif" font-size="34" font-weight="600" fill="#3DD9A0" letter-spacing="16">YULU</text>
+</svg>

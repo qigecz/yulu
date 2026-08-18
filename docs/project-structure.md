@@ -1,23 +1,31 @@
 # 渔路 YULU — 项目目录结构
 
-## 顶层结构
+## 顶层结构（工作区根：`渔路YULU/`）
 
 ```
-yulu/
-├── packages/          # 共享包（workspace packages）
-│   ├── shared/        # @yulu/shared — 类型、验证器、工具函数
-│   └── ui/            # @yulu/ui — RN 组件库 + Design Tokens
-├── apps/              # 应用层
-│   ├── mobile/        # @yulu/mobile — React Native (Expo) 移动端
-│   ├── web/           # @yulu/web — Next.js 营销落地页
-│   └── api/           # @yulu/api — Express 后端 API
-├── docs/              # 项目文档
-├── prototypes/        # 产品原型（HTML）+ 设计规格书
-├── package.json       # 根 monorepo 配置
-├── pnpm-workspace.yaml
-├── tsconfig.base.json
-└── .env.example       # 环境变量模板
+渔路YULU/
+├── yulu/          # 代码 monorepo（git 仓库，本文件的上级）
+├── 原型/          # 全部产品原型 + 设计资产（HTML 原型、logo 设计稿/SVG、设计截图）
+│   ├── design.md                # 设计规格书
+│   ├── index.html               # 设计总览页
+│   ├── landing.html / yulu-landing.html   # 营销落地页原型
+│   ├── mobile-ios.html / mobile-android.html  # 移动端首页原型
+│   ├── widget-ios.html          # iOS 桌面小组件原型
+│   ├── screens/                 # iOS 各页面原型（route/learn/nav/profile）
+│   ├── 渔路APP-logo设计.png      # logo 完整设计稿（2048²）
+│   ├── 渔路APP-logo设计无边框.png # 桌面图标定稿（当前使用的版本）
+│   └── yulu-logo.svg / yulu-logo-mark.svg  # logo 矢量源（鱼+虚线路径）
+└── 安装包/        # 所有 EAS 构建出的 Android APK（不入 git，仅本地留存）
+    └── 渔路-yulu-android-*.apk   # 按迭代命名：home=首页改造版（最新）、
+                                  # origicon=原始图标版、rootfix=崩溃修复版 等
 ```
+
+> 原型同时在 `yulu/prototypes/` 有一份（随 git 仓库走），两边内容保持一致；
+> logo 设计稿也入仓于 `yulu/prototypes/`。新的 APK 统一下载到 `安装包/`。
+
+---
+
+## yulu/
 
 ---
 
