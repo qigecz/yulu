@@ -5,6 +5,7 @@ import { colors, spacing, TabBar } from '@yulu/ui';
 import type { Tab } from '@yulu/ui';
 import { useAuthStore } from './store/auth';
 import { useUIStore } from './store/ui';
+import { useClock, formatStatusBarTime } from './hooks/useClock';
 import { setOnUnauthorized, setRefreshHandler } from './api/client';
 import { forceLogout, refreshAccessToken } from './store/auth';
 import { usePushNotifications } from './hooks/usePushNotifications';
@@ -53,6 +54,7 @@ function AppInner() {
   const forceBootBail = useAuthStore((s) => s.forceBootBail);
   const activeTab = useUIStore((s) => s.activeTab);
   const setActiveTab = useUIStore((s) => s.setActiveTab);
+  const now = useClock();
 
   // Push permissions + token registration (only when authenticated), and tap
   // routing handled inside the hook.
@@ -115,7 +117,7 @@ function AppInner() {
       <View style={styles.container}>
         {activeTab !== 'nav' && (
           <View style={styles.statusBar}>
-            <Text style={styles.statusText}>9:41</Text>
+            <Text style={styles.statusText}>{formatStatusBarTime(now)}</Text>
             <Text style={styles.statusText}>WiFi</Text>
           </View>
         )}

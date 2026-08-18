@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize, radius, WeatherStrip, SearchBar, SectionHeader, SpotCard, SpotCardList, RouteItem, FeedItem } from '@yulu/ui';
 import { formatRelativeTime, formatDistance } from '@yulu/shared';
 import { useWeather, useNearbySpots, useRoutes, useFeeds, useToggleFeedLike, useToggleFavorite } from '../hooks/queries';
+import { useClock, formatGreetingDate } from '../hooks/useClock';
 import { QueryState } from '../components/QueryState';
 import { SpotListSkeleton, RouteListSkeleton, FeedSkeleton } from '../components/Skeletons';
 import { useUIStore } from '../store/ui';
 
 export function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
+  const now = useClock();
   const weather = useWeather();
   const spots = useNearbySpots();
   const routes = useRoutes();
@@ -37,12 +40,16 @@ export function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>周三 · 6月4日</Text>
+          <Text style={styles.greeting}>{formatGreetingDate(now)}</Text>
           <Text style={styles.title}>你好，钓友</Text>
         </View>
         <View style={styles.headerActions}>
-          <View style={styles.iconBtn}><Text style={styles.iconText}>🔔</Text></View>
-          <View style={styles.iconBtn}><Text style={styles.iconText}>⚙</Text></View>
+          <View style={styles.iconBtn}>
+            <Ionicons name="notifications-outline" size={18} color={colors.fg} />
+          </View>
+          <View style={styles.iconBtn}>
+            <Ionicons name="settings-outline" size={18} color={colors.fg} />
+          </View>
         </View>
       </View>
 
