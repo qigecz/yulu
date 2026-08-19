@@ -172,9 +172,9 @@ function Overlay() {
         <SearchScreen />
       ) : overlay === 'offline-routes' ? (
         <OfflineRoutesScreen />
-      ) : (
+      ) : overlay === 'user' ? (
         <UserScreen />
-      )}
+      ) : null}
     </View>
   );
 }
