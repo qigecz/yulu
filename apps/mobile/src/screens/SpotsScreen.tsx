@@ -19,6 +19,7 @@ export function SpotsScreen() {
   const openCreateSpot = useUIStore((s) => s.openCreateSpot);
   const openSearch = useUIStore((s) => s.openSearch);
   const openNavigation = useUIStore((s) => s.openNavigation);
+  const openSpotDetail = useUIStore((s) => s.openSpotDetail);
   const toggleSpotLike = useToggleSpotLike();
   const toggleFavorite = useToggleFavorite();
   const downloadRoute = useDownloadRoute();
@@ -62,7 +63,7 @@ export function SpotsScreen() {
 
       {/* Map of nearby spots */}
       <View style={styles.mapArea}>
-        <SpotsMap spots={spots.data ?? []} />
+        <SpotsMap spots={spots.data ?? []} onSelect={(s) => openSpotDetail(s.id)} />
       </View>
 
       <View style={{ height: 12 }} />

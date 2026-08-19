@@ -1,4 +1,4 @@
-import type { Spot, Route, Feed, Tutorial, User, Weather } from '@yulu/shared';
+import type { Spot, Route, Feed, Tutorial, User, Weather, SpotReview } from '@yulu/shared';
 
 export const mockUser: User = {
   id: 'u1',
@@ -27,6 +27,26 @@ export const mockSpots: Spot[] = [
     fishSpecies: ['鲈鱼'], fishingMethod: '路亚', waterDepth: '4-6m', bottomType: '岩石底',
     tags: ['深水', '岩石底'], uploaderId: 'u1', images: [], likesCount: 42,
     downloadsCount: 120, distance: 2300, createdAt: '', updatedAt: '',
+    region: '杭州 · 淳安', rating: 4.8, ratingCount: 326, anglersToday: 17,
+    mainSpecies: '鲈鱼', waterTemp: 24, catchRate7d: 86,
+    info: [
+      { label: '水域类型', value: '湖泊 · 库湾（支流汇入口）' },
+      { label: '底部结构', value: '岩石底为主，湾口有碎石与倒树' },
+      { label: '岸钓位', value: '23 个天然钓位，西岸可停车' },
+      { label: '适钓季节', value: '3–11 月，夏季清晨与黄昏最佳' },
+      { label: '交通方式', value: '自驾（湾口停车场免费）· 步行 300m' },
+      { label: '费用', value: '免费 · 无需预约' },
+    ],
+    catchByHour: [32, 88, 22, 14, 56, 48],
+    featuredRoute: { id: 'r1', name: '碧溪湾 · 坑点巡钓路线', spotsCount: 6, totalDistance: 4.2, downloads: 128, uploader: '路亚阿杰' },
+    pits: [
+      { name: '湾口乱石堆', desc: '水深 3.5m · 鲈鱼标点 · 距停车场 300m' },
+      { name: '西岸倒树区', desc: '水深 2–4m · 障碍钓法 · 小心挂底' },
+      { name: '湾心深坑', desc: '水深 8m · 大物概率高 · 建议船钓' },
+      { name: '东岸水草边', desc: '水深 1.5–2.5m · 清晨活性高' },
+      { name: '支流汇入口', desc: '水深 3–5m · 鲴鱼翘嘴集群区' },
+      { name: '南湾网箱边', desc: '水深 4m · 夜钓翘嘴好去处' },
+    ],
   },
   {
     id: 's2', name: '富春江 · 钓台', latitude: 29.9, longitude: 119.7,
@@ -136,5 +156,27 @@ export const mockTutorials: Tutorial[] = [
     authorId: 'u2', author: { id: 'u2', nickname: '台钓老张' },
     viewsCount: 8620, likesCount: 180, featured: false,
     publishedAt: '', createdAt: '', updatedAt: '',
+  },
+];
+
+/** Spot detail reviews (评价 tab) — mirrors the ios-spot-detail prototype. */
+export const mockSpotReviews: SpotReview[] = [
+  {
+    id: 'rv1', spotId: 's1', user: { id: 'u3', nickname: '溪流路亚人' },
+    rating: 5, text: '标点清晰，跟着巡钓路线走很顺。湾口乱石堆中了一条 58cm 的鲈鱼，体验拉满。西岸停车确实方便，就是周末人多。',
+    tags: ['标点准确', '适合路亚', '停车方便'],
+    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+  {
+    id: 'rv2', spotId: 's1', user: { id: 'u4', nickname: '新手小王' },
+    rating: 4, text: '第一次来，下载路线后直达坑点，没走冤枉路。东岸水草边清晨口很好，就是蚊虫多，记得带驱蚊液。',
+    tags: ['路线好找', '适合新手', '蚊虫多'],
+    createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+  },
+  {
+    id: 'rv3', spotId: 's1', user: { id: 'u2', nickname: '库钓老周' },
+    rating: 5, text: '湾心深坑船钓上过 12 斤青鱼，大物区名不虚传。但湾口西段确实没信号，离线地图一定要提前下好。',
+    tags: ['大物区', '需船钓', '信号弱'],
+    createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
   },
 ];

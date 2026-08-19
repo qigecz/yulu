@@ -6,6 +6,7 @@ import type { Tab } from '@yulu/ui';
 import { useAuthStore } from './store/auth';
 import { useUIStore } from './store/ui';
 import { useClock, formatStatusBarTime } from './hooks/useClock';
+import { useNearbySpots } from './hooks/queries';
 import { setOnUnauthorized, setRefreshHandler } from './api/client';
 import { forceLogout, refreshAccessToken } from './store/auth';
 import { usePushNotifications } from './hooks/usePushNotifications';
@@ -21,6 +22,7 @@ import { ComposeFeedScreen } from './screens/ComposeFeedScreen';
 import { FavoritesScreen } from './screens/FavoritesScreen';
 import { FeedDetailScreen } from './screens/FeedDetailScreen';
 import { UserScreen } from './screens/UserScreen';
+import { SpotDetailScreen } from './screens/SpotDetailScreen';
 import { SearchScreen } from './screens/SearchScreen';
 import { OfflineRoutesScreen } from './screens/OfflineRoutesScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -124,9 +126,25 @@ function AppInner() {
         <View style={styles.screen}>{renderScreen()}</View>
         <TabBar tabs={tabs} activeKey={activeTab} onTabPress={(k) => setActiveTab(k as typeof activeTab)} />
         <View style={styles.homeIndicator} />
+        <SpotDetailLayer />
         <Overlay />
       </View>
     </QueryClientProvider>
+  );
+}
+
+/** Full-screen spot detail (hero + tabs + action bar), from tapping a spot card. */
+function SpotDetailLayer() {
+  const overlay = useUIStore((s) => s.overlay);
+  const spotId = useUIStore((s) => s.spotId);
+  const spots = useNearbySpots();
+  if (overlay !== 'spot-detail' || !spotId) return null;
+  const spot = spots.data?.find((s) => s.id === spotId);
+  if (!spot) return null;
+  return (
+    <View style={styles.spotDetailLayer}>
+      <SpotDetailScreen spot={spot} />
+    </View>
   );
 }
 
@@ -179,6 +197,10 @@ const styles = StyleSheet.create({
   overlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: colors.bg, zIndex: 10,
+  },
+  spotDetailLayer: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: colors.bg, zIndex: 30,
   },
   overlayClose: {
     position: 'absolute', top: 16, right: spacing.screenPadding,

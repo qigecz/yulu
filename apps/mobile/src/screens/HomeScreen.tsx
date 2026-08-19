@@ -20,6 +20,7 @@ export function HomeScreen() {
   const openFeedDetail = useUIStore((s) => s.openFeedDetail);
   const openUser = useUIStore((s) => s.openUser);
   const openSearch = useUIStore((s) => s.openSearch);
+  const openSpotDetail = useUIStore((s) => s.openSpotDetail);
   const toggleFeedLike = useToggleFeedLike();
   const toggleFavorite = useToggleFavorite();
 
@@ -108,6 +109,7 @@ export function HomeScreen() {
               distance={spot.distance ? formatDistance(spot.distance) : ''}
               fishInfo={`${spot.fishSpecies.join('/')} · ${spot.fishingMethod}`}
               tags={spot.tags}
+              onPress={() => openSpotDetail(spot.id)}
             />
           ))}
         </SpotCardList>
