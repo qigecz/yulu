@@ -7,11 +7,12 @@ interface RouteItemProps {
   name: string;
   description: string;
   onDownload?: () => void;
+  onPress?: () => void;
 }
 
-export function RouteItem({ name, description, onDownload }: RouteItemProps) {
+export function RouteItem({ name, description, onDownload, onPress }: RouteItemProps) {
   return (
-    <View style={styles.container}>
+    <TouchableOpacity disabled={!onPress} onPress={onPress} activeOpacity={0.8} style={styles.container}>
       <View style={styles.icon}>
         <Text style={styles.iconText}>🗺</Text>
       </View>
@@ -22,7 +23,7 @@ export function RouteItem({ name, description, onDownload }: RouteItemProps) {
       <TouchableOpacity onPress={onDownload}>
         <Pill label="下载" />
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 }
 

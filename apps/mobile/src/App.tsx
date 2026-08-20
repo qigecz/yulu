@@ -6,7 +6,7 @@ import type { Tab } from '@yulu/ui';
 import { useAuthStore } from './store/auth';
 import { useUIStore } from './store/ui';
 import { useClock, formatStatusBarTime } from './hooks/useClock';
-import { useNearbySpots } from './hooks/queries';
+import { useNearbySpots, useRoutes } from './hooks/queries';
 import { MAPBOX_TOKEN } from './config';
 import { setOnUnauthorized, setRefreshHandler } from './api/client';
 import { forceLogout, refreshAccessToken } from './store/auth';
@@ -24,6 +24,7 @@ import { FavoritesScreen } from './screens/FavoritesScreen';
 import { FeedDetailScreen } from './screens/FeedDetailScreen';
 import { UserScreen } from './screens/UserScreen';
 import { SpotDetailScreen } from './screens/SpotDetailScreen';
+import { RouteDetailScreen } from './screens/RouteDetailScreen';
 import { SearchScreen } from './screens/SearchScreen';
 import { OfflineRoutesScreen } from './screens/OfflineRoutesScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -136,9 +137,25 @@ function AppInner() {
         <TabBar tabs={tabs} activeKey={activeTab} onTabPress={(k) => setActiveTab(k as typeof activeTab)} />
         <View style={styles.homeIndicator} />
         <SpotDetailLayer />
+        <RouteDetailLayer />
         <Overlay />
       </View>
     </QueryClientProvider>
+  );
+}
+
+/** Full-screen route detail (map hero + title card + tabs + download bar). */
+function RouteDetailLayer() {
+  const overlay = useUIStore((s) => s.overlay);
+  const routeId = useUIStore((s) => s.routeId);
+  const routes = useRoutes();
+  if (overlay !== 'route-detail' || !routeId) return null;
+  const route = routes.data?.find((r) => r.id === routeId);
+  if (!route) return null;
+  return (
+    <View style={styles.spotDetailLayer}>
+      <RouteDetailScreen route={route} />
+    </View>
   );
 }
 

@@ -24,6 +24,7 @@ export function HomeScreen() {
   const openUser = useUIStore((s) => s.openUser);
   const openSearch = useUIStore((s) => s.openSearch);
   const openSpotDetail = useUIStore((s) => s.openSpotDetail);
+  const openRouteDetail = useUIStore((s) => s.openRouteDetail);
   const toggleFeedLike = useToggleFeedLike();
   const toggleFavorite = useToggleFavorite();
 
@@ -140,6 +141,7 @@ export function HomeScreen() {
               key={route.id}
               name={route.name}
               description={`${route.spots?.length || 0} 坑点 · ${route.totalDistance}km · ${route.uploader?.nickname || '未知'}`}
+              onPress={() => openRouteDetail(route.id)}
             />
           ))}
         </QueryState>

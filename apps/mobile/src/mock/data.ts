@@ -1,4 +1,4 @@
-import type { Spot, Route, Feed, Tutorial, User, Weather, SpotReview } from '@yulu/shared';
+import type { Spot, Route, Feed, Tutorial, User, Weather, SpotReview, RouteReview } from '@yulu/shared';
 
 export const mockUser: User = {
   id: 'u1',
@@ -99,6 +99,41 @@ export const mockRoutes: Route[] = [
     totalDistance: 18.5, bestSeason: '4-10月', tags: ['鲈鱼', '翘嘴', '路亚', '水库'],
     uploaderId: 'u1', uploader: { id: 'u2', nickname: '老张' },
     downloadsCount: 2340, likesCount: 180, featured: true,
+    region: '北京 · 密云水库',
+    routeTags: [
+      { label: '环线' },
+      { label: '岸钓 + 船钓', plain: true },
+      { label: '中等难度', plain: true },
+    ],
+    startEnd: '起终点 · 北岸停车场 · 全程沿湖岸土路 + 两段乡道',
+    durationHours: 5.5, elevationGain: 358,
+    rating: 4.6, ratingCount: 96,
+    authorBadge: '金牌探路者', authorShares: 23, authorDownloads: 4120,
+    info: [
+      { label: '路线类型', value: '环线 · 顺时针巡钓' },
+      { label: '途经', value: '溪翁庄镇 · 不老屯 · 高岭镇北岸段' },
+      { label: '路面情况', value: '湖岸土路 70% · 乡道 30%，雨后泥泞' },
+      { label: '适钓方式', value: '路亚 · 台钓 · 筏钓（3 个坑点需船）' },
+      { label: '最佳季节', value: '4–6 月、9–10 月（禁渔期勿入）' },
+      { label: '数据大小', value: '离线包 24MB · 含坑点坐标与高程' },
+    ],
+    elevation: [180, 186, 198, 214, 228, 240, 252, 262, 275, 288, 290, 282, 268, 252, 236, 222, 208, 196, 188],
+    elevationNote: '最高点 290m 位于 15km 处的望湖坡，整体坡度平缓，适合推车携带装备。',
+    supplyInfo: [
+      { label: '补水点', value: '溪翁庄加油站便利店（3km）· 高岭镇口小卖部（14km）' },
+      { label: '紧急联系', value: '水库管理站 010-6901 xxxx · 全程有巡库道路可撤离' },
+      { label: '停车', value: '北岸停车场免费 · 周末 7 点后基本满位' },
+    ],
+    warning: '高岭镇以北 6km 无手机信号，且水库部分区域为一级保护区禁止垂钓，请沿路线标注的开放段作钓。',
+    sequence: [
+      { title: '北岸停车场', tag: '起终点', kind: 'start', desc: '免费停车 · 建议清晨 5 点前到达占位，装备整理后沿湖岸土路出发。', dist: '出发 · 0.0km' },
+      { title: '溪翁庄芦苇荡', tag: '路亚', desc: '水深 1.5–2.5m，清晨翘嘴活性高，水面系效果好。注意芦苇区抛竿方向。', dist: '步行 1.8km · 建议停留 45 分钟' },
+      { title: '不老屯石梁', tag: '台钓', desc: '水深 3–4m，鲫鱼鲤鱼密度高，是全程最稳的台钓点。石底易挂，备铅。', dist: '步行 3.2km · 建议停留 90 分钟' },
+      { title: '湖心暗岛', tag: '需船', desc: '水深 6m 下的隆起地形，船钓大物点，路亚深潜米诺可搜边。无船可跳过。', dist: '离岸 400m · 建议停留 60 分钟' },
+      { title: '高岭湾口', tag: '筏钓', desc: '湾口洄流区，筏钓玉米打窝守鲤鱼，下午上口率持续走高。', dist: '步行 5.1km · 建议停留 2 小时' },
+      { title: '返回北岸停车场', kind: 'end', desc: '沿巡库路南行 4.2km 返回，途经补给点可补水。', dist: '返程 4.2km · 全程结束' },
+    ],
+    offlineMb: 24,
     spots: [
       { spot: mockSpots.find(s => s.id === 's4')!, sortOrder: 1, distance: 0 },
       { spot: mockSpots.find(s => s.id === 's5')!, sortOrder: 2, distance: 0 },
@@ -178,5 +213,27 @@ export const mockSpotReviews: SpotReview[] = [
     rating: 5, text: '湾心深坑船钓上过 12 斤青鱼，大物区名不虚传。但湾口西段确实没信号，离线地图一定要提前下好。',
     tags: ['大物区', '需船钓', '信号弱'],
     createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
+  },
+];
+
+/** Route detail reviews (评价 tab) — mirrors the ios-route-detail prototype. */
+export const mockRouteReviews: RouteReview[] = [
+  {
+    id: 'rr1', routeId: 'r1', user: { id: 'u3', nickname: '环湖老李' },
+    rating: 5, text: '路线标注非常细，连哪个点需要船都写了。按顺序走完 5 个点，不老屯石梁上了 20 多条鲫鱼。离线导航在高岭镇没信号段照样能用。',
+    tags: ['标注细致', '离线可用', '强度适中'],
+    createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: 'rr2', routeId: 'r1', user: { id: 'u4', nickname: '路亚新手小陈' },
+    rating: 4, text: '第一次跑全程，18.5km 走下来比想象中累，建议电动车或自行车。湖心暗岛那段没有船只能看别人上鱼，眼馋。其余坑点都好找。',
+    tags: ['路线清晰', '建议骑行', '部分需船'],
+    createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+  },
+  {
+    id: 'rr3', routeId: 'r1', user: { id: 'u2', nickname: '筏钓阿强' },
+    rating: 5, text: '高岭湾口打窝两小时后连上三条大鲤，这条路线对筏钓党很友好。就是雨后土路泥得走不动，出发前看好天气。',
+    tags: ['大物概率高', '雨后难行'],
+    createdAt: new Date(Date.now() - 21 * 86400000).toISOString(),
   },
 ];

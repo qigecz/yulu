@@ -20,6 +20,7 @@ export function SpotsScreen() {
   const openSearch = useUIStore((s) => s.openSearch);
   const openNavigation = useUIStore((s) => s.openNavigation);
   const openSpotDetail = useUIStore((s) => s.openSpotDetail);
+  const openRouteDetail = useUIStore((s) => s.openRouteDetail);
   const toggleSpotLike = useToggleSpotLike();
   const toggleFavorite = useToggleFavorite();
   const downloadRoute = useDownloadRoute();
@@ -81,7 +82,7 @@ export function SpotsScreen() {
       ) : (
         <QueryState isLoading={false} isError={routes.isError} refetch={() => routes.refetch()} minHeight={180}>
           {featuredRoute && (
-            <View style={styles.routeCard}>
+            <TouchableOpacity style={styles.routeCard} onPress={() => openRouteDetail(featuredRoute.id)} activeOpacity={0.85}>
               <View style={styles.routeHeader}>
                 <View>
                   <Text style={styles.routeTitle}>{featuredRoute.name}</Text>
@@ -115,7 +116,7 @@ export function SpotsScreen() {
                   <Text style={styles.navBtnText}>🧭 开始导航</Text>
                 </TouchableOpacity>
               )}
-            </View>
+            </TouchableOpacity>
           )}
         </QueryState>
       )}

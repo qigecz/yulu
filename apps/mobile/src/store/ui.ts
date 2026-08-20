@@ -8,7 +8,7 @@ import { create } from 'zustand';
  * selected target for detail screens. This store lets any screen trigger a
  * flow without prop-drilling.
  */
-export type Overlay = 'create-spot' | 'compose-feed' | 'favorites' | 'feed-detail' | 'user' | 'search' | 'offline-routes' | 'spot-detail' | null;
+export type Overlay = 'create-spot' | 'compose-feed' | 'favorites' | 'feed-detail' | 'user' | 'search' | 'offline-routes' | 'spot-detail' | 'route-detail' | null;
 
 /** The five top-level tabs; lifted into the store so any screen can switch. */
 export type TabKey = 'home' | 'spots' | 'nav' | 'learn' | 'profile';
@@ -18,6 +18,7 @@ interface UIState {
   feedId: string | null;
   userId: string | null;
   spotId: string | null;
+  routeId: string | null;
   activeTab: TabKey;
   navRouteId: string | null;
   /** Optional coords to prefill the create-spot form (e.g. from "标记坑点"). */
@@ -31,6 +32,7 @@ interface UIState {
   openFeedDetail: (feedId: string) => void;
   openUser: (userId: string) => void;
   openSpotDetail: (spotId: string) => void;
+  openRouteDetail: (routeId: string) => void;
   openSearch: () => void;
   openOfflineRoutes: () => void;
   /** Switch to the nav tab and navigate the given route. */
@@ -43,6 +45,7 @@ export const useUIStore = create<UIState>((set) => ({
   feedId: null,
   userId: null,
   spotId: null,
+  routeId: null,
   activeTab: 'home',
   navRouteId: null,
   createSpotCoords: null,
@@ -55,8 +58,9 @@ export const useUIStore = create<UIState>((set) => ({
   openFeedDetail: (feedId) => set({ overlay: 'feed-detail', feedId }),
   openUser: (userId) => set({ overlay: 'user', userId }),
   openSpotDetail: (spotId) => set({ overlay: 'spot-detail', spotId }),
+  openRouteDetail: (routeId) => set({ overlay: 'route-detail', routeId }),
   openSearch: () => set({ overlay: 'search' }),
   openOfflineRoutes: () => set({ overlay: 'offline-routes' }),
   openNavigation: (routeId) => set({ navRouteId: routeId, activeTab: 'nav', overlay: null }),
-  closeOverlay: () => set({ overlay: null, feedId: null, userId: null, spotId: null, createSpotCoords: null }),
+  closeOverlay: () => set({ overlay: null, feedId: null, userId: null, spotId: null, routeId: null, createSpotCoords: null }),
 }));
