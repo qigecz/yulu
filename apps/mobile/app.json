@@ -51,6 +51,13 @@
         {
           "color": "#2a8f7a"
         }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsImpl": "mapbox",
+          "RNMapboxMapsDownloadToken": ""
+        }
       ]
     ],
     "extra": {

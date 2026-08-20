@@ -7,6 +7,7 @@ import { useAuthStore } from './store/auth';
 import { useUIStore } from './store/ui';
 import { useClock, formatStatusBarTime } from './hooks/useClock';
 import { useNearbySpots } from './hooks/queries';
+import { MAPBOX_TOKEN } from './config';
 import { setOnUnauthorized, setRefreshHandler } from './api/client';
 import { forceLogout, refreshAccessToken } from './store/auth';
 import { usePushNotifications } from './hooks/usePushNotifications';
@@ -73,6 +74,14 @@ function AppInner() {
   useEffect(() => {
     setOnUnauthorized(() => forceLogout());
     setRefreshHandler(refreshAccessToken);
+    // Configure the Mapbox access token once. Dynamically imported — a static
+    // top-level import of @rnmapbox/maps would access its native module during
+    // bundle load, which crashes release builds before registerComponent runs.
+    if (MAPBOX_TOKEN) {
+      void import('@rnmapbox/maps').then((Mapbox) => {
+        Mapbox.default.setAccessToken(MAPBOX_TOKEN);
+      }).catch(() => {});
+    }
     void hydrate();
   }, [hydrate]);
 
