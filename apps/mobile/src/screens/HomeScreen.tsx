@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize, radius, WeatherStrip, SearchBar, SectionHeader, SpotCard, SpotCardList, RouteItem, FeedItem } from '@yulu/ui';
 import { formatRelativeTime, formatDistance } from '@yulu/shared';
 import { useWeather, useNearbySpots, useRoutes, useFeeds, useToggleFeedLike, useToggleFavorite } from '../hooks/queries';
+import { useLocation } from '../hooks/useLocation';
 import { useClock, formatGreetingDate } from '../hooks/useClock';
 import { QueryState } from '../components/QueryState';
 import { SpotListSkeleton, RouteListSkeleton, FeedSkeleton } from '../components/Skeletons';
@@ -12,7 +13,9 @@ import { useUIStore } from '../store/ui';
 export function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const now = useClock();
-  const weather = useWeather();
+  // Device location drives the live weather (and could feed "nearby" later).
+  const { coords } = useLocation();
+  const weather = useWeather(coords?.latitude, coords?.longitude);
   const spots = useNearbySpots();
   const routes = useRoutes();
   const feeds = useFeeds();

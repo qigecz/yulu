@@ -24,6 +24,7 @@ import {
   mockUser,
 } from '../mock/data';
 import { useAuthStore } from '../store/auth';
+import { fetchWeatherByCoords } from '../api/openWeather';
 import type { Spot, Route, Feed, Tutorial, Weather, User, UserProfile, Comment, CommentTargetType, SearchResults } from '@yulu/shared';
 import { useOfflineStore } from '../store/offline';
 
@@ -83,8 +84,15 @@ export function useFeeds() {
 export function useWeather(lat?: number, lng?: number) {
   return useQuery<Weather>({
     queryKey: ['weather', lat, lng],
-    queryFn: async () =>
-      USE_MOCK ? mockWeather : weatherApi.get({ lat, lng }),
+    queryFn: async () => {
+      // Real device location → live weather from Open-Meteo (no backend needed).
+      if (typeof lat === 'number' && typeof lng === 'number') {
+        return fetchWeatherByCoords(lat, lng).catch(() =>
+          USE_MOCK ? mockWeather : weatherApi.get({ lat, lng }),
+        );
+      }
+      return USE_MOCK ? mockWeather : weatherApi.get({ lat, lng });
+    },
     staleTime: 10 * 60_000,
   });
 }
