@@ -42,13 +42,13 @@ function describeWeather(code: number): { label: string; good: boolean } {
 }
 
 /** Simple fishing heuristic: rain/thunder bad; sunny/cloudy + moderate wind good. */
-function fishingAdvice(condition: string, windLevel: number): string {
+function fishingAdvice(condition: string, windLevel: number): Weather['fishingAdvice'] {
   if (condition.includes('雨') || condition.includes('雪') || condition.includes('雷') || condition.includes('雹')) {
-    return '不宜出钓';
+    return '不宜';
   }
-  if (windLevel >= 6) return '风大慎出';
+  if (windLevel >= 6) return '不宜';
   if (windLevel >= 1 && windLevel <= 4) return '宜出钓';
-  return '可出钓';
+  return '一般';
 }
 
 export async function fetchWeatherByCoords(lat: number, lng: number): Promise<Weather> {
