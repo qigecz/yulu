@@ -93,7 +93,9 @@ export function HomeScreen() {
       <View style={{ height: 18 }} />
 
       {/* Nearby spots */}
-      <SectionHeader title="附近热门钓点" actionLabel="查看全部 →" />
+      <View style={styles.pad}>
+        <SectionHeader title="附近热门钓点" actionLabel="查看全部 →" />
+      </View>
       <View style={{ height: 10 }} />
       {spots.isLoading ? (
         <SpotListSkeleton count={3} />
