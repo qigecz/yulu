@@ -27,6 +27,7 @@ import { SpotDetailScreen } from './screens/SpotDetailScreen';
 import { RouteDetailScreen } from './screens/RouteDetailScreen';
 import { SpotListScreen } from './screens/SpotListScreen';
 import { RouteListScreen } from './screens/RouteListScreen';
+import { FeedListScreen } from './screens/FeedListScreen';
 import { SearchScreen } from './screens/SearchScreen';
 import { OfflineRoutesScreen } from './screens/OfflineRoutesScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -142,9 +143,21 @@ function AppInner() {
         <RouteDetailLayer />
         <SpotListLayer />
         <RouteListLayer />
+        <FeedListLayer />
         <Overlay />
       </View>
     </QueryClientProvider>
+  );
+}
+
+/** Full-screen feed list ("更多" from the home feeds section). */
+function FeedListLayer() {
+  const overlay = useUIStore((s) => s.overlay);
+  if (overlay !== 'feed-list') return null;
+  return (
+    <View style={styles.spotDetailLayer}>
+      <FeedListScreen />
+    </View>
   );
 }
 

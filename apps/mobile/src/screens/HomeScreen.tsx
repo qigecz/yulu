@@ -27,6 +27,7 @@ export function HomeScreen() {
   const openRouteDetail = useUIStore((s) => s.openRouteDetail);
   const openSpotList = useUIStore((s) => s.openSpotList);
   const openRouteList = useUIStore((s) => s.openRouteList);
+  const openFeedList = useUIStore((s) => s.openFeedList);
   const toggleFeedLike = useToggleFeedLike();
   const toggleFavorite = useToggleFavorite();
 
@@ -157,7 +158,7 @@ export function HomeScreen() {
       {/* Community feed */}
       <View style={styles.pad}>
         <View style={styles.feedHeader}>
-          <SectionHeader title="钓友动态" actionLabel="更多 →" />
+          <SectionHeader title="钓友动态" actionLabel="更多 →" onAction={openFeedList} />
         </View>
         <TouchableOpacity style={styles.publishBtn} onPress={openComposeFeed} activeOpacity={0.7}>
           <Text style={styles.publishBtnText}>＋ 分享你的作钓动态…</Text>

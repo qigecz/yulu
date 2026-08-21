@@ -253,16 +253,51 @@ export const mockFeeds: Feed[] = [
     catchStats: { fish: '14 尾', maxLenCm: 62, hours: 2 },
     linkedRoute: { id: 'r1', name: '碧溪湾 · 坑点巡钓路线', spotsCount: 6, totalDistance: 4.2 },
     commentsCount: 46, sharesCount: 12,
+    category: '爆护', authorFollowed: true,
   },
   {
     id: 'f2', userId: 'u2', user: { id: 'u2', nickname: '台钓老张' },
     content: '富春江钓台水位下降了半米，鲫鱼偏小，建议用 1.5 号线组。水深在 2.5-3 米比较好。',
-    location: '富春江', images: [], likesCount: 18, createdAt: new Date(Date.now() - 18000000).toISOString(),
+    location: '富春江', images: [], likesCount: 96, createdAt: new Date(Date.now() - 5 * 3600000).toISOString(),
+    category: '坑点报告', authorFollowed: true, authorBadge: '坑点报告员',
+    commentsCount: 18,
   },
   {
     id: 'f3', userId: 'u3', user: { id: 'u3', nickname: '新手小王' },
-    content: '第一次去太湖东山，跟着下载的路线走，顺利找到三个坑点。感谢分享路线的前辈！',
-    location: '太湖', images: [], likesCount: 12, createdAt: new Date(Date.now() - 86400000).toISOString(),
+    content: '第一次去太湖东山，跟着下载的路线走，顺利找到三个坑点。感谢分享路线的前辈！整理了几点新手跟线心得。',
+    location: '太湖', images: [], likesCount: 45, createdAt: new Date(Date.now() - 26 * 3600000).toISOString(),
+    category: '技巧分享', commentsCount: 12,
+  },
+  // 动态列表页扩充（ios-feed-list 原型）
+  {
+    id: 'f4', userId: 'u5', user: { id: 'u5', nickname: '夜钓小分队' },
+    content: '昨晚南湾网箱边翘嘴疯了，米诺匀收停顿就有口，12点前上了7条。注意防蚊，路线和夜钓点位已整理。',
+    location: '千岛湖', images: [], likesCount: 210, createdAt: new Date(Date.now() - 34 * 3600000).toISOString(),
+    category: '爆护', commentsCount: 33,
+  },
+  {
+    id: 'f5', userId: 'u7', user: { id: 'u7', nickname: '库钓老周' },
+    content: '湾心深坑船钓上过 12 斤青鱼，大物区名不虚传。湾口西段确实没信号，离线地图一定要提前下好。',
+    location: '密云水库', images: [], likesCount: 189, createdAt: new Date(Date.now() - 50 * 3600000).toISOString(),
+    category: '坑点报告', commentsCount: 21,
+  },
+  {
+    id: 'f6', userId: 'u8', user: { id: 'u8', nickname: '溪流路亚人' },
+    content: '溪流马口亮片攻略：2.5g 亮片逆流斜抛，收线略快于流速，重点搜碎石滩下游的缓水区。附标点示意。',
+    location: '苕溪', images: [], likesCount: 156, createdAt: new Date(Date.now() - 72 * 3600000).toISOString(),
+    category: '技巧分享', commentsCount: 27,
+  },
+  {
+    id: 'f7', userId: 'u4', user: { id: 'u4', nickname: '路亚老徐' },
+    content: '七里泷急流礁石区鳜鱼开口，深潜米诺贴底搜礁石背面，中了 4 条，最大 51cm。防挂建议用铅头钩。',
+    location: '富春江', images: [], likesCount: 134, createdAt: new Date(Date.now() - 120 * 3600000).toISOString(),
+    category: '爆护', commentsCount: 15,
+  },
+  {
+    id: 'f8', userId: 'u6', user: { id: 'u6', nickname: '筏钓阿强' },
+    content: '白沙湾筏钓点水位稳定，玉米打窝两小时后连上三条大鲤。筏钓路线已上传，共 4 个坑点。',
+    location: '新安江', images: [], likesCount: 77, createdAt: new Date(Date.now() - 150 * 3600000).toISOString(),
+    category: '坑点报告', commentsCount: 9,
   },
 ];
 

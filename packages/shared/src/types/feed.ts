@@ -28,6 +28,11 @@ export interface Feed {
   /** Comment/share counts for the action row. */
   commentsCount?: number;
   sharesCount?: number;
+  /* ── list-page fields (feed-list screen) ── */
+  /** Content category for the feed list filter. */
+  category?: '爆护' | '坑点报告' | '技巧分享';
+  /** Whether the current user follows the author (关注 filter). */
+  authorFollowed?: boolean;
 }
 
 /** Flat comment with an optional author reply (楼中楼). */
