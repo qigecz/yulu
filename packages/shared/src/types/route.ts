@@ -47,6 +47,11 @@ export interface Route {
   sequence?: { title: string; tag?: string; desc: string; dist: string; kind?: 'start' | 'end' | 'mid' }[];
   /** Offline package size in MB (download bar). */
   offlineMb?: number;
+  /* ── list-page fields (route-list screen) ── */
+  /** Route shape: 环线 / 往返 / 穿越. */
+  routeType?: '环线' | '往返' | '穿越';
+  /** Difficulty label: 休闲 / 中等 / 挑战. */
+  difficulty?: '休闲' | '中等' | '挑战';
 }
 
 export interface RouteSpot {

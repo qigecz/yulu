@@ -26,6 +26,7 @@ export function HomeScreen() {
   const openSpotDetail = useUIStore((s) => s.openSpotDetail);
   const openRouteDetail = useUIStore((s) => s.openRouteDetail);
   const openSpotList = useUIStore((s) => s.openSpotList);
+  const openRouteList = useUIStore((s) => s.openRouteList);
   const toggleFeedLike = useToggleFeedLike();
   const toggleFavorite = useToggleFavorite();
 
@@ -127,7 +128,7 @@ export function HomeScreen() {
 
       {/* Recent routes */}
       <View style={styles.pad}>
-        <SectionHeader title="最新路线" actionLabel="更多 →" />
+        <SectionHeader title="最新路线" actionLabel="更多 →" onAction={openRouteList} />
         <View style={{ height: 8 }} />
         {routes.isLoading ? (
           <RouteListSkeleton count={3} />

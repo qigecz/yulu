@@ -26,6 +26,7 @@ import { UserScreen } from './screens/UserScreen';
 import { SpotDetailScreen } from './screens/SpotDetailScreen';
 import { RouteDetailScreen } from './screens/RouteDetailScreen';
 import { SpotListScreen } from './screens/SpotListScreen';
+import { RouteListScreen } from './screens/RouteListScreen';
 import { SearchScreen } from './screens/SearchScreen';
 import { OfflineRoutesScreen } from './screens/OfflineRoutesScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -140,9 +141,21 @@ function AppInner() {
         <SpotDetailLayer />
         <RouteDetailLayer />
         <SpotListLayer />
+        <RouteListLayer />
         <Overlay />
       </View>
     </QueryClientProvider>
+  );
+}
+
+/** Full-screen route list ("更多" from the home routes section). */
+function RouteListLayer() {
+  const overlay = useUIStore((s) => s.overlay);
+  if (overlay !== 'route-list') return null;
+  return (
+    <View style={styles.spotDetailLayer}>
+      <RouteListScreen />
+    </View>
   );
 }
 
