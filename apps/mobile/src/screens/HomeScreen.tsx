@@ -158,7 +158,9 @@ export function HomeScreen() {
       {/* Community feed */}
       <View style={styles.pad}>
         <View style={styles.feedHeader}>
-          <SectionHeader title="钓友动态" actionLabel="更多 →" onAction={openFeedList} />
+          <View style={styles.feedHeaderInner}>
+            <SectionHeader title="钓友动态" actionLabel="更多 →" onAction={openFeedList} />
+          </View>
         </View>
         <TouchableOpacity style={styles.publishBtn} onPress={openComposeFeed} activeOpacity={0.7}>
           <Text style={styles.publishBtnText}>＋ 分享你的作钓动态…</Text>
@@ -230,6 +232,7 @@ const styles = StyleSheet.create({
   },
   bannerBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   feedHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  feedHeaderInner: { flex: 1 },
   publishBtn: {
     marginTop: 4, paddingVertical: 14, paddingHorizontal: 16,
     borderRadius: radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border,
