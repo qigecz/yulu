@@ -1,4 +1,4 @@
-import type { Spot, Route, Feed, Tutorial, User, Weather, SpotReview, RouteReview } from '@yulu/shared';
+import type { Spot, Route, Feed, Tutorial, User, Weather, SpotReview, RouteReview, PostComment } from '@yulu/shared';
 
 export const mockUser: User = {
   id: 'u1',
@@ -162,8 +162,15 @@ export const mockRoutes: Route[] = [
 export const mockFeeds: Feed[] = [
   {
     id: 'f1', userId: 'u1', user: { id: 'u1', nickname: '路亚阿杰' },
-    content: '千岛湖碧溪湾今天爆护！用了亮片VIB，下午3点到5点连杆鲈鱼，最大的62cm。路线已分享。',
-    location: '千岛湖', images: [], likesCount: 24, createdAt: new Date(Date.now() - 7200000).toISOString(),
+    content: '千岛湖#碧溪湾#今天爆护！下午 3 点到 5 点，亮片 VIB 慢收加停顿，湾口乱石堆连续起鱼。连杆鲈鱼 14 条，最大的一条 62cm，手感直接拉满。\n\n水温 24°C 东南风 2 级，窗口期非常准。坑点 1 和坑点 2 都出鱼，坑点 3 水深大建议搜底。作钓路线和标点我已经整理好分享在下面，兄弟们直接下载就能用。',
+    location: '千岛湖', images: [], likesCount: 328, createdAt: new Date(Date.now() - 7200000).toISOString(),
+    spotId: 's1', spot: { id: 's1', name: '千岛湖 · 碧溪湾' },
+    locationDetail: '杭州 · 淳安 · 千岛湖碧溪湾 · 坑点1 湾口乱石堆',
+    authorBadge: '金牌探路者', authorFollowers: 1204,
+    photoLabels: ['渔获 62cm', '湾口标点', '作钓环境'],
+    catchStats: { fish: '14 尾', maxLenCm: 62, hours: 2 },
+    linkedRoute: { id: 'r1', name: '碧溪湾 · 坑点巡钓路线', spotsCount: 6, totalDistance: 4.2 },
+    commentsCount: 46, sharesCount: 12,
   },
   {
     id: 'f2', userId: 'u2', user: { id: 'u2', nickname: '台钓老张' },
@@ -235,5 +242,30 @@ export const mockRouteReviews: RouteReview[] = [
     rating: 5, text: '高岭湾口打窝两小时后连上三条大鲤，这条路线对筏钓党很友好。就是雨后土路泥得走不动，出发前看好天气。',
     tags: ['大物概率高', '雨后难行'],
     createdAt: new Date(Date.now() - 21 * 86400000).toISOString(),
+  },
+];
+
+/** Post-detail comments (含作者楼中楼回复) — mirrors the ios-post-detail prototype. */
+export const mockPostComments: PostComment[] = [
+  {
+    id: 'pc1', feedId: 'f1', user: { id: 'u2', nickname: '台钓老张' },
+    content: '下午湾口风不小，你们那边抛竿没受影响？',
+    likesCount: 12, createdAt: new Date(Date.now() - 7200000).toISOString(),
+    reply: { content: '湾口背风面没事，VIB 自重大风天反而更好抛。你可以站坑点 2 西侧试。' },
+  },
+  {
+    id: 'pc2', feedId: 'f1', user: { id: 'u3', nickname: '新手小王' },
+    content: 'VIB 用的多少克？匀收速度有讲究吗，每次我收太快感觉没口。',
+    likesCount: 8, createdAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: 'pc3', feedId: 'f1', user: { id: 'u4', nickname: '路亚老徐' },
+    content: '62cm 的湾区鲈鱼相当可以了，密度明显起来了。周末去蹲一波。',
+    likesCount: 5, createdAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: 'pc4', feedId: 'f1', user: { id: 'u5', nickname: '夜钓小分队' },
+    content: '白天都这口了，晚上南湾网箱边不敢想。路线已下载，感谢分享！',
+    likesCount: 3, createdAt: new Date(Date.now() - 2700000).toISOString(),
   },
 ];
