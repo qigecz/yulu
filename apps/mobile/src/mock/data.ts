@@ -1,4 +1,4 @@
-import type { Spot, Route, Feed, Tutorial, User, Weather, SpotReview, RouteReview, PostComment } from '@yulu/shared';
+import type { Spot, Route, Feed, Tutorial, User, Weather, SpotReview, RouteReview, PostComment, MallProduct } from '@yulu/shared';
 
 export const mockUser: User = {
   id: 'u1',
@@ -385,4 +385,18 @@ export const mockPostComments: PostComment[] = [
     content: '白天都这口了，晚上南湾网箱边不敢想。路线已下载，感谢分享！',
     likesCount: 3, createdAt: new Date(Date.now() - 2700000).toISOString(),
   },
+];
+
+/** Mall products (渔具商城) — mirrors the ios-mall prototype. */
+export const mockMallProducts: MallProduct[] = [
+  { id: 'm1', name: '碧溪路亚竿 · M调直柄', spec: '2.1m · 7-18g · 快调', category: '路亚竿', price: 329, sold: 2100, flag: '新品' },
+  { id: 'm2', name: '竞技直柄竿 · ML调', spec: '1.98m · 4-12g · 超快调', category: '路亚竿', price: 588, sold: 864, flag: '专场' },
+  { id: 'm3', name: '纺车轮 · 3000型浅线杯', spec: '5+1 轴承 · 4.9:1', category: '渔轮', price: 199, sold: 3400, flag: '热销' },
+  { id: 'm4', name: '金属VIB亮片 · 7g 六件套', spec: '夜光/金色/银色 各 2', category: '假饵', price: 45, sold: 5200, flag: '热销' },
+  { id: 'm5', name: '深潜米诺 · 9cm 悬浮款', spec: '1.2-1.8m 潜深', category: '假饵', price: 38, sold: 1800 },
+  { id: 'm6', name: '台钓竿 · 5.4m 超轻碳素', spec: '28调 · 98g', category: '台钓', price: 268, sold: 1200 },
+  { id: 'm7', name: '折叠钓椅 · 带靠背', spec: '承重 150kg · 1.9kg', category: '台钓', price: 98, sold: 980 },
+  { id: 'm8', name: 'PE 编织线 · 0.8 编 150m', spec: '8股 · 磨灰色', category: '配件', price: 56, sold: 2700 },
+  { id: 'm9', name: '钓鱼防晒衣 · UPF50+', spec: '冰感 · 连帽款', category: '配件', price: 129, sold: 4600, flag: '热销' },
+  { id: 'm10', name: '铝合金抄网 · 2m 伸缩', spec: '网口 45cm · 无结网布', category: '配件', price: 69, sold: 1500 },
 ];

@@ -28,6 +28,7 @@ import { RouteDetailScreen } from './screens/RouteDetailScreen';
 import { SpotListScreen } from './screens/SpotListScreen';
 import { RouteListScreen } from './screens/RouteListScreen';
 import { FeedListScreen } from './screens/FeedListScreen';
+import { MallScreen } from './screens/MallScreen';
 import { SearchScreen } from './screens/SearchScreen';
 import { OfflineRoutesScreen } from './screens/OfflineRoutesScreen';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -144,9 +145,21 @@ function AppInner() {
         <SpotListLayer />
         <RouteListLayer />
         <FeedListLayer />
+        <MallLayer />
         <Overlay />
       </View>
     </QueryClientProvider>
+  );
+}
+
+/** Full-screen mall (渔具商城, "去逛逛" from the home banner). */
+function MallLayer() {
+  const overlay = useUIStore((s) => s.overlay);
+  if (overlay !== 'mall') return null;
+  return (
+    <View style={styles.spotDetailLayer}>
+      <MallScreen />
+    </View>
   );
 }
 

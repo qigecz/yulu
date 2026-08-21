@@ -28,6 +28,7 @@ export function HomeScreen() {
   const openSpotList = useUIStore((s) => s.openSpotList);
   const openRouteList = useUIStore((s) => s.openRouteList);
   const openFeedList = useUIStore((s) => s.openFeedList);
+  const openMall = useUIStore((s) => s.openMall);
   const toggleFeedLike = useToggleFeedLike();
   const toggleFavorite = useToggleFavorite();
 
@@ -87,11 +88,11 @@ export function HomeScreen() {
       <View style={styles.spacer} />
 
       {/* Banner */}
-      <View style={styles.banner}>
+      <TouchableOpacity style={styles.banner} onPress={openMall} activeOpacity={0.85}>
         <Text style={styles.bannerTitle}>渔具商城上新</Text>
         <Text style={styles.bannerDesc}>夏季路亚竿专场，精选入门到竞技款</Text>
         <View style={styles.bannerBtn}><Text style={styles.bannerBtnText}>去逛逛</Text></View>
-      </View>
+      </TouchableOpacity>
 
       <View style={{ height: 18 }} />
 
