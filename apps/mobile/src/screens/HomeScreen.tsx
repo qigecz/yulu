@@ -25,6 +25,7 @@ export function HomeScreen() {
   const openSearch = useUIStore((s) => s.openSearch);
   const openSpotDetail = useUIStore((s) => s.openSpotDetail);
   const openRouteDetail = useUIStore((s) => s.openRouteDetail);
+  const openSpotList = useUIStore((s) => s.openSpotList);
   const toggleFeedLike = useToggleFeedLike();
   const toggleFavorite = useToggleFavorite();
 
@@ -94,7 +95,7 @@ export function HomeScreen() {
 
       {/* Nearby spots */}
       <View style={styles.pad}>
-        <SectionHeader title="附近热门钓点" actionLabel="查看全部 →" />
+        <SectionHeader title="附近热门钓点" actionLabel="查看全部 →" onAction={openSpotList} />
       </View>
       <View style={{ height: 10 }} />
       {spots.isLoading ? (

@@ -53,12 +53,50 @@ export const mockSpots: Spot[] = [
     fishSpecies: ['鲫鱼'], fishingMethod: '台钓', waterDepth: '2-3m', bottomType: '沙底',
     tags: ['缓流', '沙底'], uploaderId: 'u1', images: [], likesCount: 35,
     downloadsCount: 89, distance: 5100, createdAt: '', updatedAt: '',
+    rating: 4.6, catchRate7d: 42,
   },
   {
     id: 's3', name: '太湖 · 东山半岛', latitude: 31.1, longitude: 120.5,
     fishSpecies: ['综合'], fishingMethod: '湖钓', waterDepth: '1-2m', bottomType: '水草',
     tags: ['浅滩', '水草'], uploaderId: 'u1', images: [], likesCount: 28,
     downloadsCount: 67, distance: 8700, createdAt: '', updatedAt: '',
+    rating: 4.5, catchRate7d: 37,
+  },
+  // 附近钓点列表页扩充（ios-spot-list 原型）
+  {
+    id: 's9', name: '青山湖 · 西坝', latitude: 30.24, longitude: 119.72,
+    fishSpecies: ['翘嘴'], fishingMethod: '路亚', waterDepth: '4-8m', bottomType: '网箱边',
+    tags: ['深水', '网箱边'], uploaderId: 'u2', images: [], likesCount: 47,
+    downloadsCount: 130, distance: 12400, createdAt: '', updatedAt: '',
+    rating: 4.7, catchRate7d: 51,
+  },
+  {
+    id: 's10', name: '苕溪 · 古埠段', latitude: 30.85, longitude: 119.97,
+    fishSpecies: ['马口'], fishingMethod: '溪流', waterDepth: '0.5-1.5m', bottomType: '碎石',
+    tags: ['浅滩', '碎石底'], uploaderId: 'u2', images: [], likesCount: 39,
+    downloadsCount: 96, distance: 15200, createdAt: '', updatedAt: '',
+    rating: 4.9, catchRate7d: 64,
+  },
+  {
+    id: 's11', name: '新安江 · 白沙湾', latitude: 29.47, longitude: 119.28,
+    fishSpecies: ['鳊鱼'], fishingMethod: '筏钓', waterDepth: '3-6m', bottomType: '缓流',
+    tags: ['缓流', '网箱边'], uploaderId: 'u2', images: [], likesCount: 26,
+    downloadsCount: 71, distance: 23800, createdAt: '', updatedAt: '',
+    rating: 4.4, catchRate7d: 28,
+  },
+  {
+    id: 's12', name: '东苕溪 · 闸口', latitude: 30.42, longitude: 119.98,
+    fishSpecies: ['鲤鱼'], fishingMethod: '台钓', waterDepth: '2-4m', bottomType: '桥墩',
+    tags: ['缓流', '桥墩'], uploaderId: 'u2', images: [], likesCount: 22,
+    downloadsCount: 58, distance: 26500, createdAt: '', updatedAt: '',
+    rating: 4.3, catchRate7d: 19,
+  },
+  {
+    id: 's13', name: '富春江 · 七里泷', latitude: 29.55, longitude: 119.43,
+    fishSpecies: ['鳜鱼'], fishingMethod: '路亚', waterDepth: '5-10m', bottomType: '礁石',
+    tags: ['急流', '礁石'], uploaderId: 'u2', images: [], likesCount: 33,
+    downloadsCount: 88, distance: 31000, createdAt: '', updatedAt: '',
+    rating: 4.8, catchRate7d: 45,
   },
   // 密云水库北岸环线航点集群（导航演示用，坐标紧凑成一条路线）
   {

@@ -8,7 +8,7 @@ import { create } from 'zustand';
  * selected target for detail screens. This store lets any screen trigger a
  * flow without prop-drilling.
  */
-export type Overlay = 'create-spot' | 'compose-feed' | 'favorites' | 'feed-detail' | 'user' | 'search' | 'offline-routes' | 'spot-detail' | 'route-detail' | null;
+export type Overlay = 'create-spot' | 'compose-feed' | 'favorites' | 'feed-detail' | 'user' | 'search' | 'offline-routes' | 'spot-detail' | 'route-detail' | 'spot-list' | null;
 
 /** The five top-level tabs; lifted into the store so any screen can switch. */
 export type TabKey = 'home' | 'spots' | 'nav' | 'learn' | 'profile';
@@ -33,6 +33,7 @@ interface UIState {
   openUser: (userId: string) => void;
   openSpotDetail: (spotId: string) => void;
   openRouteDetail: (routeId: string) => void;
+  openSpotList: () => void;
   openSearch: () => void;
   openOfflineRoutes: () => void;
   /** Switch to the nav tab and navigate the given route. */
@@ -59,6 +60,7 @@ export const useUIStore = create<UIState>((set) => ({
   openUser: (userId) => set({ overlay: 'user', userId }),
   openSpotDetail: (spotId) => set({ overlay: 'spot-detail', spotId }),
   openRouteDetail: (routeId) => set({ overlay: 'route-detail', routeId }),
+  openSpotList: () => set({ overlay: 'spot-list' }),
   openSearch: () => set({ overlay: 'search' }),
   openOfflineRoutes: () => set({ overlay: 'offline-routes' }),
   openNavigation: (routeId) => set({ navRouteId: routeId, activeTab: 'nav', overlay: null }),
