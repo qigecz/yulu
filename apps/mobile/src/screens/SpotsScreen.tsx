@@ -142,7 +142,7 @@ const routeStyles = StyleSheet.create({
   badgeT: { fontSize: 9, fontWeight: '600', color: colors.accent },
 });
 
-/** 用户定位点：核心点 + 循环扩散脉冲（近似原型 keyframes）。 */
+/** 用户定位点：核心点 + 循环扩散脉冲（scale+opacity，原生驱动兼容）。 */
 function UserPulseDot() {
   const pulse = useRef(new Animated.Value(0)).current;
   React.useEffect(() => {
@@ -152,11 +152,17 @@ function UserPulseDot() {
     loop.start();
     return () => loop.stop();
   }, [pulse]);
-  const size = pulse.interpolate({ inputRange: [0, 1], outputRange: [14, 52] });
+  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.27, 1] });
   const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.7, 0] });
   return (
     <View style={styles.userDot}>
-      <Animated.View style={[styles.userPulse, { width: size, height: size, borderRadius: 26, opacity }]} />
+      <Animated.View
+        style={[
+          styles.userPulse,
+          { transform: [{ translateX: -26 }, { translateY: -26 }, { scale }] },
+          { opacity },
+        ]}
+      />
       <View style={styles.userCore} />
     </View>
   );
@@ -458,7 +464,7 @@ const styles = StyleSheet.create({
   /* user dot */
   userDot: { position: 'absolute', left: '46%', top: '44%', width: 14, height: 14, zIndex: 4 },
   userPulse: {
-    position: 'absolute', left: -26, top: -26,
+    position: 'absolute', left: 26, top: 26, width: 52, height: 52, borderRadius: 26,
     backgroundColor: 'rgba(42,143,122,0.35)',
   },
   userCore: {
