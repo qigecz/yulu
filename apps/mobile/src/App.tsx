@@ -139,7 +139,6 @@ function AppInner() {
         )}
         <View style={styles.screen}>{renderScreen()}</View>
         <TabBar tabs={tabs} activeKey={activeTab} onTabPress={(k) => setActiveTab(k as typeof activeTab)} />
-        <View style={styles.homeIndicator} />
         <SpotDetailLayer />
         <RouteDetailLayer />
         <SpotListLayer />
@@ -269,9 +268,6 @@ const styles = StyleSheet.create({
   },
   statusText: { fontSize: 15, fontWeight: '600', color: colors.fg },
   screen: { flex: 1 },
-  homeIndicator: {
-    height: 28, alignItems: 'center', justifyContent: 'flex-end',
-  },
   overlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: colors.bg, zIndex: 10,
