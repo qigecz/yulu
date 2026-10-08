@@ -74,4 +74,22 @@ const libPatcher = (ind) => ({
 tryPatch('lib/commonjs/modules/location/locationManager.js', libPatcher('        '));
 tryPatch('lib/module/modules/location/locationManager.js', libPatcher('        '));
 
+// 3. Kotlin module: emitOnLocationUpdate came from the codegen-generated base
+//    class (a product of the EventEmitter spec property we removed). Emit the
+//    event directly instead — same RCTDeviceEventEmitter channel, same payload
+//    (LocationEvent.toJSON()), event name matches the JS listener above.
+tryPatch('android/src/main/java/com/rnmapbox/rnmbx/modules/RNMBXLocationModule.kt', {
+  patched: (s) => s.includes('emitter?.emit("onLocationUpdate"') || s.includes("emitter?.emit(\\\"onLocationUpdate\\\""),
+  replace: (s) =>
+    s.replace(
+      `                emitOnLocationUpdate(locationEvent.toJSON())\n` +
+        `                /*\n` +
+        `                val emitter = EventEmitter.getModuleEmitter(reactApplicationContext)\n` +
+        `                emitter?.emit(LOCATION_UPDATE, locationEvent.payload)\n` +
+        `                */`,
+      `                val emitter = EventEmitter.getModuleEmitter(reactApplicationContext)\n` +
+        `                emitter?.emit("onLocationUpdate", locationEvent.toJSON())`,
+    ),
+});
+
 console.log(`[rnmapbox-patch] done (${touched} file(s) modified)`);

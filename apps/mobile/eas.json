@@ -17,7 +17,7 @@
         "buildType": "apk"
       },
       "cache": {
-        "key": "v3-postinstall-patch"
+        "key": "v4-kotlin-emit"
       }
     },
     "production": {
