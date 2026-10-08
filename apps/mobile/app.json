@@ -58,6 +58,14 @@
           "RNMapboxMapsImpl": "mapbox",
           "RNMapboxMapsDownloadToken": ""
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "newArchEnabled": true
+          }
+        }
       ]
     ],
     "extra": {
@@ -68,7 +76,6 @@
         "projectId": "f6cecc5a-9e1b-4ef0-a5b3-d83db92e3360"
       }
     },
-    "owner": "qigecz",
-    "newArchEnabled": true
+    "owner": "qigecz"
   }
 }
