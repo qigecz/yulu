@@ -1,0 +1,93 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+deleted file mode 100644
+index 1cb276a138cd1e7e85a410d38c73d38949457587..0000000000000000000000000000000000000000
+diff --git a/android/.gitignore b/android/.gitignore
+deleted file mode 100644
+index 39fb081a42a86ccf8f9cf99dbccc8bdf7c828bce..0000000000000000000000000000000000000000
+diff --git a/android/.npmignore b/android/.npmignore
+deleted file mode 100644
+index 39fb081a42a86ccf8f9cf99dbccc8bdf7c828bce..0000000000000000000000000000000000000000
+diff --git a/lib/commonjs/modules/location/locationManager.js b/lib/commonjs/modules/location/locationManager.js
+index b8ed01138eb94739aac793082d95363c630ab38a..887b23feedf67efb33054ec150966416c393dd86 100644
+--- a/lib/commonjs/modules/location/locationManager.js
++++ b/lib/commonjs/modules/location/locationManager.js
+@@ -99,10 +99,15 @@ class LocationManager {
+       MapboxGLLocationManager.start(validDisplacement);
+       if (_reactNative.Platform.OS === 'ios') {
+         this.subscription = LocationModuleEventEmitter.addListener(MapboxGL.LocationCallbackName.Update, this._onUpdate);
+-      } else {
++      } else if (typeof MapboxGLLocationManager.onLocationUpdate === 'function') {
+         this.subscription = MapboxGLLocationManager.onLocationUpdate(location => {
+           this._onUpdate(location.payload);
+         });
++      } else {
++        const { DeviceEventEmitter } = require('react-native');
++        this.subscription = DeviceEventEmitter.addListener('onLocationUpdate', location => {
++          this._onUpdate(location === null || location === void 0 ? void 0 : location.payload);
++        });
+       }
+       this._isListening = true;
+     }
+diff --git a/lib/module/modules/location/locationManager.js b/lib/module/modules/location/locationManager.js
+index e1c3f5935ad30aeeb3abf72c7c5c4b9e5ffeed3c..3738b7d64c1f6ba79cfcf9fd20a53b1ac4d2303b 100644
+--- a/lib/module/modules/location/locationManager.js
++++ b/lib/module/modules/location/locationManager.js
+@@ -94,10 +94,15 @@ export class LocationManager {
+       MapboxGLLocationManager.start(validDisplacement);
+       if (Platform.OS === 'ios') {
+         this.subscription = LocationModuleEventEmitter.addListener(MapboxGL.LocationCallbackName.Update, this._onUpdate);
+-      } else {
++      } else if (typeof MapboxGLLocationManager.onLocationUpdate === 'function') {
+         this.subscription = MapboxGLLocationManager.onLocationUpdate(location => {
+           this._onUpdate(location.payload);
+         });
++      } else {
++        const { DeviceEventEmitter } = require('react-native');
++        this.subscription = DeviceEventEmitter.addListener('onLocationUpdate', location => {
++          this._onUpdate(location === null || location === void 0 ? void 0 : location.payload);
++        });
+       }
+       this._isListening = true;
+     }
+diff --git a/src/modules/location/locationManager.ts b/src/modules/location/locationManager.ts
+index 1d7ec92260d3348ca0742e0d2c719aeeec1963cf..8fcdfa2db57196cef80bb04234b2ab7708ed33bc 100644
+--- a/src/modules/location/locationManager.ts
++++ b/src/modules/location/locationManager.ts
+@@ -177,10 +177,16 @@ export class LocationManager {
+           MapboxGL.LocationCallbackName.Update,
+           this._onUpdate,
+         );
+-      } else {
+-        this.subscription = MapboxGLLocationManager.onLocationUpdate((location) => {
++      } else if (typeof (MapboxGLLocationManager as any).onLocationUpdate === 'function') {
++        this.subscription = (MapboxGLLocationManager as any).onLocationUpdate((location: any) => {
+           this._onUpdate(location.payload);
+         });
++      } else {
++        // codegen patch: EventEmitter spec unsupported on RN 0.74 new arch — listen via DeviceEventEmitter
++        const { DeviceEventEmitter } = require('react-native');
++        this.subscription = DeviceEventEmitter.addListener('onLocationUpdate', (location: any) => {
++          this._onUpdate(location?.payload);
++        }) as any;
+       }
+ 
+       this._isListening = true;
+diff --git a/src/specs/NativeRNMBXLocationModule.ts b/src/specs/NativeRNMBXLocationModule.ts
+index 363d56b7702d57c94aa74d84cd8c4e47efbe457a..3139e256e018f4fedd4feaed7184c6a577d1b909 100644
+--- a/src/specs/NativeRNMBXLocationModule.ts
++++ b/src/specs/NativeRNMBXLocationModule.ts
+@@ -1,5 +1,4 @@
+ import { TurboModule, TurboModuleRegistry} from "react-native";
+-import type { EventEmitter } from 'react-native/Libraries/Types/CodegenTypes';
+ 
+ type LocationEvent = {
+   type: string //"userlocationdupdated"
+@@ -24,8 +23,6 @@ export interface Spec extends TurboModule {
+   getLastKnownLocation(): Promise<LocationEvent['payload']>
+   simulateHeading(changesPerSecond: number, increment: number): void
+   setLocationEventThrottle(throttle: number): void
+-
+-  readonly onLocationUpdate: EventEmitter<LocationEvent>
+ }
+ 
+ export default TurboModuleRegistry.getEnforcing<Spec>('RNMBXLocationModule');
