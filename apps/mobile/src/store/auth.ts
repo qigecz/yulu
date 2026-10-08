@@ -75,7 +75,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    console.log('YULU_LOGOUT', 'called!');
     await AsyncStorage.multiRemove([TOKEN_KEY, REFRESH_KEY, USER_KEY]);
     setTokens(null, null);
     set({ user: null, accessToken: null, refreshToken: null, status: 'unauthenticated' });
@@ -89,11 +88,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         await AsyncStorage.setItem(USER_KEY, JSON.stringify(mockWithId)).catch(() => {});
         setTokens('mock', 'mock');
         set({ user: mockWithId, accessToken: 'mock', refreshToken: 'mock', status: 'authenticated' });
-        console.log('YULU_HYDRATE', 'mock branch -> authenticated');
         return;
       }
 
-      console.log('YULU_HYDRATE', 'real-api branch');
       const [token, refresh, userRaw] = await AsyncStorage.multiGet([TOKEN_KEY, REFRESH_KEY, USER_KEY]);
       const accessToken = token[1];
       const refreshToken = refresh[1];
@@ -110,9 +107,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
       set({ status: 'unauthenticated' });
-      console.log('YULU_HYDRATE', 'real-api no token -> unauthenticated');
     } catch (e) {
-      console.log('YULU_HYDRATE', 'catch:', String(e));
       // Storage failures (or anything else) must never strand the app on the
       // loading screen. In mock mode drop straight into the mock user; else go
       // to login so the UI is always reachable.
@@ -129,7 +124,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   forceBootBail: () => {
-    console.log('YULU_BAIL', 'fired, status=' + useAuthStore.getState().status + ' USE_MOCK=' + USE_MOCK);
     // Only meaningful if still loading.
     if (useAuthStore.getState().status !== 'loading') return;
     if (USE_MOCK) {

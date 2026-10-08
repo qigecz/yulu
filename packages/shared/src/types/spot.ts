@@ -35,6 +35,11 @@ export interface Spot {
   waterTemp?: number;
   /** Catch rate over the last 7 days, 0–100 (%). */
   catchRate7d?: number;
+  /* ── map-page fields (spots screen stylized map) ── */
+  /** Position on the stylized spot map, in % of map width/height. */
+  mapX?: number;
+  mapY?: number;
+
   /** Info key-values rendered in the 详情 tab. */
   info?: { label: string; value: string }[];
   /** Hourly catch distribution for the best-time bar chart (6 buckets). */

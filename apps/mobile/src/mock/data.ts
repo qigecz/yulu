@@ -27,6 +27,7 @@ export const mockSpots: Spot[] = [
     fishSpecies: ['鲈鱼'], fishingMethod: '路亚', waterDepth: '4-6m', bottomType: '岩石底',
     tags: ['深水', '岩石底'], uploaderId: 'u1', images: [], likesCount: 42,
     downloadsCount: 120, distance: 2300, createdAt: '', updatedAt: '',
+    mapX: 34, mapY: 52.5,
     region: '杭州 · 淳安', rating: 4.8, ratingCount: 326, anglersToday: 17,
     mainSpecies: '鲈鱼', waterTemp: 24, catchRate7d: 86,
     info: [
@@ -49,18 +50,40 @@ export const mockSpots: Spot[] = [
     ],
   },
   {
-    id: 's2', name: '富春江 · 钓台', latitude: 29.9, longitude: 119.7,
+    id: 's2', name: '富春江 · 钓台', latitude: 29.9, longitude: 119.7, mapX: 15, mapY: 43.5,
     fishSpecies: ['鲫鱼'], fishingMethod: '台钓', waterDepth: '2-3m', bottomType: '沙底',
     tags: ['缓流', '沙底'], uploaderId: 'u1', images: [], likesCount: 35,
     downloadsCount: 89, distance: 5100, createdAt: '', updatedAt: '',
     rating: 4.6, catchRate7d: 42,
   },
   {
-    id: 's3', name: '太湖 · 东山半岛', latitude: 31.1, longitude: 120.5,
+    id: 's3', name: '太湖 · 东山半岛', latitude: 31.1, longitude: 120.5, mapX: 68, mapY: 38.5,
     fishSpecies: ['综合'], fishingMethod: '湖钓', waterDepth: '1-2m', bottomType: '水草',
     tags: ['浅滩', '水草'], uploaderId: 'u1', images: [], likesCount: 28,
     downloadsCount: 67, distance: 8700, createdAt: '', updatedAt: '',
     rating: 4.5, catchRate7d: 37,
+  },
+  // 坑点地图页钓点（ios-route.html 原型）
+  {
+    id: 's14', name: '碧溪湖 · 入库口', latitude: 29.63, longitude: 118.95, mapX: 47, mapY: 63.5,
+    fishSpecies: ['综合'], fishingMethod: '湖钓', waterDepth: '1-3m', bottomType: '库汊',
+    tags: ['库汊', '浅水'], uploaderId: 'u2', images: [], likesCount: 18,
+    downloadsCount: 44, distance: 3400, createdAt: '', updatedAt: '',
+    rating: 4.2, catchRate7d: 28,
+  },
+  {
+    id: 's15', name: '龙溪 · 筏钓湾', latitude: 29.55, longitude: 118.82, mapX: 78, mapY: 57.5,
+    fishSpecies: ['鳜鱼'], fishingMethod: '筏钓', waterDepth: '6-9m', bottomType: '深湾',
+    tags: ['深湾', '深水'], uploaderId: 'u2', images: [], likesCount: 21,
+    downloadsCount: 52, distance: 8600, createdAt: '', updatedAt: '',
+    rating: 4.5, catchRate7d: 19,
+  },
+  {
+    id: 's16', name: '云溪涧', latitude: 29.68, longitude: 119.05, mapX: 24, mapY: 68.5,
+    fishSpecies: ['溪石斑'], fishingMethod: '溪流', waterDepth: '0.5-1m', bottomType: '山涧',
+    tags: ['山涧', '浅滩'], uploaderId: 'u2', images: [], likesCount: 15,
+    downloadsCount: 38, distance: 6200, createdAt: '', updatedAt: '',
+    rating: 4.3, catchRate7d: 23,
   },
   // 附近钓点列表页扩充（ios-spot-list 原型）
   {
