@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Live clock. Re-renders the caller on minute boundaries so status-bar time
@@ -7,21 +7,19 @@ import { useEffect, useState } from 'react';
  */
 export function useClock(): Date {
   const [now, setNow] = useState(() => new Date());
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const tick = () => setNow(new Date());
     // Align to the next minute boundary, then fire every 60s.
-    const msToNextMinute = 60000 - (Date.now() % 60000);
     const first = setTimeout(() => {
       tick();
-      const interval = setInterval(tick, 60000);
-      // stash cleanup on the timeout closure
-      (first as unknown as { _interval?: ReturnType<typeof setInterval> })._interval = interval;
-    }, msToNextMinute);
+      intervalRef.current = setInterval(tick, 60000);
+    }, 60000 - (Date.now() % 60000));
     return () => {
       clearTimeout(first);
-      const interval = (first as unknown as { _interval?: ReturnType<typeof setInterval> })._interval;
-      if (interval) clearInterval(interval);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
     };
   }, []);
 
