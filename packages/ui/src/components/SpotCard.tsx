@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { colors, fontSize, radius, spacing } from '../theme/tokens';
 import { Tag } from './Tag';
 
@@ -8,11 +8,12 @@ interface SpotCardProps {
   distance: string;
   fishInfo: string;
   tags?: string[];
+  onPress?: () => void;
 }
 
-export function SpotCard({ name, distance, fishInfo, tags }: SpotCardProps) {
+export function SpotCard({ name, distance, fishInfo, tags, onPress }: SpotCardProps) {
   return (
-    <View style={styles.card}>
+    <TouchableOpacity disabled={!onPress} onPress={onPress} activeOpacity={0.85} style={styles.card}>
       <View style={styles.image} />
       <View style={styles.info}>
         <Text style={styles.name}>{name}</Text>
@@ -23,7 +24,7 @@ export function SpotCard({ name, distance, fishInfo, tags }: SpotCardProps) {
           </View>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
