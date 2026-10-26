@@ -216,3 +216,15 @@ yulu/
 2. **后端**：`pnpm --filter @yulu/api dev` → curl 测试各 API 端点，检查数据库种子数据
 3. **移动端**：`pnpm --filter @yulu/mobile start` → Expo Go 扫码，验证三个核心页面 UI 与原型一致
 4. **数据库**：运行迁移 `knex migrate:latest` + `knex seed:run`，验证 PostGIS 空间查询
+
+## 开发工作流（Archon）
+
+2026-10-26 起接入 [Archon](https://github.com/coleam00/Archon) 工作流引擎，项目专属工作流定义在**项目根目录**（`渔路YULU/.archon/workflows/`，不在本仓库内，Archon 只扫描运行目录）：
+
+- `yulu-dev` — 日常开发：读项目文档与坑点 → 方案 → 实现 → lint/typecheck → 规范化 commit + push
+- `yulu-build-android` — EAS 云构建 Android APK（preview profile）
+- `yulu-deploy-web` — 发布到阿里云：预检（已提交推送 + SSH 免密）→ 服务器 pull/build/restart → 健康检查
+
+用法（在 `渔路YULU` 目录下）：`archon workflow run yulu-dev "任务描述"`；`archon workflow list` 查看全部（含 20 个官方默认工作流）。
+
+部署工作流前提：本机已配置 `root@47.98.105.25` 的 SSH 密钥免密登录。
