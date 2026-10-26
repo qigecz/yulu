@@ -1,5 +1,19 @@
 # 已知问题清单（下次构建一并处理）
 
+## 2026-10-26 `pnpm -r lint` 被 web 的 next lint 卡死【已修复 ✅】
+
+**现象**：root `pnpm lint`（= `pnpm -r lint`）在 `apps/web` 失败：`next lint` 因
+web 包没有 `.eslintrc` 也没有 eslint 依赖，进入**交互式配置询问**，非交互环境
+（Archon 工作流 validate 节点 / CI）直接 exit 1 且无诊断输出。yulu-dev 工作流
+2026-10-26 的 validate 失败即此原因。
+
+**处理**：移除 web 的 `lint` 脚本与 root 的 `lint` 聚合脚本（仓库其余包均未配置
+ESLint，留着只会 `ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT` / 交互卡死；校验以 root
+`pnpm typecheck` 为准）。
+
+**后续**：真要上 ESLint 时，装 `eslint` + `eslint-config-next` 并补
+`.eslintrc.json` 后再把脚本加回来。
+
 ## 2026-10-08 坑点页 pin 点不响应【已修复并真机验证 ✅ 2026-10-08，构建 896b6b17】
 
 **现象**：坑点页（SpotsScreen 重设计版，构建 896c4503）地图上的坑点 pin 点击无任何反应
