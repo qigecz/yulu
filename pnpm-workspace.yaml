@@ -4,3 +4,5 @@ packages:
 nodeLinker: hoisted
 allowBuilds:
   esbuild: true
+patchedDependencies:
+  '@rnmapbox/maps@10.1.39': patches/@rnmapbox__maps@10.1.39.patch
