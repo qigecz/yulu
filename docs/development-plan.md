@@ -23,6 +23,8 @@
 - ✅ **Mapbox 地图 + 航点引导**：接入 `@rnmapbox/maps`（开发构建），`RouteMap` 组件（路线 done/remaining 双色连线 + 三态航点 pin + 用户位置点）、`SpotsMap`（附近坑点真实坐标 pin）；`NavigationScreen` 重写为数据驱动航点引导（ETA/进度/转向文案/航点推进：GPS 接近自动推进 + 手动「到达此坑点」）；`useLocation` hook（expo-location）；路线入口（SpotsScreen「开始导航」、OfflineRoutesScreen「导航」）；`utils/navigation.ts`（waypoints/progress/ETA）。详见 `docs/mapbox-setup.md`
 
 ### ✅ Phase 3：社区 + 社交
+- ✅ **学习页/我的页原型补齐**（2026-10-26，对照 `ios-learn.html` / `ios-profile.html`）：学习页分类筛选（筏钓/绑钩 DIY）、「继续学习」进度卡、「本周精选」徽标+作者头像、教程条目可点（计数/热度高亮/空态）、模拟播放浮层 `VideoPlayerOverlay`（进度/倍速/收藏下载）；我的页金徽标+编辑资料、三入口发布（`PublishSheet` 路线/技巧模拟发布→本地置顶+toast）、卡片式菜单带角标（收藏数/离线数/商城接入）。播放器与发布面板为模拟实现，接真实视频源与 create-route/create-tutorial 后替换。
+- **UGC**：创建钓点（CreateSpotScreen）、发布动态（ComposeFeedScreen），overlay 浮层 + Mock/Real 双模式
 - **UGC**：创建钓点（CreateSpotScreen）、发布动态（ComposeFeedScreen），overlay 浮层 + Mock/Real 双模式
 - **社交互动**：点赞（feeds/spots）、收藏（多态 favorites + 「我的收藏」页）、关注（follows + 用户主页）、评论（多态 comments + 动态详情页）
 - ✅ **推送通知（Expo Push，全流程）**：后端 `push_tokens` 表 + `POST /users/push-token` + `services/notifications.ts`（调 Expo v2/send，尽力而为不阻塞）；社交事件触发推送——spot/feed 点赞、评论、关注（跳过本人）；移动端 `expo-notifications` + `usePushNotifications`（请求权限/注册 token/前台横幅/点击跳转）。详见 `docs/push-deeplink.md`
