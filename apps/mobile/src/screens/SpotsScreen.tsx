@@ -23,7 +23,7 @@ type SortKey = 'dist' | 'hot';
 /** 风格化地形图（近似原型的水系画风：湖体 + 湖湾 + 支流 + 道路 + 树林）。 */
 function TerrainScene() {
   return (
-    <View style={terrainStyles.scene}>
+    <View pointerEvents="none" style={terrainStyles.scene}>
       {/* 支流 */}
       <View style={terrainStyles.stream1} />
       <View style={terrainStyles.stream2} />
@@ -155,7 +155,7 @@ function UserPulseDot() {
   const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.27, 1] });
   const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.7, 0] });
   return (
-    <View style={styles.userDot}>
+    <View pointerEvents="none" style={styles.userDot}>
       <Animated.View
         style={[
           styles.userPulse,
@@ -243,6 +243,7 @@ export function SpotsScreen() {
                 style={[styles.pin, { left: `${s.mapX!}%`, top: `${s.mapY!}%` }]}
                 onPress={() => select(s.id)}
                 activeOpacity={0.85}
+                hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
               >
                 <View style={[styles.pinDot, isSel && styles.pinDotSel, hot && styles.pinDotHot]}>
                   <Text style={[styles.pinCnt, isSel && styles.pinCntSel]}>{s.catchRate7d}</Text>
@@ -284,28 +285,31 @@ export function SpotsScreen() {
         </View>
 
         {/* 钓法筛选 + 路线开关 */}
-        <View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-            {METHODS.map((m) => (
-              <TouchableOpacity
-                key={m.key}
-                style={[styles.chip, method === m.key && styles.chipOn]}
-                onPress={() => { setMethod(m.key); setSelected(null); }}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.chipT, method === m.key && styles.chipTOn]}>{m.label}</Text>
-              </TouchableOpacity>
-            ))}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.chipScroll}
+          contentContainerStyle={styles.chipRow}
+        >
+          {METHODS.map((m) => (
             <TouchableOpacity
-              style={[styles.chip, styles.routeChip, routeOn && styles.routeChipOn]}
-              onPress={() => setRouteOn((v) => !v)}
+              key={m.key}
+              style={[styles.chip, method === m.key && styles.chipOn]}
+              onPress={() => { setMethod(m.key); setSelected(null); }}
               activeOpacity={0.8}
             >
-              <Ionicons name="git-branch-outline" size={12} color={routeOn ? '#fff' : colors.fg} />
-              <Text style={[styles.chipT, routeOn && styles.chipTOn]}>路线</Text>
+              <Text style={[styles.chipT, method === m.key && styles.chipTOn]}>{m.label}</Text>
             </TouchableOpacity>
-          </ScrollView>
-        </View>
+          ))}
+          <TouchableOpacity
+            style={[styles.chip, styles.routeChip, routeOn && styles.routeChipOn]}
+            onPress={() => setRouteOn((v) => !v)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="git-branch-outline" size={12} color={routeOn ? '#fff' : colors.fg} />
+            <Text style={[styles.chipT, routeOn && styles.chipTOn]}>路线</Text>
+          </TouchableOpacity>
+        </ScrollView>
 
         {/* 右侧地图控制 */}
         <View style={styles.mapCtl}>
@@ -438,7 +442,7 @@ const styles = StyleSheet.create({
   mapLayer: { ...StyleSheet.absoluteFillObject, transformOrigin: '50% 42%' },
 
   /* pins */
-  pin: { position: 'absolute', transform: [{ translateX: -13 }, { translateY: -13 }], alignItems: 'center', zIndex: 5 },
+  pin: { position: 'absolute', marginLeft: -13, marginTop: -13, alignItems: 'center', zIndex: 5 },
   pinDot: {
     width: 26, height: 26, borderRadius: 13, backgroundColor: colors.fg,
     borderWidth: 3, borderColor: colors.surface,
@@ -498,7 +502,8 @@ const styles = StyleSheet.create({
   condT: { fontSize: 11, color: colors.fg },
 
   /* chips */
-  chipRow: { gap: 6, paddingHorizontal: 16, position: 'absolute', top: 108, left: 0, right: 0, zIndex: 20 },
+  chipScroll: { position: 'absolute', top: 108, left: 0, right: 0, zIndex: 20 },
+  chipRow: { gap: 6, paddingHorizontal: 16 },
   chip: {
     paddingHorizontal: 13, paddingVertical: 6, borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.86)', borderWidth: 1, borderColor: colors.border,
