@@ -1,12 +1,3 @@
-diff --git a/CHANGELOG.md b/CHANGELOG.md
-deleted file mode 100644
-index 1cb276a138cd1e7e85a410d38c73d38949457587..0000000000000000000000000000000000000000
-diff --git a/android/.gitignore b/android/.gitignore
-deleted file mode 100644
-index 39fb081a42a86ccf8f9cf99dbccc8bdf7c828bce..0000000000000000000000000000000000000000
-diff --git a/android/.npmignore b/android/.npmignore
-deleted file mode 100644
-index 39fb081a42a86ccf8f9cf99dbccc8bdf7c828bce..0000000000000000000000000000000000000000
 diff --git a/lib/commonjs/modules/location/locationManager.js b/lib/commonjs/modules/location/locationManager.js
 index b8ed01138eb94739aac793082d95363c630ab38a..887b23feedf67efb33054ec150966416c393dd86 100644
 --- a/lib/commonjs/modules/location/locationManager.js
