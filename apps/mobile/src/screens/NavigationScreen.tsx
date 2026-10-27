@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize, radius } from '@yulu/ui';
 import type { Route } from '@yulu/shared';
 import { haversineDistance, formatDistance } from '@yulu/shared';
@@ -15,6 +16,9 @@ import {
   estimateEta,
   formatClock,
   routeTotalMeters,
+  bearingTo,
+  bearingLabel,
+  bearingRotation,
 } from '../utils/navigation';
 
 /** Meters within which a waypoint is considered "reached" (auto-advance). */
@@ -62,6 +66,12 @@ export function NavigationScreen() {
   const eta = estimateEta(progress.remainingMeters);
   const finished = currentIndex >= waypoints.length - 1 && distToCurrent != null && distToCurrent < ARRIVAL_THRESHOLD_M;
 
+  // Bearing from the user toward the current waypoint (turn-card arrow + label).
+  const bearing = useMemo(() => {
+    if (!coords || !current) return null;
+    return bearingTo(coords.latitude, coords.longitude, current.latitude, current.longitude);
+  }, [coords, current]);
+
   const endNav = () => {
     Alert.alert('结束导航', '已退出路线导航。', [{ text: '好的', onPress: () => setActiveTab('spots') }]);
   };
@@ -92,7 +102,15 @@ export function NavigationScreen() {
       {/* Turn instruction card */}
       <View style={styles.turnCard}>
         <View style={styles.turnIcon}>
-          <Text style={{ fontSize: 20 }}>{finished ? '🏁' : '↗'}</Text>
+          {finished ? (
+            <Ionicons name="flag-outline" size={20} color={colors.accent} />
+          ) : bearing != null ? (
+            <View style={{ transform: [{ rotate: `${bearingRotation(bearing)}deg` }] }}>
+              <Ionicons name="navigate" size={20} color={colors.accent} />
+            </View>
+          ) : (
+            <Ionicons name="locate" size={20} color={colors.accent} />
+          )}
         </View>
         <View style={{ flex: 1 }}>
           {finished ? (
@@ -104,7 +122,8 @@ export function NavigationScreen() {
                 <Text style={styles.turnDistUnit}>m</Text>
               </Text>
               <Text style={styles.turnText} numberOfLines={1}>
-                前往 {current?.name}
+                {bearing != null ? `沿${bearingLabel(bearing)}方向，前往 ` : '前往 '}
+                {current?.name}
               </Text>
             </>
           )}
@@ -185,8 +204,21 @@ export function NavigationScreen() {
                   </Text>
                 </View>
                 {status === 'done' && <Text style={styles.wpDoneLabel}>已完成</Text>}
-                {status === 'current' && distToCurrent != null && (
-                  <Text style={styles.wpDistCurrent}>{formatDistance(distToCurrent)}</Text>
+                {status === 'current' && (
+                  <>
+                    {distToCurrent != null && (
+                      <Text style={styles.wpDistCurrent}>{formatDistance(distToCurrent)}</Text>
+                    )}
+                    {!finished && (
+                      <TouchableOpacity
+                        style={styles.arriveBtn}
+                        onPress={() => setCurrentIndex((i) => Math.min(i + 1, waypoints.length - 1))}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.arriveBtnT}>到达</Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
                 )}
                 {status === 'upcoming' && <Text style={styles.wpDist}>{formatDistance(wp.cumulative)}</Text>}
               </View>
@@ -194,21 +226,15 @@ export function NavigationScreen() {
           })}
         </ScrollView>
 
-        {/* Action buttons */}
+        {/* Action buttons (prototype: danger-outline end + solid mark) */}
         <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.endNavBtn} onPress={endNav}>
-            <Text style={styles.endNavText}>■ 结束导航</Text>
+          <TouchableOpacity style={styles.endNavBtn} onPress={endNav} activeOpacity={0.8}>
+            <Ionicons name="stop-outline" size={18} color="#c0392b" />
+            <Text style={styles.endNavText}>结束导航</Text>
           </TouchableOpacity>
-          {!finished && (
-            <TouchableOpacity
-              style={styles.advanceBtn}
-              onPress={() => setCurrentIndex((i) => Math.min(i + 1, waypoints.length - 1))}
-            >
-              <Text style={styles.advanceBtnText}>到达此坑点</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.markBtn} onPress={markSpot}>
-            <Text style={styles.markBtnText}>✎ 标记</Text>
+          <TouchableOpacity style={styles.markBtn} onPress={markSpot} activeOpacity={0.85}>
+            <Ionicons name="create-outline" size={18} color="#fff" />
+            <Text style={styles.markBtnText}>标记坑点</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -305,16 +331,18 @@ const styles = StyleSheet.create({
   endNavBtn: {
     flex: 1, height: 44, borderRadius: 14, borderWidth: 1.5,
     borderColor: '#c0392b', alignItems: 'center', justifyContent: 'center',
+    flexDirection: 'row', gap: 6,
   },
   endNavText: { color: '#c0392b', fontSize: 14, fontWeight: '600' },
-  advanceBtn: {
-    flex: 1, height: 44, borderRadius: 14, borderWidth: 1.5,
-    borderColor: colors.accent, alignItems: 'center', justifyContent: 'center',
+  arriveBtn: {
+    marginLeft: 8, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999,
+    backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent,
   },
-  advanceBtnText: { color: colors.accent, fontSize: 13, fontWeight: '600' },
+  arriveBtnT: { color: colors.accent, fontSize: 11, fontWeight: '600' },
   markBtn: {
     flex: 1, height: 44, borderRadius: 14,
     backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center',
+    flexDirection: 'row', gap: 6,
   },
   markBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });

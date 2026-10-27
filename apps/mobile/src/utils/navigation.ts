@@ -107,3 +107,29 @@ export function formatClock(d: Date): string {
   const m = String(d.getMinutes()).padStart(2, '0');
   return `${h}:${m}`;
 }
+
+/** Initial bearing (degrees clockwise from true north) from point A to B. */
+export function bearingTo(
+  lat1: number, lng1: number,
+  lat2: number, lng2: number,
+): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const φ1 = toRad(lat1), φ2 = toRad(lat2);
+  const Δλ = toRad(lng2 - lng1);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (Math.atan2(y, x) * 180) / Math.PI;
+}
+
+const BEARING_LABELS = ['北', '东北', '东', '东南', '南', '西南', '西', '西北'] as const;
+
+/** Compass label for a bearing, e.g. "东北". */
+export function bearingLabel(bearingDeg: number): string {
+  const norm = ((bearingDeg % 360) + 360) % 360;
+  return BEARING_LABELS[Math.round(norm / 45) % 8];
+}
+
+/** Rotation (deg) for an up-pointing arrow icon so it points along the bearing. */
+export function bearingRotation(bearingDeg: number): number {
+  return ((bearingDeg % 360) + 360) % 360;
+}
