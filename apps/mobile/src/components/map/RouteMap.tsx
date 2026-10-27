@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import { colors } from '@yulu/ui';
@@ -33,6 +33,15 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
 ) {
   const camera = useRef<Mapbox.Camera>(null);
   const zoom = useRef(14);
+  // Defer the MapView by one frame: mounting it synchronously inside the same
+  // commit it appears in triggers a Fabric ViewTagResolver failure on Android
+  // (blank map, "view: null found with tag" in logs) when the nav tab mounts
+  // directly instead of via a state-driven transition.
+  const [mapReady, setMapReady] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMapReady(true), 50);
+    return () => clearTimeout(t);
+  }, []);
 
   const coords: [number, number][] = waypoints.map((w) => [w.longitude, w.latitude]);
 
@@ -61,6 +70,7 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
 
   return (
     <View style={styles.container}>
+      {!mapReady ? null : (
       <Mapbox.MapView style={styles.map} logoEnabled={false} pitchEnabled={false} rotateEnabled={false}>
         <Mapbox.Camera
           ref={camera}
@@ -102,6 +112,7 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
           </Mapbox.MarkerView>
         )}
       </Mapbox.MapView>
+      )}
     </View>
   );
 });

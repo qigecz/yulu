@@ -79,14 +79,12 @@ function AppInner() {
   useEffect(() => {
     setOnUnauthorized(() => forceLogout());
     setRefreshHandler(refreshAccessToken);
-    // Configure the Mapbox access token once. Dynamically imported — a static
-    // top-level import of @rnmapbox/maps would access its native module during
-    // bundle load, which crashes release builds before registerComponent runs.
-    if (MAPBOX_TOKEN) {
-      void import('@rnmapbox/maps').then((Mapbox) => {
-        Mapbox.default.setAccessToken(MAPBOX_TOKEN);
-      }).catch(() => {});
-    }
+    // Configure the Mapbox access token once (empty token = blank basemap but
+    // the SDK still needs an explicit init before the first MapView mounts —
+    // skipping it triggers a Fabric ViewTagResolver failure on Android).
+    void import('@rnmapbox/maps')
+      .then((Mapbox) => Mapbox.default.setAccessToken(MAPBOX_TOKEN))
+      .catch(() => {});
     void hydrate();
   }, [hydrate]);
 
