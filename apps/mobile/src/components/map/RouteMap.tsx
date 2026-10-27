@@ -4,6 +4,8 @@ import Mapbox from '@rnmapbox/maps';
 import { colors } from '@yulu/ui';
 import type { Waypoint } from '../../utils/navigation';
 import type { UserCoords } from '../../hooks/useLocation';
+import { wgs84ToGcj02 } from '../../utils/gcj02';
+import { SATELLITE_STYLE } from './mapStyle';
 
 export type RouteMapHandle = {
   /** Zoom in (+) or out (−) by a delta. */
@@ -43,14 +45,21 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
     return () => clearTimeout(t);
   }, []);
 
-  const coords: [number, number][] = waypoints.map((w) => [w.longitude, w.latitude]);
+  // Gaode tiles are GCJ-02 — convert every WGS-84 coordinate (waypoints, user
+  // position, camera targets) on the way in so pins line up with the imagery.
+  const coords: [number, number][] = waypoints.map((w) =>
+    wgs84ToGcj02(w.longitude, w.latitude),
+  );
+  const userPos: [number, number] | null = userCoords
+    ? wgs84ToGcj02(userCoords.longitude, userCoords.latitude)
+    : null;
 
   useImperativeHandle(ref, () => ({
     zoomBy: (delta) => {
       zoom.current = Math.max(3, Math.min(20, zoom.current + delta));
       camera.current?.zoomTo(zoom.current, 200);
     },
-    flyTo: (coord) => camera.current?.flyTo(coord),
+    flyTo: (coord) => camera.current?.flyTo(wgs84ToGcj02(coord[0], coord[1])),
     fitRoute: () => {
       if (coords.length < 2) return;
       const ne = bounds(coords, 'ne');
@@ -71,7 +80,14 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
   return (
     <View style={styles.container}>
       {!mapReady ? null : (
-      <Mapbox.MapView style={styles.map} logoEnabled={false} pitchEnabled={false} rotateEnabled={false}>
+      <Mapbox.MapView
+        style={styles.map}
+        styleJSON={JSON.stringify(SATELLITE_STYLE)}
+        logoEnabled={false}
+        attributionEnabled={false}
+        pitchEnabled={false}
+        rotateEnabled={false}
+      >
         <Mapbox.Camera
           ref={camera}
           defaultSettings={{
@@ -100,14 +116,14 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
         {waypoints.map((w, i) => {
           const status = i < currentIndex ? 'done' : i === currentIndex ? 'current' : 'upcoming';
           return (
-            <Mapbox.MarkerView key={w.id} coordinate={[w.longitude, w.latitude]}>
+            <Mapbox.MarkerView key={w.id} coordinate={coords[i]}>
               <WaypointPin status={status} label={w.sortOrder} name={status === 'current' ? w.name : undefined} />
             </Mapbox.MarkerView>
           );
         })}
 
-        {userCoords && (
-          <Mapbox.MarkerView coordinate={[userCoords.longitude, userCoords.latitude]}>
+        {userPos && (
+          <Mapbox.MarkerView coordinate={userPos}>
             <View style={styles.userDot} />
           </Mapbox.MarkerView>
         )}

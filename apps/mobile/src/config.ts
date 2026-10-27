@@ -19,7 +19,7 @@ export const API_BASE_URL: string =
 // Mock data is the default data source so the app runs without a backend.
 export const USE_MOCK: boolean = extra.useMock ?? true;
 
-// Mapbox public access token. Set `expo.extra.mapboxAccessToken` in app.json
-// to render real map tiles; without it the base map is blank (pins and route
-// lines still render). Requires a development build (`expo prebuild`).
+// Unused since the switch to MapLibre + free Gaode tiles (basemaps are inline
+// style JSONs in components/map/mapStyle.ts, no account or token required).
+// Kept only because App.tsx must call setAccessToken once to init the SDK.
 export const MAPBOX_TOKEN: string = extra.mapboxAccessToken ?? '';
