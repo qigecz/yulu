@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>渔路 · 钓友动态列表 · iOS</title>
+  <style>
+    :root {
+      --bg:      #f3f5f2;
+      --surface: #ffffff;
+      --fg:      #1a2420;
+      --muted:   #647a70;
+      --border:  #dce2dc;
+      --accent:  #2a8f7a;
+
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft:     color-mix(in oklch, var(--fg) 6%, transparent);
+
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body:    -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --font-mono:    ui-monospace, 'SF Mono', Menlo, monospace;
+
+      --fs-body: 15px;
+      --fs-meta: 12px;
+      --radius-card: 18px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: radial-gradient(60% 80% at 50% 0%, color-mix(in oklch, var(--accent) 6%, var(--bg)) 0%, var(--bg) 60%);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: var(--fs-body);
+      line-height: 1.4;
+      -webkit-font-smoothing: antialiased;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+    }
+
+    .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .caption {
+      font-family: var(--font-mono); font-size: 12px;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    }
+    .caption strong { color: var(--fg); font-weight: 500; }
+
+    .device {
+      position: relative; width: 390px; height: 844px;
+      border-radius: 56px; padding: 12px;
+      background: linear-gradient(160deg, #2a2a2c 0%, #1a1a1c 50%, #0e0e10 100%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 0 2px #000 inset,
+                  0 28px 60px -12px rgba(0,0,0,0.45), 0 8px 20px -8px rgba(0,0,0,0.35);
+      isolation: isolate;
+    }
+    .device::before, .device::after {
+      content: ''; position: absolute; width: 3px;
+      background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.06) 8%, transparent 16%, transparent 84%, rgba(255,255,255,0.04) 92%, transparent 100%);
+      top: 100px; bottom: 100px; pointer-events: none;
+    }
+    .device::before { left: -1px; }
+    .device::after  { right: -1px; }
+    .island {
+      position: absolute; top: 22px; left: 50%; transform: translateX(-50%);
+      width: 124px; height: 36px; background: #000; border-radius: 999px; z-index: 30;
+    }
+    .btn-rail { position: absolute; width: 4px; background: #0a0a0c; border-radius: 2px; }
+    .btn-rail.left-1  { left: -3px; top: 174px; height: 32px; }
+    .btn-rail.left-2  { left: -3px; top: 220px; height: 60px; }
+    .btn-rail.left-3  { left: -3px; top: 290px; height: 60px; }
+    .btn-rail.right-1 { right: -3px; top: 250px; height: 100px; }
+
+    .screen {
+      position: relative; width: 100%; height: 100%;
+      background: var(--bg); border-radius: 44px; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .statusbar {
+      flex: 0 0 47px; padding: 18px 26px 0;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      font-family: var(--font-body); font-size: 15px; font-weight: 600;
+      color: var(--fg);
+    }
+    .statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
+    .statusbar svg { width: 17px; height: 11px; fill: var(--fg); }
+    .statusbar .battery { width: 25px; }
+
+    .content {
+      flex: 1 1 auto; overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .content::-webkit-scrollbar { display: none; }
+
+    .home-indicator { flex: 0 0 28px; position: relative; }
+    .home-indicator::after {
+      content: ''; position: absolute; left: 50%; bottom: 8px;
+      transform: translateX(-50%); width: 134px; height: 5px;
+      background: var(--fg); border-radius: 999px; opacity: 0.85;
+    }
+
+    .meta { font-family: var(--font-mono); font-size: var(--fs-meta); color: var(--muted); }
+    .num  { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    /* header */
+    .header {
+      padding: 8px 20px 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .header .h-title { font-family: var(--font-display); font-size: 18px; letter-spacing: -0.01em; }
+    .header .icon-btn {
+      width: 36px; height: 36px; border-radius: 999px;
+      background: var(--surface); border: 1px solid var(--border);
+      display: grid; place-items: center; color: var(--fg); cursor: pointer;
+    }
+    .header .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+    .header .icon-btn:hover { border-color: color-mix(in oklch, var(--accent) 45%, var(--border)); }
+    .header .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .header .icon-btn.compose {
+      background: var(--accent); border-color: transparent; color: #fff;
+    }
+    .header .icon-btn.compose:hover { background: color-mix(in oklch, var(--accent) 88%, #000); }
+
+    /* filter chips */
+    .filter-scroll {
+      display: flex; gap: 8px; overflow-x: auto;
+      padding: 6px 20px 2px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+    .fchip {
+      flex-shrink: 0; padding: 7px 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; font-size: 13px; color: var(--fg);
+      cursor: pointer; font-family: var(--font-body);
+    }
+    .fchip:hover { border-color: color-mix(in oklch, var(--accent) 45%, var(--border)); }
+    .fchip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .fchip.on {
+      background: var(--accent); color: #fff; border-color: transparent; font-weight: 600;
+    }
+
+    /* result meta row */
+    .result-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px 10px;
+    }
+    .result-row .r-count { font-size: 13px; color: var(--muted); }
+    .result-row .r-count strong { color: var(--fg); font-weight: 600; }
+    .sort-group { display: flex; gap: 4px; }
+    .sort-btn {
+      padding: 5px 10px; border: none; background: none;
+      font-family: var(--font-body); font-size: 12px; color: var(--muted);
+      cursor: pointer; border-radius: 8px;
+    }
+    .sort-btn:hover { background: var(--fg-soft); }
+    .sort-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .sort-btn.on { color: var(--accent); font-weight: 600; background: var(--accent-soft); }
+
+    /* feed list card */
+    .feed-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+    .feed-card {
+      display: block;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 14px;
+      color: var(--fg); text-decoration: none;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .feed-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -8px rgba(0,0,0,0.14);
+    }
+    .feed-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .feed-card .f-head { display: flex; align-items: center; gap: 10px; }
+    .feed-card .avatar {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent-soft), var(--fg-soft)), var(--surface);
+      border: 1px solid var(--border);
+    }
+    .feed-card .f-who { min-width: 0; }
+    .feed-card .f-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .feed-card .f-badge {
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.05em;
+      padding: 2px 7px; border-radius: 5px;
+      background: var(--accent-soft); color: var(--accent);
+    }
+    .feed-card .f-loc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .feed-card .f-time { margin-left: auto; font-size: 11px; color: var(--muted); flex-shrink: 0; }
+    .feed-card .f-text {
+      font-size: 13px; color: var(--fg); opacity: 0.85; line-height: 1.55;
+      margin-top: 10px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .feed-card .f-imgs { display: flex; gap: 6px; margin-top: 10px; }
+    .feed-card .f-img {
+      width: 60px; height: 60px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent-soft), var(--fg-soft));
+      border: 1px solid var(--border);
+      display: grid; place-items: center;
+      color: var(--muted); font-family: var(--font-mono); font-size: 9px;
+    }
+    .feed-card .f-foot {
+      display: flex; align-items: center; gap: 16px; margin-top: 12px;
+      font-size: 12px; color: var(--muted);
+      border-top: 1px solid var(--border); padding-top: 10px;
+    }
+    .feed-card .f-stat { display: inline-flex; align-items: center; gap: 5px; }
+    .feed-card .f-stat svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 1.7; }
+    .feed-card .f-stat.hot { color: var(--accent); }
+    .feed-card .f-stat.hot svg { stroke: var(--accent); }
+    .feed-card .f-more { margin-left: auto; color: var(--accent); font-weight: 500; }
+
+    .list-end {
+      font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+      text-align: center; padding: 16px 0 20px;
+    }
+
+    .empty-state {
+      display: none; flex-direction: column; align-items: center; gap: 8px;
+      padding: 48px 20px; text-align: center;
+    }
+    .empty-state.show { display: flex; }
+    .empty-state .e-icon {
+      width: 52px; height: 52px; border-radius: 16px;
+      background: var(--fg-soft);
+      display: grid; place-items: center;
+    }
+    .empty-state .e-icon svg { width: 24px; height: 24px; stroke: var(--muted); fill: none; stroke-width: 1.6; }
+    .empty-state .e-text { font-size: 14px; color: var(--muted); }
+
+    /* tab bar */
+    .tabbar {
+      flex: 0 0 auto;
+      display: grid; grid-template-columns: repeat(var(--tabs, 5), 1fr);
+      padding: 8px 8px 0;
+      border-top: 1px solid var(--border);
+      background: color-mix(in oklch, var(--surface) 92%, transparent);
+      backdrop-filter: blur(20px);
+    }
+    .tab {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 8px 0; color: var(--muted); font-size: 10px; letter-spacing: 0.02em;
+      text-decoration: none; font-family: var(--font-body);
+    }
+    .tab.active { color: var(--accent); }
+    .tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+    .tab.active svg { stroke-width: 2; }
+  </style>
+</head>
+<body>
+  <!-- shared icons -->
+  <svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+    <symbol id="ic-heart" viewBox="0 0 24 24">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+    </symbol>
+    <symbol id="ic-comment" viewBox="0 0 24 24">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+    </symbol>
+    <symbol id="ic-share" viewBox="0 0 24 24">
+      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>
+    </symbol>
+    <symbol id="ic-post" viewBox="0 0 24 24">
+      <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>
+    </symbol>
+  </svg>
+
+  <div class="stage">
+    <div class="caption"><strong>渔路</strong> · iOS · 钓友动态</div>
+    <div class="device" data-od-id="device">
+      <span class="btn-rail left-1" aria-hidden="true"></span>
+      <span class="btn-rail left-2" aria-hidden="true"></span>
+      <span class="btn-rail left-3" aria-hidden="true"></span>
+      <span class="btn-rail right-1" aria-hidden="true"></span>
+      <span class="island" aria-hidden="true"></span>
+
+      <div class="screen">
+        <div class="statusbar">
+          <span class="num">9:41</span>
+          <span class="right">
+            <svg viewBox="0 0 17 11" aria-hidden="true">
+              <rect x="0" y="7" width="3" height="4" rx="0.6"/>
+              <rect x="4" y="5" width="3" height="6" rx="0.6"/>
+              <rect x="8" y="3" width="3" height="8" rx="0.6"/>
+              <rect x="12" y="0" width="3" height="11" rx="0.6"/>
+            </svg>
+            <svg viewBox="0 0 17 11" aria-hidden="true">
+              <path d="M8.5 1.5C5.5 1.5 2.7 2.6 0.5 4.6L2 6.1C3.8 4.5 6.1 3.6 8.5 3.6c2.4 0 4.7 0.9 6.5 2.5l1.5-1.5c-2.2-2-5-3.1-8-3.1zM3.5 7.6L5 9.1c1-0.9 2.2-1.4 3.5-1.4 1.3 0 2.5 0.5 3.5 1.4l1.5-1.5c-1.4-1.3-3.1-2-5-2-1.9 0-3.6 0.7-5 2zM6.5 10.6l2 2 2-2c-0.5-0.5-1.2-0.8-2-0.8s-1.5 0.3-2 0.8z"/>
+            </svg>
+            <svg class="battery" viewBox="0 0 25 11" aria-hidden="true">
+              <rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.45"/>
+              <rect x="22" y="3.5" width="1.5" height="4" rx="0.4" fill="currentColor" fill-opacity="0.45"/>
+              <rect x="2" y="2" width="18" height="7" rx="1.4"/>
+            </svg>
+          </span>
+        </div>
+
+        <main class="content" data-od-id="content">
+          <!-- header -->
+          <div class="header" data-od-id="header">
+            <button class="icon-btn" aria-label="返回">
+              <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <span class="h-title">钓友动态</span>
+            <button class="icon-btn compose" aria-label="发布动态">
+              <svg viewBox="0 0 24 24"><use href="#ic-post"/></svg>
+            </button>
+          </div>
+
+          <!-- content filters -->
+          <div class="filter-scroll" role="group" aria-label="动态内容筛选" data-od-id="content-filters">
+            <button class="fchip on" data-cat="全部">全部</button>
+            <button class="fchip" data-cat="关注">关注</button>
+            <button class="fchip" data-cat="爆护">爆护</button>
+            <button class="fchip" data-cat="坑点报告">坑点报告</button>
+            <button class="fchip" data-cat="技巧分享">技巧分享</button>
+          </div>
+
+          <!-- result row -->
+          <div class="result-row" data-od-id="result-row">
+            <span class="r-count" id="resultCount">共 <strong>8</strong> 条动态 · 按最新排序</span>
+            <div class="sort-group" role="group" aria-label="排序方式">
+              <button class="sort-btn on" data-sort="latest">最新</button>
+              <button class="sort-btn" data-sort="hot">热门</button>
+            </div>
+          </div>
+
+          <!-- list -->
+          <div class="feed-list" id="feedList" data-od-id="feed-list"></div>
+
+          <!-- empty state -->
+          <div class="empty-state" id="emptyState" data-od-id="empty-state">
+            <div class="e-icon">
+              <svg viewBox="0 0 24 24"><use href="#ic-comment"/></svg>
+            </div>
+            <div class="e-text">该分类下暂无动态，去关注几位钓友吧</div>
+          </div>
+
+          <p class="list-end" id="listEnd">— 已加载全部 8 条动态 —</p>
+        </main>
+
+        <nav class="tabbar" style="--tabs: 5;" data-od-id="tabbar">
+          <a class="tab active" href="../mobile-ios.html">
+            <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+            首页
+          </a>
+          <a class="tab" href="ios-route.html">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            坑点
+          </a>
+          <a class="tab" href="ios-nav.html">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            导航
+          </a>
+          <a class="tab" href="ios-learn.html">
+            <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            学习
+          </a>
+          <a class="tab" href="ios-profile.html">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+            我的
+          </a>
+        </nav>
+
+        <div class="home-indicator" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // feed data — 与首页「钓友动态」及动态详情页数据保持一致并扩展
+    const feeds = [
+      {
+        author: '路亚阿杰', badge: '金牌探路者', followed: true, cat: '爆护',
+        hoursAgo: 2, loc: '千岛湖 · 碧溪湾',
+        text: '千岛湖碧溪湾今天爆护！用了亮片VIB，下午3点到5点连杆鲈鱼，最大的62cm。路线已分享。',
+        imgs: 3, likes: 328, comments: 46
+      },
+      {
+        author: '台钓老张', badge: '坑点报告员', followed: true, cat: '坑点报告',
+        hoursAgo: 5, loc: '富春江 · 钓台',
+        text: '富春江钓台水位下降了半米，鲫鱼偏小，建议用 1.5 号线组。水深在 2.5-3 米比较好。',
+        imgs: 0, likes: 96, comments: 18
+      },
+      {
+        author: '新手小王', badge: '', followed: false, cat: '技巧分享',
+        hoursAgo: 26, loc: '太湖 · 东山半岛',
+        text: '第一次去太湖东山，跟着下载的路线走，顺利找到三个坑点。感谢分享路线的前辈！整理了几点新手跟线心得。',
+        imgs: 1, likes: 45, comments: 12
+      },
+      {
+        author: '夜钓小分队', badge: '', followed: false, cat: '爆护',
+        hoursAgo: 34, loc: '千岛湖 · 南湾网箱边',
+        text: '昨晚南湾网箱边翘嘴疯了，米诺匀收停顿就有口，12点前上了7条。注意防蚊，路线和夜钓点位已整理。',
+        imgs: 2, likes: 210, comments: 33
+      },
+      {
+        author: '库钓老周', badge: '', followed: false, cat: '坑点报告',
+        hoursAgo: 50, loc: '密云水库 · 湾心深坑',
+        text: '湾心深坑船钓上过 12 斤青鱼，大物区名不虚传。湾口西段确实没信号，离线地图一定要提前下好。',
+        imgs: 2, likes: 189, comments: 21
+      },
+      {
+        author: '溪流路亚人', badge: '', followed: false, cat: '技巧分享',
+        hoursAgo: 72, loc: '苕溪 · 古埠段',
+        text: '溪流马口亮片攻略：2.5g 亮片逆流斜抛，收线略快于流速，重点搜碎石滩下游的缓水区。附标点示意。',
+        imgs: 3, likes: 156, comments: 27
+      },
+      {
+        author: '路亚老徐', badge: '', followed: false, cat: '爆护',
+        hoursAgo: 120, loc: '富春江 · 七里泷',
+        text: '七里泷急流礁石区鳜鱼开口，深潜米诺贴底搜礁石背面，中了 4 条，最大 51cm。防挂建议用铅头钩。',
+        imgs: 2, likes: 134, comments: 15
+      },
+      {
+        author: '筏钓阿强', badge: '', followed: false, cat: '坑点报告',
+        hoursAgo: 150, loc: '新安江 · 白沙湾',
+        text: '白沙湾筏钓点水位稳定，玉米打窝两小时后连上三条大鲤。筏钓路线已上传，共 4 个坑点。',
+        imgs: 1, likes: 77, comments: 9
+      }
+    ];
+
+    const state = { cat: '全部', sort: 'latest' };
+    const sortNames = { latest: '最新', hot: '热门' };
+    const listEl = document.getElementById('feedList');
+    const emptyEl = document.getElementById('emptyState');
+    const endEl = document.getElementById('listEnd');
+    const countEl = document.getElementById('resultCount');
+
+    function agoLabel(hours) {
+      if (hours < 1) return '刚刚';
+      if (hours < 24) return hours + ' 小时前';
+      const days = Math.round(hours / 24);
+      if (days === 1) return '昨天';
+      return days + ' 天前';
+    }
+
+    function render() {
+      let arr = feeds.filter(f => {
+        if (state.cat === '全部') return true;
+        if (state.cat === '关注') return f.followed;
+        return f.cat === state.cat;
+      });
+      if (state.sort === 'latest') arr.sort((a, b) => a.hoursAgo - b.hoursAgo);
+      if (state.sort === 'hot') arr.sort((a, b) => b.likes - a.likes);
+
+      listEl.innerHTML = '';
+      arr.forEach((f, i) => {
+        const a = document.createElement('a');
+        a.className = 'feed-card';
+        a.href = 'ios-post-detail.html';
+        a.setAttribute('data-od-id', 'feed-card-' + (i + 1));
+        a.innerHTML =
+          '<div class="f-head">' +
+          '<div class="avatar"></div>' +
+          '<div class="f-who">' +
+          '<div class="f-name"><span class="f-name-t"></span><span class="f-badge"></span></div>' +
+          '<div class="f-loc"></div>' +
+          '</div>' +
+          '<span class="f-time"></span>' +
+          '</div>' +
+          '<p class="f-text"></p>' +
+          '<div class="f-imgs"></div>' +
+          '<div class="f-foot">' +
+          '<span class="f-stat' + (f.likes >= 300 ? ' hot' : '') + '"><svg viewBox="0 0 24 24"><use href="#ic-heart"/></svg><span class="num"></span></span>' +
+          '<span class="f-stat"><svg viewBox="0 0 24 24"><use href="#ic-comment"/></svg><span class="num"></span></span>' +
+          '<span class="f-stat"><svg viewBox="0 0 24 24"><use href="#ic-share"/></svg></span>' +
+          '<span class="f-more">详情 →</span>' +
+          '</div>';
+        const nameEl = a.querySelector('.f-name-t');
+        const badgeEl = a.querySelector('.f-badge');
+        nameEl.textContent = f.author;
+        if (f.cat === '爆护') { badgeEl.textContent = '爆护'; }
+        else if (f.badge) { badgeEl.textContent = f.badge; }
+        else { badgeEl.remove(); }
+        a.querySelector('.f-loc').textContent = agoLabel(f.hoursAgo) + ' · ' + f.loc;
+        a.querySelector('.f-time').textContent = f.cat;
+        a.querySelector('.f-text').textContent = f.text;
+        const statNums = a.querySelectorAll('.f-stat .num');
+        statNums[0].textContent = f.likes;
+        statNums[1].textContent = f.comments;
+        const imgWrap = a.querySelector('.f-imgs');
+        for (let k = 0; k < f.imgs; k++) {
+          const el = document.createElement('div');
+          el.className = 'f-img';
+          el.textContent = '[照片]';
+          imgWrap.appendChild(el);
+        }
+        if (f.imgs === 0) imgWrap.remove();
+        listEl.appendChild(a);
+      });
+
+      const hasResults = arr.length > 0;
+      emptyEl.classList.toggle('show', !hasResults);
+      endEl.style.display = hasResults ? '' : 'none';
+      endEl.textContent = '— 已加载全部 ' + arr.length + ' 条动态 —';
+      countEl.innerHTML = '共 <strong>' + arr.length + '</strong> 条动态 · 按' + sortNames[state.sort] + '排序';
+    }
+
+    // category filter
+    document.querySelectorAll('.fchip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.fchip').forEach(c => c.classList.toggle('on', c === chip));
+        state.cat = chip.dataset.cat;
+        render();
+      });
+    });
+
+    // sort
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('on', b === btn));
+        state.sort = btn.dataset.sort;
+        render();
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>

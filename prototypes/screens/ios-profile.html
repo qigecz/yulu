@@ -9,6 +9,7 @@
       --bg: #f3f5f2; --surface: #ffffff; --fg: #1a2420; --muted: #647a70; --border: #dce2dc; --accent: #2a8f7a;
       --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
       --fg-soft: color-mix(in oklch, var(--fg) 6%, transparent);
+      --gold: #b8860b;
       --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
       --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
       --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
@@ -38,7 +39,7 @@
       top: 100px; bottom: 100px; pointer-events: none;
     }
     .device::before { left: -1px; } .device::after { right: -1px; }
-    .island { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 124px; height: 36px; background: #000; border-radius: 999px; z-index: 5; }
+    .island { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 124px; height: 36px; background: #000; border-radius: 999px; z-index: 60; }
     .btn-rail { position: absolute; width: 4px; background: #0a0a0c; border-radius: 2px; }
     .btn-rail.left-1 { left: -3px; top: 174px; height: 32px; }
     .btn-rail.left-2 { left: -3px; top: 220px; height: 60px; }
@@ -51,68 +52,77 @@
     .statusbar .battery { width: 25px; }
     .content { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
     .content::-webkit-scrollbar { display: none; }
-    .home-indicator { flex: 0 0 28px; position: relative; }
+    .home-indicator { flex: 0 0 28px; position: relative; z-index: 40; }
     .home-indicator::after { content: ''; position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); width: 134px; height: 5px; background: var(--fg); border-radius: 999px; opacity: 0.85; }
     .pad { padding-inline: 20px; }
     .stack { display: flex; flex-direction: column; gap: 16px; }
     .row { display: flex; align-items: center; gap: 12px; }
-    .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .meta { font-family: var(--font-mono); font-size: var(--fs-meta); color: var(--muted); }
     .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-    .pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--accent-soft); color: var(--accent); border-radius: 999px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
-    .tag { display: inline-flex; padding: 3px 9px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; font-size: 11px; }
-    .tabbar { flex: 0 0 auto; display: grid; grid-template-columns: repeat(var(--tabs, 5), 1fr); padding: 8px 8px 0; border-top: 1px solid var(--border); background: color-mix(in oklch, var(--surface) 92%, transparent); backdrop-filter: blur(20px); }
-    .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; color: var(--muted); font-size: 10px; }
+    .tabbar { flex: 0 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 8px 0; border-top: 1px solid var(--border); background: color-mix(in oklch, var(--surface) 92%, transparent); backdrop-filter: blur(20px); }
+    .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; color: var(--muted); font-size: 10px; text-decoration: none; }
     .tab.active { color: var(--accent); }
     .tab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.7; }
     .tab.active svg { stroke-width: 2; }
 
     /* profile header */
-    .profile-header {
-      padding: 12px 20px 16px;
-      display: flex; align-items: center; gap: 14px;
-    }
+    .profile-header { padding: 10px 20px 14px; display: flex; align-items: center; gap: 14px; }
     .avatar {
-      width: 60px; height: 60px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent-soft), var(--fg-soft)), var(--surface);
-      border: 2px solid var(--border);
+      width: 60px; height: 60px; border-radius: 50%; flex-shrink: 0;
+      background: var(--accent-soft); border: 2px solid var(--surface);
+      box-shadow: 0 0 0 1px var(--border);
       display: grid; place-items: center;
+      font-family: var(--font-display); font-size: 24px; font-weight: 600; color: var(--accent);
     }
-    .avatar svg { width: 28px; height: 28px; stroke: var(--muted); fill: none; stroke-width: 1.5; }
-    .profile-name { font-size: 20px; font-weight: 600; margin: 0; }
-    .profile-bio { font-size: 13px; color: var(--muted); margin: 2px 0 0; }
+    .profile-name { font-family: var(--font-display); font-size: 21px; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 7px; letter-spacing: -0.01em; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 8px; border-radius: 999px;
+      background: color-mix(in oklch, var(--gold) 14%, transparent);
+      color: var(--gold); font-size: 10px; font-weight: 600;
+    }
+    .badge svg { width: 10px; height: 10px; fill: var(--gold); }
+    .profile-bio { font-size: 12px; color: var(--muted); margin: 3px 0 0; }
+    .edit-btn {
+      margin-left: auto; flex-shrink: 0;
+      padding: 7px 14px; border-radius: 999px; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface);
+      font-size: 12px; color: var(--fg); font-family: var(--font-body);
+      text-decoration: none;
+    }
+    .edit-btn:hover { border-color: var(--muted); }
+    .edit-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     /* stats row */
     .stats-row {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
-      margin: 0 20px; padding: 14px 0;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      margin: 0 20px; padding: 13px 0;
       border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      background: var(--surface);
     }
-    .stat-cell { text-align: center; }
-    .stat-cell .stat-val { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--fg); }
-    .stat-cell .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .stat-cell { text-align: center; background: none; border: none; padding: 0; cursor: pointer; font-family: var(--font-body); }
+    .stat-cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+    .stat-cell .stat-val { font-family: var(--font-display); font-size: 21px; font-weight: 600; color: var(--fg); display: block; }
+    .stat-cell .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; display: block; }
 
-    /* share buttons */
-    .share-actions {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-      margin: 14px 20px 0;
-    }
-    .share-btn {
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-      min-height: 44px; border-radius: 14px; font-size: 14px; font-weight: 600;
+    /* publish actions */
+    .publish-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 20px 0; }
+    .pub-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+      min-height: 58px; border-radius: 14px; font-size: 12px; font-weight: 600;
       border: 1px solid var(--border); background: var(--surface); color: var(--fg);
-      cursor: pointer;
+      cursor: pointer; font-family: var(--font-body);
     }
-    .share-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.6; }
-    .share-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .share-btn.primary svg { stroke: #fff; }
+    .pub-btn svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+    .pub-btn:hover { border-color: var(--muted); }
+    .pub-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .pub-btn.primary:hover { background: color-mix(in oklch, var(--accent) 92%, #000); }
+    .pub-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-    /* my content sections */
     .section-label {
       font-size: 15px; font-weight: 600; padding: 0; margin: 0 0 10px;
       display: flex; align-items: center; justify-content: space-between;
     }
-    .section-label .more { font-size: 13px; color: var(--accent); font-weight: 500; }
+    .section-label .more { font-size: 13px; color: var(--accent); font-weight: 500; text-decoration: none; }
 
     .my-item {
       display: grid; grid-template-columns: 36px 1fr auto;
@@ -120,6 +130,8 @@
       border-top: 1px solid var(--border);
     }
     .my-item:first-child { border-top: 0; }
+    .my-item.fresh { animation: fresh-in 0.4s ease-out; }
+    @keyframes fresh-in { from { background: var(--accent-soft); } to { background: transparent; } }
     .my-item .item-icon {
       width: 36px; height: 36px; border-radius: 10px;
       background: var(--accent-soft); display: grid; place-items: center;
@@ -128,11 +140,14 @@
     .my-item .item-title { font-size: 14px; font-weight: 500; }
     .my-item .item-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
     .my-item .item-meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+    .fresh .item-meta { color: var(--accent); }
 
     /* menu list */
+    .menu-card { margin: 0 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 4px 16px; }
     .menu-item {
       display: flex; align-items: center; justify-content: space-between;
       padding: 13px 0; border-top: 1px solid var(--border);
+      color: var(--fg); text-decoration: none;
     }
     .menu-item:first-child { border-top: 0; }
     .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
@@ -142,7 +157,116 @@
     }
     .menu-item .menu-icon svg { width: 16px; height: 16px; stroke: var(--fg); fill: none; stroke-width: 1.5; }
     .menu-item .menu-label { font-size: 15px; }
-    .menu-item .menu-arrow { color: var(--muted); font-size: 16px; }
+    .menu-item .menu-right { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+    .menu-item .menu-count { font-family: var(--font-mono); font-size: 12px; }
+    .menu-item .menu-arrow { font-size: 16px; }
+    .menu-item:hover .menu-label { color: var(--accent); }
+
+    /* ── publisher sheet ── */
+    .sheet-scrim {
+      position: absolute; inset: 0; z-index: 45;
+      background: rgba(10, 14, 12, 0.4);
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .sheet-scrim.open { opacity: 1; pointer-events: auto; }
+    .sheet {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 50;
+      background: var(--surface);
+      border-radius: 22px 22px 0 0;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -8px 30px -12px rgba(0,0,0,0.18);
+      padding: 8px 0 14px;
+      display: flex; flex-direction: column; gap: 12px;
+      transform: translateY(105%); transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+      max-height: 82%;
+    }
+    .sheet.open { transform: translateY(0); }
+    .sheet-handle { width: 36px; height: 4px; border-radius: 999px; background: var(--border); margin: 0 auto; flex: 0 0 4px; }
+    .sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+    .sheet-head .s-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+    .sheet-close {
+      width: 30px; height: 30px; border-radius: 999px; cursor: pointer;
+      background: var(--fg-soft); border: none; color: var(--fg);
+      display: grid; place-items: center;
+    }
+    .sheet-close svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .sheet-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .seg { display: flex; background: var(--fg-soft); border-radius: 999px; padding: 2px; margin: 0 16px; }
+    .seg-btn {
+      flex: 1; border: none; background: none; cursor: pointer;
+      padding: 7px 0; border-radius: 999px;
+      font-size: 12px; color: var(--muted); font-family: var(--font-body);
+    }
+    .seg-btn.active { background: var(--fg); color: #fff; font-weight: 600; }
+    .seg-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .sheet-body { padding: 0 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .field-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .Composer {
+      width: 100%; min-height: 88px; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: 12px;
+      background: var(--bg); font-family: var(--font-body); font-size: 14px;
+      color: var(--fg); resize: none; line-height: 1.5;
+    }
+    .Composer:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .Composer::placeholder { color: var(--muted); }
+    .field-err { font-size: 11px; color: #b03a2e; display: none; }
+    .field-err.show { display: block; }
+    .char-count { font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-align: right; }
+
+    .link-row { display: flex; gap: 6px; overflow-x: auto; }
+    .link-row::-webkit-scrollbar { display: none; }
+    .link-chip {
+      flex-shrink: 0; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+      border: 1px solid var(--border); background: var(--bg);
+      font-size: 12px; color: var(--fg); font-family: var(--font-body);
+    }
+    .link-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .link-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .photo-slot {
+      aspect-ratio: 1; border-radius: 10px; border: 1px dashed var(--border);
+      background: var(--bg); display: grid; place-items: center;
+      color: var(--muted); cursor: pointer; padding: 0;
+    }
+    .photo-slot svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+    .photo-slot.filled {
+      border-style: solid; border-color: transparent; cursor: default;
+      background: linear-gradient(135deg, color-mix(in oklch, var(--accent) 22%, var(--surface)), color-mix(in oklch, var(--fg) 12%, var(--surface)));
+    }
+    .photo-slot.filled svg { stroke: #fff; fill: none; opacity: 0.9; }
+    .photo-slot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .submit-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; min-height: 46px; border-radius: 14px;
+      background: var(--accent); color: #fff; border: none;
+      font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font-body);
+    }
+    .submit-btn:hover { background: color-mix(in oklch, var(--accent) 92%, #000); }
+    .submit-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .submit-btn[disabled] { opacity: 0.6; cursor: default; }
+    .spinner {
+      width: 15px; height: 15px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* toast */
+    .toast {
+      position: absolute; left: 50%; bottom: 120px; z-index: 55;
+      transform: translate(-50%, 16px);
+      background: var(--fg); color: #fff;
+      padding: 10px 18px; border-radius: 999px;
+      font-size: 13px; box-shadow: 0 6px 20px -6px rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none; transition: all 0.3s;
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast svg { width: 14px; height: 14px; stroke: #7dd8c3; fill: none; stroke-width: 2.2; }
   </style>
 </head>
 <body>
@@ -163,187 +287,175 @@
             <svg class="battery" viewBox="0 0 25 11" aria-hidden><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.45"/><rect x="22" y="3.5" width="1.5" height="4" rx="0.4" fill="currentColor" fill-opacity="0.45"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
           </span>
         </div>
+
         <main class="content" data-od-id="content">
           <!-- Profile header -->
-          <div class="profile-header">
-            <div class="avatar">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
-            </div>
+          <div class="profile-header" data-od-id="profile-header">
+            <div class="avatar" aria-hidden="true">杰</div>
             <div>
-              <p class="profile-name">路亚阿杰</p>
-              <p class="profile-bio">路亚爱好者 · 浙江 · 千岛湖</p>
+              <p class="profile-name">路亚阿杰
+                <span class="badge"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>金牌探路者</span>
+              </p>
+              <p class="profile-bio">路亚爱好者 · 浙江千岛湖 · 主攻鲈鱼翘嘴</p>
             </div>
+            <a class="edit-btn" href="ios-profile-edit.html">编辑资料</a>
           </div>
 
           <!-- Stats -->
-          <div class="stats-row">
-            <div class="stat-cell">
-              <div class="stat-val">23</div>
-              <div class="stat-lbl">分享坑点</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-val">8</div>
-              <div class="stat-lbl">分享路线</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-val">156</div>
-              <div class="stat-lbl">获赞</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-val">89</div>
-              <div class="stat-lbl">粉丝</div>
-            </div>
+          <div class="stats-row" data-od-id="profile-stats">
+            <button class="stat-cell" type="button" aria-label="分享坑点 23 个">
+              <span class="stat-val" id="statSpots">23</span>
+              <span class="stat-lbl">分享坑点</span>
+            </button>
+            <button class="stat-cell" type="button" aria-label="分享路线 8 条">
+              <span class="stat-val" id="statRoutes">8</span>
+              <span class="stat-lbl">分享路线</span>
+            </button>
+            <button class="stat-cell" type="button" aria-label="获赞 156">
+              <span class="stat-val">156</span>
+              <span class="stat-lbl">获赞</span>
+            </button>
+            <button class="stat-cell" type="button" aria-label="粉丝 89">
+              <span class="stat-val">89</span>
+              <span class="stat-lbl">粉丝</span>
+            </button>
           </div>
 
-          <!-- Share actions -->
-          <div class="share-actions">
-            <button class="share-btn primary">
+          <!-- Publish entries -->
+          <div class="publish-row" data-od-id="publish-entries">
+            <button class="pub-btn primary" type="button" data-pub="spot">
               <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               分享坑点
             </button>
-            <button class="share-btn">
+            <button class="pub-btn" type="button" data-pub="route">
               <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
               分享路线
+            </button>
+            <button class="pub-btn" type="button" data-pub="tip">
+              <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              技巧分享
             </button>
           </div>
 
           <div style="height: 18px;"></div>
 
           <!-- My routes -->
-          <div class="pad stack" data-od-id="my-routes" style="gap:8px;">
+          <div class="pad stack" style="gap:8px;" data-od-id="my-routes">
             <div class="section-label" style="padding:0;">
               我的路线
-              <span class="more">全部 →</span>
+              <a class="more" href="ios-route-list.html">全部 →</a>
             </div>
-            <div>
-              <div class="my-item">
-                <div class="item-icon">
-                  <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
-                </div>
-                <div>
-                  <div class="item-title">千岛湖西南湾探钓路线</div>
-                  <div class="item-sub">6 坑点 · 7.8km · 340 次下载</div>
-                </div>
-                <span class="item-meta">3天前</span>
-              </div>
-              <div class="my-item">
-                <div class="item-icon">
-                  <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
-                </div>
-                <div>
-                  <div class="item-title">富春江夜钓精选路线</div>
-                  <div class="item-sub">4 坑点 · 5.2km · 180 次下载</div>
-                </div>
-                <span class="item-meta">2周前</span>
-              </div>
-              <div class="my-item">
-                <div class="item-icon">
-                  <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
-                </div>
-                <div>
-                  <div class="item-title">太湖东山春季路亚路线</div>
-                  <div class="item-sub">5 坑点 · 6.4km · 560 次下载</div>
-                </div>
-                <span class="item-meta">1月前</span>
-              </div>
-            </div>
+            <div id="routeList"></div>
           </div>
 
           <div style="height: 14px;"></div>
 
           <!-- My tips -->
-          <div class="pad stack" data-od-id="my-tips" style="gap:8px;">
+          <div class="pad stack" style="gap:8px;" data-od-id="my-tips">
             <div class="section-label" style="padding:0;">
               我的技巧分享
               <span class="more">全部 →</span>
             </div>
-            <div>
-              <div class="my-item">
-                <div class="item-icon">
-                  <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                </div>
-                <div>
-                  <div class="item-title">VIB 收线速度与水深的关系</div>
-                  <div class="item-sub">128 次收藏 · 42 条评论</div>
-                </div>
-                <span class="item-meta">5天前</span>
-              </div>
-              <div class="my-item">
-                <div class="item-icon">
-                  <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                </div>
-                <div>
-                  <div class="item-title">千岛湖碧溪湾爆护全记录</div>
-                  <div class="item-sub">86 次收藏 · 35 条评论</div>
-                </div>
-                <span class="item-meta">2周前</span>
-              </div>
-            </div>
+            <div id="tipList"></div>
           </div>
 
           <div style="height: 14px;"></div>
 
           <!-- Menu -->
-          <div class="pad">
-            <div class="menu-item">
-              <div class="menu-left">
-                <div class="menu-icon">
-                  <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                </div>
+          <div class="menu-card" data-od-id="profile-menu">
+            <a class="menu-item" href="ios-spot-list.html">
+              <span class="menu-left">
+                <span class="menu-icon"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
                 <span class="menu-label">我的收藏</span>
-              </div>
-              <span class="menu-arrow">›</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-left">
-                <div class="menu-icon">
-                  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                </div>
+              </span>
+              <span class="menu-right"><span class="menu-count">36</span><span class="menu-arrow">›</span></span>
+            </a>
+            <a class="menu-item" href="ios-route-detail.html">
+              <span class="menu-left">
+                <span class="menu-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
                 <span class="menu-label">离线路线</span>
-              </div>
-              <span class="menu-arrow">›</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-left">
-                <div class="menu-icon">
-                  <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                </div>
+              </span>
+              <span class="menu-right"><span class="menu-count">2 已下载</span><span class="menu-arrow">›</span></span>
+            </a>
+            <a class="menu-item" href="ios-mall.html">
+              <span class="menu-left">
+                <span class="menu-icon"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
                 <span class="menu-label">渔具商城订单</span>
-              </div>
-              <span class="menu-arrow">›</span>
-            </div>
-            <div class="menu-item">
-              <div class="menu-left">
-                <div class="menu-icon">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-                </div>
+              </span>
+              <span class="menu-right"><span class="menu-count">待收货 1</span><span class="menu-arrow">›</span></span>
+            </a>
+            <a class="menu-item" href="ios-learn.html">
+              <span class="menu-left">
+                <span class="menu-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span>
                 <span class="menu-label">设置</span>
-              </div>
-              <span class="menu-arrow">›</span>
-            </div>
+              </span>
+              <span class="menu-right"><span class="menu-arrow">›</span></span>
+            </a>
           </div>
 
           <div style="height: 16px;"></div>
         </main>
 
-        <nav class="tabbar" style="--tabs: 5;" data-od-id="tabbar">
-          <a class="tab">
+        <!-- Publisher sheet -->
+        <div class="sheet-scrim" id="sheetScrim" aria-hidden="true"></div>
+        <div class="sheet" id="pubSheet" data-od-id="publisher-sheet" role="dialog" aria-label="发布内容" aria-hidden="true">
+          <div class="sheet-handle" aria-hidden="true"></div>
+          <div class="sheet-head">
+            <span class="s-title" id="sheetTitle">分享坑点</span>
+            <button class="sheet-close" id="sheetClose" type="button" aria-label="关闭发布器">
+              <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="seg" id="segRow" role="group" aria-label="发布类型">
+            <button class="seg-btn active" type="button" data-type="spot">坑点</button>
+            <button class="seg-btn" type="button" data-type="route">路线</button>
+            <button class="seg-btn" type="button" data-type="tip">技巧</button>
+          </div>
+          <div class="sheet-body">
+            <div>
+              <p class="field-label" id="fieldLabel" style="margin:0 0 6px;">坑点描述</p>
+              <textarea class="Composer" id="composer" maxlength="500" placeholder="描述这个坑点的位置、水深、鱼情，帮助其他钓友…"></textarea>
+              <p class="field-err" id="fieldErr" style="margin:4px 0 0;">写点内容再发布吧，钓友们等着看呢</p>
+              <p class="char-count" style="margin:2px 0 0;"><span id="charNum">0</span> / 500</p>
+            </div>
+            <div>
+              <p class="field-label" style="margin:0 0 6px;" id="linkLabel">关联钓点</p>
+              <div class="link-row" id="linkRow"></div>
+            </div>
+            <div>
+              <p class="field-label" style="margin:0 0 6px;">现场照片</p>
+              <div class="photo-grid" id="photoGrid"></div>
+            </div>
+            <button class="submit-btn" id="submitBtn" type="button">
+              <span id="submitLabel">发布</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="toastText">发布成功</span>
+        </div>
+
+        <nav class="tabbar" data-od-id="tabbar">
+          <a class="tab" href="../mobile-ios.html">
             <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
             首页
           </a>
-          <a class="tab">
+          <a class="tab" href="ios-route.html">
             <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             坑点
           </a>
-          <a class="tab">
+          <a class="tab" href="ios-nav.html">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
             导航
           </a>
-          <a class="tab">
+          <a class="tab" href="ios-learn.html">
             <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
             学习
           </a>
-          <a class="tab active">
+          <a class="tab active" href="ios-profile.html">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
             我的
           </a>
@@ -352,5 +464,198 @@
       </div>
     </div>
   </div>
+
+  <script>
+    (function () {
+      // 数据与其他页面一致（阿杰：89 粉丝、金牌探路者）
+      var ROUTES = [
+        { title: '千岛湖西南湾探钓路线', sub: '6 坑点 · 7.8km · 340 次下载', time: '3天前' },
+        { title: '富春江夜钓精选路线',   sub: '4 坑点 · 5.2km · 180 次下载', time: '2周前' },
+        { title: '太湖东山春季路亚路线', sub: '5 坑点 · 6.4km · 560 次下载', time: '1月前' }
+      ];
+      var TIPS = [
+        { title: 'VIB 收线速度与水深的关系', sub: '128 次收藏 · 42 条评论', time: '5天前' },
+        { title: '千岛湖碧溪湾爆护全记录',   sub: '86 次收藏 · 35 条评论',  time: '2周前' }
+      ];
+      var LINKS = {
+        spot:  ['千岛湖 · 碧溪湾', '富春江 · 钓台', '太湖 · 东山半岛', '碧溪湖 · 入库口'],
+        route: ['北岸环线', '东山半岛路线', '碧溪湾巡钓路线'],
+        tip:   ['路亚', '台钓', '筏钓', '装备', '绑钩']
+      };
+      var TITLES = { spot: '分享坑点', route: '分享路线', tip: '技巧分享' };
+      var LABELS = { spot: '坑点描述', route: '路线介绍', tip: '技巧正文' };
+      var LINK_LABELS = { spot: '关联钓点', route: '关联区域', tip: '技巧分类' };
+      var PLACEHOLDERS = {
+        spot: '描述这个坑点的位置、水深、鱼情，帮助其他钓友…',
+        route: '介绍这条路线的亮点：坑点数量、适钓鱼种、注意事项…',
+        tip: '把你的独家心得写下来：适用场景、操作要点、装备选择…'
+      };
+      var ICONS = {
+        route: '<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
+        tip: '<svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+        spot: '<svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+      };
+
+      var pubType = 'spot';
+      var composer = document.getElementById('composer');
+      var charNum = document.getElementById('charNum');
+      var fieldErr = document.getElementById('fieldErr');
+      var sheet = document.getElementById('pubSheet');
+      var scrim = document.getElementById('sheetScrim');
+      var submitBtn = document.getElementById('submitBtn');
+      var submitLabel = document.getElementById('submitLabel');
+      var toast = document.getElementById('toast');
+      var toastText = document.getElementById('toastText');
+      var routeList = document.getElementById('routeList');
+      var tipList = document.getElementById('tipList');
+      var linkRow = document.getElementById('linkRow');
+      var photoGrid = document.getElementById('photoGrid');
+      var submitting = false;
+
+      function makeItem(item, icon, fresh) {
+        var d = document.createElement('div');
+        d.className = 'my-item' + (fresh ? ' fresh' : '');
+        d.innerHTML =
+          '<div class="item-icon">' + icon + '</div>' +
+          '<div><div class="item-title"></div><div class="item-sub"></div></div>' +
+          '<span class="item-meta"></span>';
+        d.querySelector('.item-title').textContent = item.title;
+        d.querySelector('.item-sub').textContent = item.sub;
+        d.querySelector('.item-meta').textContent = fresh ? '刚刚' : item.time;
+        return d;
+      }
+
+      function renderLists() {
+        routeList.innerHTML = '';
+        tipList.innerHTML = '';
+        ROUTES.forEach(function (r) { routeList.appendChild(makeItem(r, ICONS.route)); });
+        TIPS.forEach(function (t) { tipList.appendChild(makeItem(t, ICONS.tip)); });
+      }
+
+      function renderLinks() {
+        linkRow.innerHTML = '';
+        LINKS[pubType].forEach(function (name, i) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'link-chip' + (i === 0 ? ' active' : '');
+          b.textContent = name;
+          b.addEventListener('click', function () {
+            linkRow.querySelectorAll('.link-chip').forEach(function (c) { c.classList.remove('active'); });
+            b.classList.add('active');
+          });
+          linkRow.appendChild(b);
+        });
+      }
+
+      function renderPhotos() {
+        photoGrid.innerHTML = '';
+        for (var i = 0; i < 4; i++) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'photo-slot' + (i === 0 ? ' filled' : '');
+          b.setAttribute('aria-label', i === 0 ? '封面照片' : '添加照片');
+          b.innerHTML = i === 0
+            ? '<svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+            : '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
+          if (i !== 0) {
+            b.addEventListener('click', function () { this.classList.add('filled'); this.setAttribute('aria-label', '照片'); });
+          }
+          photoGrid.appendChild(b);
+        }
+      }
+
+      function setPubType(t) {
+        pubType = t;
+        document.getElementById('sheetTitle').textContent = TITLES[t];
+        document.getElementById('fieldLabel').textContent = LABELS[t];
+        document.getElementById('linkLabel').textContent = LINK_LABELS[t];
+        composer.setAttribute('placeholder', PLACEHOLDERS[t]);
+        document.querySelectorAll('.seg-btn').forEach(function (b) {
+          b.classList.toggle('active', b.getAttribute('data-type') === t);
+        });
+        renderLinks();
+      }
+
+      function openSheet(t) {
+        setPubType(t);
+        composer.value = '';
+        charNum.textContent = '0';
+        fieldErr.classList.remove('show');
+        renderPhotos();
+        sheet.classList.add('open');
+        sheet.setAttribute('aria-hidden', 'false');
+        scrim.classList.add('open');
+      }
+
+      function closeSheet() {
+        sheet.classList.remove('open');
+        sheet.setAttribute('aria-hidden', 'true');
+        scrim.classList.remove('open');
+      }
+
+      function showToast(msg) {
+        toastText.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(function () { toast.classList.remove('show'); }, 2200);
+      }
+
+      document.querySelectorAll('.pub-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { openSheet(btn.getAttribute('data-pub')); });
+      });
+      document.querySelectorAll('.seg-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { setPubType(btn.getAttribute('data-type')); });
+      });
+      document.getElementById('sheetClose').addEventListener('click', closeSheet);
+      scrim.addEventListener('click', closeSheet);
+
+      composer.addEventListener('input', function () {
+        charNum.textContent = String(composer.value.length);
+        if (composer.value.trim()) fieldErr.classList.remove('show');
+      });
+
+      submitBtn.addEventListener('click', function () {
+        if (submitting) return;
+        if (!composer.value.trim()) {
+          fieldErr.classList.add('show');
+          composer.focus();
+          return;
+        }
+        submitting = true;
+        submitBtn.disabled = true;
+        submitLabel.innerHTML = '';
+        var sp = document.createElement('span');
+        sp.className = 'spinner';
+        submitBtn.insertBefore(sp, submitLabel);
+        submitLabel.textContent = '发布中…';
+        setTimeout(function () {
+          var text = composer.value.trim();
+          var head = text.length > 16 ? text.slice(0, 16) + '…' : text;
+          if (pubType === 'route') {
+            ROUTES.unshift({ title: head, sub: '新路线 · 审核中', time: '刚刚' });
+            routeList.insertBefore(makeItem(ROUTES[0], ICONS.route, true), routeList.firstChild);
+            bump('statRoutes');
+          } else if (pubType === 'tip') {
+            TIPS.unshift({ title: head, sub: '0 次收藏 · 0 条评论', time: '刚刚' });
+            tipList.insertBefore(makeItem(TIPS[0], ICONS.tip, true), tipList.firstChild);
+          } else {
+            bump('statSpots');
+          }
+          submitting = false;
+          submitBtn.disabled = false;
+          sp.remove();
+          submitLabel.textContent = '发布';
+          closeSheet();
+          showToast('发布成功，感谢分享');
+        }, 900);
+      });
+
+      function bump(id) {
+        var el = document.getElementById(id);
+        el.textContent = String(Number(el.textContent) + 1);
+      }
+
+      renderLists();
+    })();
+  </script>
 </body>
 </html>
