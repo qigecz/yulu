@@ -18,6 +18,7 @@ import { SpotsScreen } from './screens/SpotsScreen';
 import { NavigationScreen } from './screens/NavigationScreen';
 import { LearnScreen } from './screens/LearnScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
+import { ProfileEditScreen } from './screens/ProfileEditScreen';
 import { CreateSpotScreen } from './screens/CreateSpotScreen';
 import { ComposeFeedScreen } from './screens/ComposeFeedScreen';
 import { FavoritesScreen } from './screens/FavoritesScreen';
@@ -79,9 +80,9 @@ function AppInner() {
   useEffect(() => {
     setOnUnauthorized(() => forceLogout());
     setRefreshHandler(refreshAccessToken);
-    // Configure the Mapbox access token once (empty token = blank basemap but
-    // the SDK still needs an explicit init before the first MapView mounts —
-    // skipping it triggers a Fabric ViewTagResolver failure on Android).
+    // Explicitly init the map SDK (token stays empty — basemaps come from
+    // free Gaode raster tiles via MapLibre, see components/map/mapStyle.ts).
+    // Skipping the init triggers a Fabric ViewTagResolver failure on Android.
     void import('@rnmapbox/maps')
       .then((Mapbox) => Mapbox.default.setAccessToken(MAPBOX_TOKEN))
       .catch(() => {});
@@ -249,6 +250,8 @@ function Overlay() {
         <OfflineRoutesScreen />
       ) : overlay === 'user' ? (
         <UserScreen />
+      ) : overlay === 'profile-edit' ? (
+        <ProfileEditScreen />
       ) : null}
     </View>
   );

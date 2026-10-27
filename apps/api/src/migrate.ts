@@ -24,6 +24,12 @@ async function migrate() {
     )
   `);
 
+  // 编辑资料新增列（对已建库幂等补列）。
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS location VARCHAR(50)`);
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS fishing_experience VARCHAR(10)`);
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS fishing_methods TEXT[] DEFAULT '{}'`);
+  await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS target_species TEXT[] DEFAULT '{}'`);
+
   await query(`
     CREATE TABLE IF NOT EXISTS spots (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

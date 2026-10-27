@@ -56,7 +56,7 @@ router.post('/refresh', validate(refreshTokenSchema), async (req: Request, res: 
 
 router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   const result = await query(
-    'SELECT id, nickname, avatar_url, bio, spots_count, routes_count, likes_count, followers_count FROM users WHERE id = $1',
+    'SELECT id, nickname, avatar_url, bio, location, fishing_experience, fishing_methods, target_species, spots_count, routes_count, likes_count, followers_count FROM users WHERE id = $1',
     [req.userId]
   );
   if (result.rows.length === 0) {

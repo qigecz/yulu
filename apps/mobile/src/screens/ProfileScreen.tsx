@@ -2,12 +2,15 @@ import React, { useRef, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, SectionHeader } from '@yulu/ui';
+import { formatViewCount } from '@yulu/shared';
+import type { Tutorial } from '@yulu/shared';
 import { useAuthStore } from '../store/auth';
 import { useUIStore } from '../store/ui';
 import { useOfflineStore } from '../store/offline';
 import { useRoutes, useTutorials, useFavoriteSpots, useFavoriteFeeds } from '../hooks/queries';
 import { QueryState } from '../components/QueryState';
 import { PublishSheet, type PublishType } from '../components/PublishSheet';
+import { VideoPlayerOverlay } from '../components/VideoPlayerOverlay';
 
 /** 发布面板模拟产出的条目（真实接口接入前仅存在于本地）。 */
 type LocalItem = { id: string; title: string; sub: string; time: string };
@@ -19,6 +22,10 @@ export function ProfileScreen() {
   const openFavorites = useUIStore((s) => s.openFavorites);
   const openOfflineRoutes = useUIStore((s) => s.openOfflineRoutes);
   const openMall = useUIStore((s) => s.openMall);
+  const openRouteDetail = useUIStore((s) => s.openRouteDetail);
+  const openRouteList = useUIStore((s) => s.openRouteList);
+  const openProfileEdit = useUIStore((s) => s.openProfileEdit);
+  const setActiveTab = useUIStore((s) => s.setActiveTab);
   const routes = useRoutes();
   const tutorials = useTutorials();
   const favoriteSpots = useFavoriteSpots();
@@ -33,6 +40,8 @@ export function ProfileScreen() {
   const [routeBump, setRouteBump] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 模拟视频播放浮层（与学习页一致，接真实视频源后加 url）。
+  const [player, setPlayer] = useState<{ title: string; sub: string; duration: string } | null>(null);
 
   const myRoutes = routes.data ?? [];
   const myTutorials = (tutorials.data ?? []).slice(0, 2);
@@ -48,6 +57,14 @@ export function ProfileScreen() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast(msg);
     toastTimer.current = setTimeout(() => setToast(null), 2200);
+  };
+
+  const openTutorial = (tut: Tutorial) => {
+    setPlayer({
+      title: tut.title,
+      sub: `${tut.author?.nickname ?? '钓友'} · ${tut.category ?? '路亚'} · ${formatViewCount(tut.viewsCount)} 次观看`,
+      duration: tut.duration || '00:00',
+    });
   };
 
   const handlePublished = (type: PublishType, title: string) => {
@@ -95,7 +112,7 @@ export function ProfileScreen() {
         <TouchableOpacity
           style={styles.editBtn}
           activeOpacity={0.7}
-          onPress={() => Alert.alert('编辑资料', '资料编辑功能开发中，敬请期待')}
+          onPress={openProfileEdit}
         >
           <Text style={styles.editBtnText}>编辑资料</Text>
         </TouchableOpacity>
@@ -136,27 +153,27 @@ export function ProfileScreen() {
 
       {/* My routes */}
       <View style={styles.pad}>
-        <SectionHeader title="我的路线" actionLabel="全部 →" />
+        <SectionHeader title="我的路线" actionLabel="全部 →" onAction={openRouteList} />
         <QueryState isLoading={routes.isLoading} isError={routes.isError} refetch={() => routes.refetch()} empty={myRoutes.length === 0 && localRoutes.length === 0} emptyText="暂无分享路线">
           {localRoutes.map((item) => (
-            <View key={item.id} style={styles.myItem}>
+            <TouchableOpacity key={item.id} style={styles.myItem} activeOpacity={0.7} onPress={() => showToast('路线审核中，通过后即可查看详情')}>
               <View style={styles.itemIcon}><Ionicons name="map-outline" size={16} color={colors.accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.itemSub}>{item.sub}</Text>
               </View>
               <Text style={styles.itemMetaFresh}>{item.time}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
           {myRoutes.map((route) => (
-            <View key={route.id} style={styles.myItem}>
+            <TouchableOpacity key={route.id} style={styles.myItem} activeOpacity={0.7} onPress={() => openRouteDetail(route.id)}>
               <View style={styles.itemIcon}><Ionicons name="map-outline" size={16} color={colors.accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.itemTitle} numberOfLines={1}>{route.name}</Text>
                 <Text style={styles.itemSub}>{route.totalDistance}km · {route.downloadsCount} 次下载</Text>
               </View>
               <Text style={styles.itemMeta}>3天前</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </QueryState>
       </View>
@@ -165,27 +182,28 @@ export function ProfileScreen() {
 
       {/* My tips */}
       <View style={styles.pad}>
-        <SectionHeader title="我的技巧分享" actionLabel="全部 →" />
+        {/* 技巧列表页尚未单独开发，「全部」先跳到学习页教程列表。 */}
+        <SectionHeader title="我的技巧分享" actionLabel="全部 →" onAction={() => setActiveTab('learn')} />
         <QueryState isLoading={tutorials.isLoading} isError={tutorials.isError} refetch={() => tutorials.refetch()} empty={myTutorials.length === 0 && localTips.length === 0} emptyText="暂无技巧分享">
           {localTips.map((item) => (
-            <View key={item.id} style={styles.myItem}>
+            <TouchableOpacity key={item.id} style={styles.myItem} activeOpacity={0.7} onPress={() => showToast('技巧已提交，详情功能即将上线')}>
               <View style={styles.itemIcon}><Ionicons name="book-outline" size={16} color={colors.accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
                 <Text style={styles.itemSub}>{item.sub}</Text>
               </View>
               <Text style={styles.itemMetaFresh}>{item.time}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
           {myTutorials.map((tut) => (
-            <View key={tut.id} style={styles.myItem}>
+            <TouchableOpacity key={tut.id} style={styles.myItem} activeOpacity={0.7} onPress={() => openTutorial(tut)}>
               <View style={styles.itemIcon}><Ionicons name="book-outline" size={16} color={colors.accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.itemTitle} numberOfLines={1}>{tut.title}</Text>
                 <Text style={styles.itemSub}>{tut.likesCount} 次点赞 · {tut.viewsCount} 次观看</Text>
               </View>
               <Text style={styles.itemMeta}>5天前</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </QueryState>
       </View>
@@ -246,6 +264,16 @@ export function ProfileScreen() {
       />
 
       </ScrollView>
+
+      {/* 模拟视频播放浮层（点击我的技巧条目触发） */}
+      <VideoPlayerOverlay
+        visible={player !== null}
+        title={player?.title ?? ''}
+        sub={player?.sub ?? ''}
+        duration={player?.duration ?? '00:00'}
+        startSeconds={0}
+        onClose={() => setPlayer(null)}
+      />
 
       {/* Toast */}
       {toast && (

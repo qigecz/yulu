@@ -29,6 +29,7 @@
 - **社交互动**：点赞（feeds/spots）、收藏（多态 favorites + 「我的收藏」页）、关注（follows + 用户主页）、评论（多态 comments + 动态详情页）
 - ✅ **推送通知（Expo Push，全流程）**：后端 `push_tokens` 表 + `POST /users/push-token` + `services/notifications.ts`（调 Expo v2/send，尽力而为不阻塞）；社交事件触发推送——spot/feed 点赞、评论、关注（跳过本人）；移动端 `expo-notifications` + `usePushNotifications`（请求权限/注册 token/前台横幅/点击跳转）。详见 `docs/push-deeplink.md`
 - ✅ **体验打磨**：`Skeleton`/`SkeletonText` 骨架组件（pulse）+ 屏级 `SpotListSkeleton/RouteListSkeleton/FeedSkeleton` 替代 spinner；Home/Spots/Learn/Profile 四屏接 `RefreshControl` 下拉刷新；`ErrorBoundary` 包裹 App 顶层防白屏
+- ✅ **编辑资料页**（2026-10-27，对照 `原型/screens/ios-profile-edit.html`）：全栈打通——后端 `PATCH /api/users/me`（Zod 校验 + 只更新传入列）+ users 表新增 location/fishing_experience/fishing_methods/target_species 四列（幂等 ALTER）；`GET /users/:id`、`GET /auth/me` 带回新列。移动端 `ProfileEditScreen` overlay：头像更换（expo-image-picker 拍照/相册/保留，real 模式走 uploads 上传）、昵称（2–12 字 blur 校验 + 错误摘要条）、签名（50 字计数）、所在地底部弹层、钓龄分段、钓法/鱼种多选 chips、荣誉徽章；未保存返回拦截（放弃弹窗）、保存按钮 dirty 才可点 + spinner、toast；保存后写回 auth store 并持久化 AsyncStorage（mock 模式本地合并）。`ProfileScreen` 我的路线/技巧条目与「全部 →」入口同步接上点击跳转（路线详情/播放浮层）
 
 ### ✅ Phase 4（部分）：iOS 小组件 + 深链
 - ✅ **深度链接**：scheme `yulu://`；`utils/deeplink.ts` 分发（nav/route/feed/user/spot/home）；App.tsx 接 `Linking` 冷启动+运行时 URL；推送点击复用同一分发器（`buildDeepLink`）

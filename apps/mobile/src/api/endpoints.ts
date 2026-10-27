@@ -1,6 +1,7 @@
 import { apiClient } from './client';
 import { toSpot, toRoute, toFeed, toTutorial, toUser, toUserProfile, toComment } from './transforms';
 import type { Spot, Route, Feed, Tutorial, User, UserProfile, Comment, Weather, CommentTargetType, SearchResults } from '@yulu/shared';
+import type { UpdateProfileInput } from '@yulu/shared';
 
 type Row = Record<string, any>;
 
@@ -160,6 +161,11 @@ export const usersApi = {
   get: async (id: string) => {
     const { data } = await apiClient.get<Row>(`/users/${id}`);
     return toUserProfile(data as any);
+  },
+  /** Edit-profile save. Only provided fields are updated server-side. */
+  updateMe: async (input: UpdateProfileInput) => {
+    const { data } = await apiClient.patch<Row>('/users/me', input);
+    return toUser(data as any);
   },
   follow: async (id: string) => {
     await apiClient.post(`/users/${id}/follow`);

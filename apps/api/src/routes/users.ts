@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { query } from '../config/database';
 import { authMiddleware, optionalAuth, AuthRequest } from '../middleware/auth';
 import { validate } from '../middleware/validate';
-import { pushTokenSchema } from '@yulu/shared';
+import { pushTokenSchema, updateProfileSchema } from '@yulu/shared';
 import { notifyUser, getUserNickname } from '../services/notifications';
 
 const router = Router();
@@ -18,10 +18,36 @@ router.post('/push-token', authMiddleware, validate(pushTokenSchema), async (req
   res.status(201).json({ ok: true });
 });
 
+/** Update my profile (edit-profile screen). Only provided columns change. */
+router.patch('/me', authMiddleware, validate(updateProfileSchema), async (req: AuthRequest, res: Response) => {
+  const { nickname, bio, avatarUrl, location, fishingExperience, fishingMethods, targetSpecies } = req.body;
+  const result = await query(
+    `UPDATE users SET
+       nickname = COALESCE($1, nickname),
+       bio = COALESCE($2, bio),
+       avatar_url = COALESCE($3, avatar_url),
+       location = COALESCE($4, location),
+       fishing_experience = COALESCE($5, fishing_experience),
+       fishing_methods = COALESCE($6, fishing_methods),
+       target_species = COALESCE($7, target_species),
+       updated_at = NOW()
+     WHERE id = $8
+     RETURNING id, phone, email, nickname, avatar_url, bio, location,
+       fishing_experience, fishing_methods, target_species,
+       spots_count, routes_count, likes_count, followers_count,
+       created_at, updated_at`,
+    [nickname ?? null, bio ?? null, avatarUrl ?? null, location ?? null,
+     fishingExperience ?? null, fishingMethods ?? null, targetSpecies ?? null, req.userId],
+  );
+  if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+  res.json(result.rows[0]);
+});
+
 /** User profile with personalized follow state and following count. */
 router.get('/:id', optionalAuth, async (req: AuthRequest, res: Response) => {
   const result = await query(
-    `SELECT u.id, u.nickname, u.avatar_url, u.bio,
+    `SELECT u.id, u.nickname, u.avatar_url, u.bio, u.location,
+       u.fishing_experience, u.fishing_methods, u.target_species,
        u.spots_count, u.routes_count, u.likes_count, u.followers_count,
        (SELECT COUNT(*) FROM follows WHERE follower_id = u.id) AS following_count,
        (f.follower_id IS NOT NULL) AS is_following

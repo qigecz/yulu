@@ -22,6 +22,8 @@ interface AuthState {
   logout: () => Promise<void>;
   /** Restore session from storage (or seed mock user in mock mode). */
   hydrate: () => Promise<void>;
+  /** Replace the cached user (edit-profile save) and persist to storage. */
+  setUser: (user: User) => Promise<void>;
   /** Safety net: if hydrate never resolves, leave the loading screen anyway. */
   forceBootBail: () => void;
 }
@@ -72,6 +74,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     const res = await authApi.register({ phone, password, nickname });
     const user = await persistSession(res);
     set({ user, accessToken: res.accessToken, refreshToken: res.refreshToken, status: 'authenticated' });
+  },
+
+  setUser: async (user) => {
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(user)).catch(() => {});
+    set({ user });
   },
 
   logout: async () => {

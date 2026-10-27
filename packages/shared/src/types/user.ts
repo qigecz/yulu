@@ -5,6 +5,14 @@ export interface User {
   nickname: string;
   avatarUrl?: string;
   bio?: string;
+  /** 常驻地（如「浙江 · 千岛湖」），编辑资料维护。 */
+  location?: string;
+  /** 钓龄档位：lt1 / 1to3 / 3to5 / gt5。 */
+  fishingExperience?: 'lt1' | '1to3' | '3to5' | 'gt5';
+  /** 常用钓法（路亚 / 台钓 / 筏钓…，多选）。 */
+  fishingMethods?: string[];
+  /** 主打鱼种（多选）。 */
+  targetSpecies?: string[];
   spotsCount: number;
   routesCount: number;
   likesCount: number;
