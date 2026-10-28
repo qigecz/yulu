@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>渔路 · 购物车 · iOS</title>
+  <style>
+    :root {
+      --bg: #f3f5f2; --surface: #ffffff; --fg: #1a2420; --muted: #647a70; --border: #dce2dc; --accent: #2a8f7a;
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft: color-mix(in oklch, var(--fg) 6%, transparent);
+      --gold: #b8860b; --danger: #b03a2e;
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      --radius-card: 18px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: radial-gradient(60% 80% at 50% 0%, color-mix(in oklch, var(--accent) 6%, var(--bg)) 0%, var(--bg) 60%);
+      color: var(--fg); font-family: var(--font-body); font-size: 15px;
+      line-height: 1.4; -webkit-font-smoothing: antialiased;
+      display: grid; place-items: center; padding: 32px;
+    }
+    .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .caption { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .caption strong { color: var(--fg); font-weight: 500; }
+    .device {
+      position: relative; width: 390px; height: 844px; border-radius: 56px; padding: 12px;
+      background: linear-gradient(160deg, #2a2a2c 0%, #1a1a1c 50%, #0e0e10 100%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 0 2px #000 inset, 0 28px 60px -12px rgba(0,0,0,0.45);
+      isolation: isolate;
+    }
+    .device::before, .device::after {
+      content: ''; position: absolute; width: 3px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 8%, transparent 16%, transparent 84%, rgba(255,255,255,0.04) 92%, transparent);
+      top: 100px; bottom: 100px; pointer-events: none;
+    }
+    .device::before { left: -1px; } .device::after { right: -1px; }
+    .island { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 124px; height: 36px; background: #000; border-radius: 999px; z-index: 60; }
+    .btn-rail { position: absolute; width: 4px; background: #0a0a0c; border-radius: 2px; }
+    .btn-rail.left-1 { left: -3px; top: 174px; height: 32px; }
+    .btn-rail.left-2 { left: -3px; top: 220px; height: 60px; }
+    .btn-rail.left-3 { left: -3px; top: 290px; height: 60px; }
+    .btn-rail.right-1 { right: -3px; top: 250px; height: 100px; }
+    .screen { position: relative; width: 100%; height: 100%; background: var(--bg); border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; }
+    .statusbar { flex: 0 0 47px; padding: 18px 26px 0; display: flex; align-items: flex-start; justify-content: space-between; font-size: 15px; font-weight: 600; }
+    .statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
+    .statusbar svg { width: 17px; height: 11px; fill: var(--fg); }
+    .statusbar .battery { width: 25px; }
+    .content { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
+    .content::-webkit-scrollbar { display: none; }
+    .home-indicator { flex: 0 0 28px; position: relative; z-index: 40; }
+    .home-indicator::after { content: ''; position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); width: 134px; height: 5px; background: var(--fg); border-radius: 999px; opacity: 0.85; }
+    .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    .navbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px 10px; }
+    .nav-side { width: 84px; display: flex; align-items: center; }
+    .nav-side.right { justify-content: flex-end; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: none; cursor: pointer; padding: 6px 4px 6px 0;
+      color: var(--accent); font-size: 15px; font-family: var(--font-body); text-decoration: none;
+    }
+    .back-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nav-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+    .manage-btn { background: none; border: none; cursor: pointer; font-size: 13px; color: var(--muted); font-family: var(--font-body); padding: 6px 0; }
+
+    /* items */
+    .cart-item {
+      margin: 0 16px 10px; padding: 12px 14px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card);
+      display: flex; gap: 12px; align-items: center;
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    .cart-item.removing { opacity: 0; transform: translateX(30px); }
+    .ck {
+      width: 21px; height: 21px; border-radius: 50%; flex-shrink: 0; cursor: pointer;
+      border: 1.5px solid var(--border); background: var(--surface); padding: 0;
+      display: grid; place-items: center;
+    }
+    .ck svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 3; opacity: 0; }
+    .ck[aria-checked="true"] { background: var(--accent); border-color: var(--accent); }
+    .ck[aria-checked="true"] svg { opacity: 1; }
+    .ck:focus-visible, .qty-btn:focus-visible, .del-btn:focus-visible, .checkout-btn:focus-visible, .sel-all .ck:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 2px;
+    }
+    .ci-img {
+      width: 64px; height: 64px; border-radius: 12px; flex-shrink: 0;
+      background: var(--accent-soft); display: grid; place-items: center;
+    }
+    .ci-img svg { width: 30px; height: 30px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+    .ci-body { flex: 1; min-width: 0; }
+    .ci-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ci-spec { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .ci-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 7px; }
+    .ci-price { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: var(--accent); }
+    .qty-ctl { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .qty-btn { width: 28px; height: 26px; background: var(--bg); border: none; cursor: pointer; font-size: 15px; color: var(--fg); }
+    .qty-btn[disabled] { color: var(--border); cursor: default; }
+    .qty-val { width: 30px; text-align: center; font-family: var(--font-mono); font-size: 12px; }
+    .del-btn {
+      align-self: flex-start; background: none; border: none; cursor: pointer;
+      color: var(--muted); padding: 2px; flex-shrink: 0;
+    }
+    .del-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+    .del-btn:hover { color: var(--danger); }
+
+    /* empty state */
+    .empty { margin: 60px 40px; text-align: center; }
+    .empty svg { width: 64px; height: 64px; stroke: var(--border); fill: none; stroke-width: 1.4; }
+    .empty p { font-size: 14px; color: var(--muted); margin: 12px 0 16px; }
+    .empty a {
+      display: inline-block; padding: 9px 22px; border-radius: 999px;
+      background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; text-decoration: none;
+    }
+
+    /* settle bar */
+    .settlebar {
+      position: absolute; left: 0; right: 0; bottom: 28px; z-index: 35;
+      display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+      background: color-mix(in oklch, var(--surface) 92%, transparent); backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+    }
+    .sel-all { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); }
+    .total-wrap { flex: 1; text-align: right; font-size: 11px; color: var(--muted); }
+    .total-price { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--accent); }
+    .checkout-btn {
+      min-width: 108px; min-height: 44px; border-radius: 14px; border: none; cursor: pointer;
+      background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; font-family: var(--font-body);
+    }
+    .checkout-btn[disabled] { background: var(--border); color: var(--muted); cursor: default; }
+    .spinner {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+      animation: spin 0.7s linear infinite; display: inline-block; vertical-align: -2px; margin-right: 4px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* toast */
+    .toast {
+      position: absolute; left: 50%; bottom: 110px; z-index: 55;
+      transform: translate(-50%, 16px);
+      background: var(--fg); color: #fff;
+      padding: 10px 18px; border-radius: 999px;
+      font-size: 13px; box-shadow: 0 6px 20px -6px rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none; transition: all 0.3s;
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast svg { width: 14px; height: 14px; stroke: #7dd8c3; fill: none; stroke-width: 2.2; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption"><strong>渔路</strong> · iOS · 购物车</div>
+    <div class="device" data-od-id="device">
+      <span class="btn-rail left-1" aria-hidden></span>
+      <span class="btn-rail left-2" aria-hidden></span>
+      <span class="btn-rail left-3" aria-hidden></span>
+      <span class="btn-rail right-1" aria-hidden></span>
+      <span class="island" aria-hidden></span>
+      <div class="screen">
+        <div class="statusbar">
+          <span class="num">9:41</span>
+          <span class="right">
+            <svg viewBox="0 0 17 11" aria-hidden><rect x="0" y="7" width="3" height="4" rx="0.6"/><rect x="4" y="5" width="3" height="6" rx="0.6"/><rect x="8" y="3" width="3" height="8" rx="0.6"/><rect x="12" y="0" width="3" height="11" rx="0.6"/></svg>
+            <svg viewBox="0 0 17 11" aria-hidden><path d="M8.5 1.5C5.5 1.5 2.7 2.6 0.5 4.6L2 6.1C3.8 4.5 6.1 3.6 8.5 3.6c2.4 0 4.7 0.9 6.5 2.5l1.5-1.5c-2.2-2-5-3.1-8-3.1zM3.5 7.6L5 9.1c1-0.9 2.2-1.4 3.5-1.4 1.3 0 2.5 0.5 3.5 1.4l1.5-1.5c-1.4-1.3-3.1-2-5-2-1.9 0-3.6 0.7-5 2zM6.5 10.6l2 2 2-2c-0.5-0.5-1.2-0.8-2-0.8s-1.5 0.3-2 0.8z"/></svg>
+            <svg class="battery" viewBox="0 0 25 11" aria-hidden><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.45"/><rect x="22" y="3.5" width="1.5" height="4" rx="0.4" fill="currentColor" fill-opacity="0.45"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
+          </span>
+        </div>
+
+        <main class="content" data-od-id="content">
+          <div class="navbar" data-od-id="cart-navbar">
+            <span class="nav-side">
+              <a class="back-btn" href="ios-mall.html">
+                <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>商城
+              </a>
+            </span>
+            <span class="nav-title">购物车 <span class="num" style="font-size:13px; color:var(--muted); font-weight:400;" id="titleCount">(4)</span></span>
+            <span class="nav-side right"></span>
+          </div>
+
+          <div id="cartList" data-od-id="cart-list"></div>
+
+          <!-- 空状态 -->
+          <div class="empty" id="cartEmpty" data-od-id="cart-empty" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <p>购物车空空如也，先去商城挑几件趁手的装备吧</p>
+            <a href="ios-mall.html">去逛逛</a>
+          </div>
+
+          <div style="height: 16px;"></div>
+        </main>
+
+        <!-- 结算栏 -->
+        <div class="settlebar" id="settlebar" data-od-id="settle-bar">
+          <button class="ck sel-all-ck" type="button" role="checkbox" aria-checked="true" aria-label="全选">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <span class="sel-all">全选</span>
+          <span class="total-wrap">
+            合计 <span class="total-price" id="totalPrice">¥373</span><br />
+            不含运费 · 顺丰包邮
+          </span>
+          <button class="checkout-btn" id="checkoutBtn" type="button">去结算(4)</button>
+        </div>
+
+        <!-- toast -->
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="toastText">已完成</span>
+        </div>
+
+        <div class="home-indicator" aria-hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // 与商城商品数据一致
+      var ITEMS = [
+        { id: 'vib', name: '金属VIB亮片 · 7g 六件套', spec: '夜光/金色/银色 各 2', price: 45, qty: 2, icon: 'fish' },
+        { id: 'reel', name: '纺车轮 · 3000型浅线杯', spec: '5+1 轴承 · 4.9:1', price: 199, qty: 1, icon: 'reel' },
+        { id: 'shirt', name: '钓鱼防晒衣 · UPF50+', spec: '冰感 · 连帽款 · L码', price: 129, qty: 1, icon: 'shirt' }
+      ];
+      var ICONS = {
+        fish: '<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="15" cy="12" r="1.2"/></svg>',
+        reel: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3v3M21 12h-3M12 21v-3M3 12h3"/></svg>',
+        shirt: '<svg viewBox="0 0 24 24"><path d="M12 2l4 3 5 2-2 5-2-1v11H7V11l-2 1-2-5 5-2z"/></svg>'
+      };
+
+      var list = document.getElementById('cartList');
+      var emptyBox = document.getElementById('cartEmpty');
+      var settlebar = document.getElementById('settlebar');
+      var totalEl = document.getElementById('totalPrice');
+      var ckBtn = document.getElementById('checkoutBtn');
+      var allCk = document.querySelector('.sel-all-ck');
+      var titleCount = document.getElementById('titleCount');
+      var toast = document.getElementById('toast');
+      var toastText = document.getElementById('toastText');
+      var toastTimer = null;
+      var paying = false;
+
+      function showToast(msg) {
+        toastText.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+      }
+
+      function yuan(n) { return '¥' + n; }
+      function selected() { return ITEMS.filter(function (i) { return i.on; }); }
+
+      function render() {
+        list.innerHTML = '';
+        ITEMS.forEach(function (item) {
+          var row = document.createElement('div');
+          row.className = 'cart-item';
+          row.innerHTML =
+            '<button class="ck" type="button" role="checkbox" aria-checked="' + (item.on ? 'true' : 'false') + '" aria-label="选择' + item.name + '">' +
+              '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>' +
+            '<div class="ci-img" aria-hidden="true">' + ICONS[item.icon] + '</div>' +
+            '<div class="ci-body">' +
+              '<p class="ci-name"></p>' +
+              '<p class="ci-spec"></p>' +
+              '<div class="ci-foot">' +
+                '<span class="ci-price"></span>' +
+                '<span class="qty-ctl">' +
+                  '<button class="qty-btn qm" type="button" aria-label="减少' + item.name + '数量">−</button>' +
+                  '<span class="qty-val"></span>' +
+                  '<button class="qty-btn qp" type="button" aria-label="增加' + item.name + '数量">+</button>' +
+                '</span>' +
+              '</div>' +
+            '</div>' +
+            '<button class="del-btn" type="button" aria-label="删除' + item.name + '">' +
+              '<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+            '</button>';
+          row.querySelector('.ci-name').textContent = item.name;
+          row.querySelector('.ci-spec').textContent = item.spec;
+          row.querySelector('.ci-price').textContent = yuan(item.price * item.qty);
+          row.querySelector('.qty-val').textContent = String(item.qty);
+          var qm = row.querySelector('.qm'); var qp = row.querySelector('.qp');
+          qm.disabled = item.qty <= 1;
+
+          row.querySelector('.ck').addEventListener('click', function () {
+            item.on = !item.on;
+            render();
+          });
+          qm.addEventListener('click', function () { if (item.qty > 1) { item.qty--; render(); } });
+          qp.addEventListener('click', function () { if (item.qty < 9) { item.qty++; render(); } else showToast('单件最多购买 9 件'); });
+          row.querySelector('.del-btn').addEventListener('click', function () {
+            row.classList.add('removing');
+            setTimeout(function () {
+              ITEMS = ITEMS.filter(function (x) { return x.id !== item.id; });
+              showToast('已移除「' + item.name + '」');
+              render();
+            }, 250);
+          });
+          list.appendChild(row);
+        });
+
+        var sel = selected();
+        var total = sel.reduce(function (s, i) { return s + i.price * i.qty; }, 0);
+        totalEl.textContent = yuan(total);
+        ckBtn.textContent = '去结算(' + sel.length + ')';
+        ckBtn.disabled = sel.length === 0 || paying;
+        allCk.setAttribute('aria-checked', String(sel.length === ITEMS.length && ITEMS.length > 0));
+        titleCount.textContent = '(' + ITEMS.reduce(function (s, i) { return s + i.qty; }, 0) + ')';
+
+        var gone = ITEMS.length === 0;
+        emptyBox.hidden = !gone;
+        settlebar.style.display = gone ? 'none' : '';
+      }
+
+      allCk.addEventListener('click', function () {
+        var on = allCk.getAttribute('aria-checked') !== 'true';
+        ITEMS.forEach(function (i) { i.on = on; });
+        render();
+      });
+
+      ckBtn.addEventListener('click', function () {
+        var sel = selected();
+        if (sel.length === 0 || paying) return;
+        paying = true;
+        ckBtn.disabled = true;
+        ckBtn.innerHTML = '<span class="spinner"></span>结算中';
+        var total = sel.reduce(function (s, i) { return s + i.price * i.qty; }, 0);
+        var n = sel.reduce(function (s, i) { return s + i.qty; }, 0);
+        setTimeout(function () {
+          showToast('下单成功 · ' + n + ' 件共 ' + yuan(total));
+          setTimeout(function () { window.location.href = 'ios-orders.html'; }, 900);
+        }, 1000);
+      });
+
+      ITEMS.forEach(function (i) { i.on = true; });
+      render();
+    })();
+  </script>
+</body>
+</html>

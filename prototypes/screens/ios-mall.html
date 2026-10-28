@@ -323,10 +323,10 @@
               <button class="icon-btn" aria-label="搜索商品">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               </button>
-              <button class="icon-btn" aria-label="购物车">
+              <a class="icon-btn" href="ios-cart.html" aria-label="购物车，已加入 2 件" style="position:relative; text-decoration:none; color:inherit;">
                 <svg viewBox="0 0 24 24"><use href="#ic-cart"/></svg>
                 <span class="cart-badge" id="cartBadge">2</span>
-              </button>
+              </a>
             </div>
           </div>
 
@@ -455,8 +455,16 @@
         card.querySelector('.p-sold .num').textContent = soldLabel(p.sold);
         const flagEl = card.querySelector('.p-flag');
         if (p.flag) { flagEl.textContent = p.flag; } else { flagEl.remove(); }
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', '查看' + p.name + '详情');
+        card.addEventListener('click', () => { window.location.href = 'ios-product-detail.html'; });
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.location.href = 'ios-product-detail.html'; }
+        });
         const btn = card.querySelector('.add-btn');
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
           if (btn.classList.contains('added')) return;
           btn.classList.add('added');
           btn.innerHTML = '<svg viewBox="0 0 24 24"><use href="#ic-check"/></svg>';

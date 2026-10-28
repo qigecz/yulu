@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>渔路 · 我的技巧分享 · iOS</title>
+  <style>
+    :root {
+      --bg: #f3f5f2; --surface: #ffffff; --fg: #1a2420; --muted: #647a70; --border: #dce2dc; --accent: #2a8f7a;
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft: color-mix(in oklch, var(--fg) 6%, transparent);
+      --gold: #b8860b;
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      --radius-card: 18px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: radial-gradient(60% 80% at 50% 0%, color-mix(in oklch, var(--accent) 6%, var(--bg)) 0%, var(--bg) 60%);
+      color: var(--fg); font-family: var(--font-body); font-size: 15px;
+      line-height: 1.4; -webkit-font-smoothing: antialiased;
+      display: grid; place-items: center; padding: 32px;
+    }
+    .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .caption { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .caption strong { color: var(--fg); font-weight: 500; }
+    .device {
+      position: relative; width: 390px; height: 844px; border-radius: 56px; padding: 12px;
+      background: linear-gradient(160deg, #2a2a2c 0%, #1a1a1c 50%, #0e0e10 100%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 0 2px #000 inset, 0 28px 60px -12px rgba(0,0,0,0.45);
+      isolation: isolate;
+    }
+    .device::before, .device::after {
+      content: ''; position: absolute; width: 3px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 8%, transparent 16%, transparent 84%, rgba(255,255,255,0.04) 92%, transparent);
+      top: 100px; bottom: 100px; pointer-events: none;
+    }
+    .device::before { left: -1px; } .device::after { right: -1px; }
+    .island { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 124px; height: 36px; background: #000; border-radius: 999px; z-index: 60; }
+    .btn-rail { position: absolute; width: 4px; background: #0a0a0c; border-radius: 2px; }
+    .btn-rail.left-1 { left: -3px; top: 174px; height: 32px; }
+    .btn-rail.left-2 { left: -3px; top: 220px; height: 60px; }
+    .btn-rail.left-3 { left: -3px; top: 290px; height: 60px; }
+    .btn-rail.right-1 { right: -3px; top: 250px; height: 100px; }
+    .screen { position: relative; width: 100%; height: 100%; background: var(--bg); border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; }
+    .statusbar { flex: 0 0 47px; padding: 18px 26px 0; display: flex; align-items: flex-start; justify-content: space-between; font-size: 15px; font-weight: 600; }
+    .statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
+    .statusbar svg { width: 17px; height: 11px; fill: var(--fg); }
+    .statusbar .battery { width: 25px; }
+    .content { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+    .content::-webkit-scrollbar { display: none; }
+    .home-indicator { flex: 0 0 28px; position: relative; z-index: 40; }
+    .home-indicator::after { content: ''; position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); width: 134px; height: 5px; background: var(--fg); border-radius: 999px; opacity: 0.85; }
+    .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    .navbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px 10px; }
+    .nav-side { width: 84px; display: flex; align-items: center; }
+    .nav-side.right { justify-content: flex-end; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: none; cursor: pointer; padding: 6px 4px 6px 0;
+      color: var(--accent); font-size: 15px; font-family: var(--font-body); text-decoration: none;
+    }
+    .back-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nav-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+
+    .chips { display: flex; gap: 7px; margin: 0 16px 12px; overflow-x: auto; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0; padding: 7px 14px; border-radius: 999px; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface);
+      font-size: 12px; color: var(--fg); font-family: var(--font-body);
+    }
+    .chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+    .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .count-note { margin: 0 20px 8px; font-size: 11px; color: var(--muted); }
+
+    .tip-card {
+      margin: 0 16px 10px; padding: 13px 15px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card);
+      display: flex; gap: 12px; align-items: flex-start; cursor: pointer;
+    }
+    .tip-card:hover { border-color: var(--muted); }
+    .tip-icon { width: 40px; height: 40px; border-radius: 11px; background: var(--accent-soft); display: grid; place-items: center; flex-shrink: 0; }
+    .tip-icon svg { width: 19px; height: 19px; stroke: var(--accent); fill: none; stroke-width: 1.6; }
+    .tip-body { flex: 1; min-width: 0; }
+    .tip-title { font-size: 15px; font-weight: 600; line-height: 1.35; }
+    .tip-cat {
+      display: inline-block; margin-top: 5px; font-size: 10px; font-weight: 600;
+      padding: 1.5px 8px; border-radius: 999px; background: var(--fg-soft); color: var(--muted);
+    }
+    .tip-cat.hot { background: var(--accent-soft); color: var(--accent); }
+    .tip-stats { display: flex; gap: 12px; margin-top: 7px; font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+    .tip-stats svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.7; vertical-align: -1.5px; margin-right: 2px; }
+    .tip-time { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+    .empty { margin: 60px 40px; text-align: center; }
+    .empty svg { width: 60px; height: 60px; stroke: var(--border); fill: none; stroke-width: 1.4; }
+    .empty p { font-size: 14px; color: var(--muted); margin: 12px 0 16px; }
+    .empty a { display: inline-block; padding: 9px 22px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; }
+
+    /* toast */
+    .toast {
+      position: absolute; left: 50%; bottom: 90px; z-index: 55;
+      transform: translate(-50%, 16px);
+      background: var(--fg); color: #fff; padding: 10px 18px; border-radius: 999px;
+      font-size: 13px; box-shadow: 0 6px 20px -6px rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none; transition: all 0.3s;
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast svg { width: 14px; height: 14px; stroke: #7dd8c3; fill: none; stroke-width: 2.2; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption"><strong>渔路</strong> · iOS · 我的技巧分享</div>
+    <div class="device" data-od-id="device">
+      <span class="btn-rail left-1" aria-hidden></span>
+      <span class="btn-rail left-2" aria-hidden></span>
+      <span class="btn-rail left-3" aria-hidden></span>
+      <span class="btn-rail right-1" aria-hidden></span>
+      <span class="island" aria-hidden></span>
+      <div class="screen">
+        <div class="statusbar">
+          <span class="num">9:41</span>
+          <span class="right">
+            <svg viewBox="0 0 17 11" aria-hidden><rect x="0" y="7" width="3" height="4" rx="0.6"/><rect x="4" y="5" width="3" height="6" rx="0.6"/><rect x="8" y="3" width="3" height="8" rx="0.6"/><rect x="12" y="0" width="3" height="11" rx="0.6"/></svg>
+            <svg viewBox="0 0 17 11" aria-hidden><path d="M8.5 1.5C5.5 1.5 2.7 2.6 0.5 4.6L2 6.1C3.8 4.5 6.1 3.6 8.5 3.6c2.4 0 4.7 0.9 6.5 2.5l1.5-1.5c-2.2-2-5-3.1-8-3.1zM3.5 7.6L5 9.1c1-0.9 2.2-1.4 3.5-1.4 1.3 0 2.5 0.5 3.5 1.4l1.5-1.5c-1.4-1.3-3.1-2-5-2-1.9 0-3.6 0.7-5 2zM6.5 10.6l2 2 2-2c-0.5-0.5-1.2-0.8-2-0.8s-1.5 0.3-2 0.8z"/></svg>
+            <svg class="battery" viewBox="0 0 25 11" aria-hidden><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.45"/><rect x="22" y="3.5" width="1.5" height="4" rx="0.4" fill="currentColor" fill-opacity="0.45"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
+          </span>
+        </div>
+
+        <main class="content" data-od-id="content">
+          <div class="navbar" data-od-id="tips-navbar">
+            <span class="nav-side">
+              <a class="back-btn" href="ios-profile.html">
+                <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>我的
+              </a>
+            </span>
+            <span class="nav-title">我的技巧分享</span>
+            <span class="nav-side right"></span>
+          </div>
+
+          <div class="chips" role="group" aria-label="技巧分类筛选" data-od-id="tips-filters">
+            <button class="chip active" type="button" data-cat="all">全部</button>
+            <button class="chip" type="button" data-cat="路亚">路亚</button>
+            <button class="chip" type="button" data-cat="台钓">台钓</button>
+            <button class="chip" type="button" data-cat="装备">装备</button>
+            <button class="chip" type="button" data-cat="绑钩">绑钩</button>
+          </div>
+
+          <p class="count-note num" id="countNote">共 6 篇 · 被收藏 409 次</p>
+
+          <div id="tipList" data-od-id="tip-list"></div>
+
+          <div class="empty" id="tipEmpty" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <p>这个分类下还没有技巧，去发一篇帮帮钓友们</p>
+            <a href="ios-profile.html">返回去分享</a>
+          </div>
+
+          <div style="height: 16px;"></div>
+        </main>
+
+        <!-- toast -->
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="toastText">已完成</span>
+        </div>
+
+        <div class="home-indicator" aria-hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // 前两条与「我的」页一致，扩充至 6 条
+      var TIPS = [
+        { id: 'vib-speed', cat: '路亚', title: 'VIB 收线速度与水深的关系', fav: 128, cmt: 42, time: '5天前', hot: true,
+          note: '匀速慢收藏底、抽停诱攻击，7g VIB 实测三档速度对应泳层' },
+        { id: 'bixi-log', cat: '路亚', title: '千岛湖碧溪湾爆护全记录', fav: 86, cmt: 35, time: '2周前', hot: false,
+          note: '86 尾翘嘴的完整作钓日志：标点、饵色与窗口期复盘' },
+        { id: 'autumn-window', cat: '路亚', title: '秋季翘嘴窗口期作钓笔记', fav: 54, cmt: 18, time: '3周前', hot: false,
+          note: '换季温差下早晚窗口的变化规律，附 10 月实测水温' },
+        { id: 'grass-hole', cat: '台钓', title: '长竿短线钓草洞的经验总结', fav: 47, cmt: 12, time: '1月前', hot: false,
+          note: '草洞选位三要素与逗钓手法，跑鱼率直降一半' },
+        { id: 'night-light', cat: '装备', title: '夜钓灯选择与摆放位置', fav: 33, cmt: 9, time: '1月前', hot: false,
+          note: '蓝光/白光/紫光的取舍，灯位与钓位的夹角讲究' },
+        { id: 'double-hook', cat: '绑钩', title: '子线双钩绑法图解', fav: 61, cmt: 23, time: '2月前', hot: false,
+          note: '内绑式与外绑式的强度对比，新手一次成功率更高的绑法' }
+      ];
+      var ICON = '<svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>';
+      var starIcon = '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>';
+      var cmtIcon = '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+
+      var cat = 'all';
+      var listEl = document.getElementById('tipList');
+      var emptyEl = document.getElementById('tipEmpty');
+      var countNote = document.getElementById('countNote');
+      var toast = document.getElementById('toast');
+      var toastText = document.getElementById('toastText');
+      var toastTimer = null;
+
+      function showToast(msg) {
+        toastText.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+      }
+
+      function render() {
+        var arr = cat === 'all' ? TIPS : TIPS.filter(function (t) { return t.cat === cat; });
+        listEl.innerHTML = '';
+        arr.forEach(function (t) {
+          var card = document.createElement('div');
+          card.className = 'tip-card';
+          card.setAttribute('role', 'button');
+          card.setAttribute('tabindex', '0');
+          card.innerHTML =
+            '<div class="tip-icon" aria-hidden="true">' + ICON + '</div>' +
+            '<div class="tip-body">' +
+              '<p class="tip-title"></p>' +
+              '<span class="tip-cat' + (t.hot ? ' hot' : '') + '"></span>' +
+              '<p style="font-size:12px; color:var(--muted); margin:6px 0 0;" class="tip-note"></p>' +
+              '<div class="tip-stats">' +
+                '<span>' + starIcon + ' <span class="fav-n"></span> 收藏</span>' +
+                '<span>' + cmtIcon + ' <span class="cmt-n"></span> 评论</span>' +
+              '</div>' +
+            '</div>' +
+            '<span class="tip-time"></span>';
+          card.querySelector('.tip-title').textContent = t.title;
+          card.querySelector('.tip-cat').textContent = t.cat + (t.hot ? ' · 热门' : '');
+          card.querySelector('.tip-note').textContent = t.note;
+          card.querySelector('.fav-n').textContent = String(t.fav);
+          card.querySelector('.cmt-n').textContent = String(t.cmt);
+          card.querySelector('.tip-time').textContent = t.time;
+          function open() { showToast('原型中技巧正文为示意，即将开放'); }
+          card.addEventListener('click', open);
+          card.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+          });
+          listEl.appendChild(card);
+        });
+        var favSum = arr.reduce(function (s, t) { return s + t.fav; }, 0);
+        countNote.textContent = cat === 'all'
+          ? '共 ' + arr.length + ' 篇 · 被收藏 ' + favSum + ' 次'
+          : '「' + cat + '」分类 · 共 ' + arr.length + ' 篇';
+        emptyEl.hidden = arr.length !== 0;
+      }
+
+      document.querySelectorAll('.chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          document.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+          chip.classList.add('active');
+          cat = chip.getAttribute('data-cat');
+          render();
+        });
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

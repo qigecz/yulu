@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>渔路 · 商品详情 · iOS</title>
+  <style>
+    :root {
+      --bg: #f3f5f2; --surface: #ffffff; --fg: #1a2420; --muted: #647a70; --border: #dce2dc; --accent: #2a8f7a;
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft: color-mix(in oklch, var(--fg) 6%, transparent);
+      --gold: #b8860b;
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      --radius-card: 18px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: radial-gradient(60% 80% at 50% 0%, color-mix(in oklch, var(--accent) 6%, var(--bg)) 0%, var(--bg) 60%);
+      color: var(--fg); font-family: var(--font-body); font-size: 15px;
+      line-height: 1.4; -webkit-font-smoothing: antialiased;
+      display: grid; place-items: center; padding: 32px;
+    }
+    .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .caption { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .caption strong { color: var(--fg); font-weight: 500; }
+    .device {
+      position: relative; width: 390px; height: 844px; border-radius: 56px; padding: 12px;
+      background: linear-gradient(160deg, #2a2a2c 0%, #1a1a1c 50%, #0e0e10 100%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 0 2px #000 inset, 0 28px 60px -12px rgba(0,0,0,0.45);
+      isolation: isolate;
+    }
+    .device::before, .device::after {
+      content: ''; position: absolute; width: 3px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 8%, transparent 16%, transparent 84%, rgba(255,255,255,0.04) 92%, transparent);
+      top: 100px; bottom: 100px; pointer-events: none;
+    }
+    .device::before { left: -1px; } .device::after { right: -1px; }
+    .island { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 124px; height: 36px; background: #000; border-radius: 999px; z-index: 60; }
+    .btn-rail { position: absolute; width: 4px; background: #0a0a0c; border-radius: 2px; }
+    .btn-rail.left-1 { left: -3px; top: 174px; height: 32px; }
+    .btn-rail.left-2 { left: -3px; top: 220px; height: 60px; }
+    .btn-rail.left-3 { left: -3px; top: 290px; height: 60px; }
+    .btn-rail.right-1 { right: -3px; top: 250px; height: 100px; }
+    .screen { position: relative; width: 100%; height: 100%; background: var(--bg); border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; }
+    .statusbar { flex: 0 0 47px; padding: 18px 26px 0; display: flex; align-items: flex-start; justify-content: space-between; font-size: 15px; font-weight: 600; }
+    .statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
+    .statusbar svg { width: 17px; height: 11px; fill: var(--fg); }
+    .statusbar .battery { width: 25px; }
+    .content { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 76px; }
+    .content::-webkit-scrollbar { display: none; }
+    .home-indicator { flex: 0 0 28px; position: relative; z-index: 40; }
+    .home-indicator::after { content: ''; position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); width: 134px; height: 5px; background: var(--fg); border-radius: 999px; opacity: 0.85; }
+    .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    .navbar {
+      position: absolute; top: 47px; left: 0; right: 0; z-index: 30;
+      display: flex; align-items: center; justify-content: space-between; padding: 6px 16px 10px;
+      background: color-mix(in oklch, var(--bg) 86%, transparent); backdrop-filter: blur(14px);
+    }
+    .nav-side { width: 84px; display: flex; align-items: center; }
+    .nav-side.right { justify-content: flex-end; }
+    .back-btn, .cart-entry {
+      display: inline-flex; align-items: center; gap: 4px; position: relative;
+      background: none; cursor: pointer; padding: 6px 4px 6px 0;
+      color: var(--fg); font-size: 14px; font-family: var(--font-body); text-decoration: none;
+    }
+    .back-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .cart-entry { padding: 6px; color: var(--fg); }
+    .cart-entry svg { width: 21px; height: 21px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+    .cart-badge {
+      position: absolute; top: 0; right: -3px; min-width: 15px; height: 15px;
+      border-radius: 999px; background: var(--accent); color: #fff;
+      font-size: 9px; line-height: 15px; text-align: center; padding: 0 3px;
+      font-family: var(--font-mono);
+    }
+    .nav-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+    .back-btn:focus-visible, .cart-entry:focus-visible, .spec-chip:focus-visible, .qty-btn:focus-visible,
+    .buy-btn:focus-visible, .cart-btn:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px;
+    }
+
+    /* gallery */
+    .gallery { position: relative; height: 330px; background: var(--surface); }
+    .gallery svg.scene { width: 100%; height: 100%; display: block; }
+    .gallery .flag {
+      position: absolute; top: 14px; left: 14px;
+      background: var(--accent); color: #fff; font-size: 11px; font-weight: 600;
+      padding: 3px 9px; border-radius: 999px;
+    }
+    .gallery .dots { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+    .gallery .dots i { width: 6px; height: 6px; border-radius: 999px; background: var(--border); }
+    .gallery .dots i.on { background: var(--accent); width: 14px; }
+
+    /* info card */
+    .info-card {
+      margin: -18px 16px 0; position: relative; z-index: 5;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card);
+      padding: 14px 16px;
+    }
+    .price-row { display: flex; align-items: baseline; gap: 10px; }
+    .price { font-family: var(--font-display); font-size: 26px; font-weight: 600; color: var(--accent); }
+    .price .cur { font-size: 15px; }
+    .sold { font-size: 12px; color: var(--muted); }
+    .p-name { font-size: 17px; font-weight: 600; margin: 7px 0 0; line-height: 1.35; }
+    .p-sub { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
+    .p-tags { display: flex; gap: 6px; margin-top: 9px; }
+    .ptag { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+
+    /* sections */
+    .sect { margin: 12px 16px 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 13px 16px; }
+    .sect-title { font-size: 15px; font-weight: 600; margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center; }
+    .spec-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .spec-chip {
+      padding: 7px 14px; border-radius: 10px; cursor: pointer;
+      border: 1px solid var(--border); background: var(--bg);
+      font-size: 13px; color: var(--fg); font-family: var(--font-body);
+    }
+    .spec-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+    .qty-row { display: flex; align-items: center; justify-content: space-between; }
+    .qty-ctl { display: flex; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .qty-btn { width: 36px; height: 34px; background: var(--bg); border: none; cursor: pointer; font-size: 17px; color: var(--fg); }
+    .qty-btn[disabled] { color: var(--border); cursor: default; }
+    .qty-val { width: 40px; text-align: center; font-family: var(--font-mono); font-size: 14px; }
+    .stock { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+    .spec-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .spec-table td { padding: 7px 0; border-top: 1px solid var(--border); }
+    .spec-table tr:first-child td { border-top: 0; }
+    .spec-table td:first-child { color: var(--muted); width: 96px; }
+
+    .review { padding: 10px 0; border-top: 1px solid var(--border); }
+    .review:first-of-type { border-top: 0; }
+    .rv-head { display: flex; align-items: center; gap: 8px; }
+    .rv-ava { width: 26px; height: 26px; border-radius: 50%; background: var(--fg-soft); display: grid; place-items: center; font-size: 11px; font-weight: 600; }
+    .rv-name { font-size: 13px; font-weight: 600; }
+    .rv-stars { color: var(--gold); font-size: 11px; letter-spacing: 1px; }
+    .rv-text { font-size: 13px; margin: 5px 0 0; line-height: 1.5; }
+    .rv-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .rate-all { font-size: 12px; color: var(--accent); font-weight: 500; }
+
+    /* buy bar */
+    .buybar {
+      position: absolute; left: 0; right: 0; bottom: 28px; z-index: 35;
+      display: flex; gap: 10px; padding: 10px 16px;
+      background: color-mix(in oklch, var(--surface) 92%, transparent); backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+    }
+    .cart-btn, .buy-btn {
+      flex: 1; min-height: 46px; border-radius: 14px; cursor: pointer;
+      font-size: 15px; font-weight: 600; font-family: var(--font-body);
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .cart-btn { background: var(--surface); border: 1.5px solid var(--accent); color: var(--accent); }
+    .cart-btn:hover { background: var(--accent-soft); }
+    .buy-btn { background: var(--accent); border: none; color: #fff; }
+    .buy-btn:hover { background: color-mix(in oklch, var(--accent) 92%, #000); }
+    .buy-btn[disabled] { opacity: 0.6; cursor: default; }
+    .spinner {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+      animation: spin 0.7s linear infinite; display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* toast */
+    .toast {
+      position: absolute; left: 50%; bottom: 110px; z-index: 55;
+      transform: translate(-50%, 16px);
+      background: var(--fg); color: #fff;
+      padding: 10px 18px; border-radius: 999px;
+      font-size: 13px; box-shadow: 0 6px 20px -6px rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none; transition: all 0.3s;
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast svg { width: 14px; height: 14px; stroke: #7dd8c3; fill: none; stroke-width: 2.2; }
+
+    dialog.confirm {
+      border: none; border-radius: 18px; padding: 0;
+      width: 272px; background: var(--surface);
+      box-shadow: 0 18px 50px -12px rgba(0,0,0,0.35);
+      color: var(--fg); font-family: var(--font-body);
+    }
+    dialog.confirm::backdrop { background: rgba(10, 14, 12, 0.45); }
+    .dlg-body { padding: 20px 18px 14px; text-align: center; }
+    .dlg-title { font-size: 16px; font-weight: 600; margin: 0; }
+    .dlg-text { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+    .dlg-btns { display: flex; border-top: 1px solid var(--border); }
+    .dlg-btn {
+      flex: 1; padding: 13px 0; background: none; border: none; cursor: pointer;
+      font-family: var(--font-body); font-size: 15px; color: var(--muted);
+    }
+    .dlg-btn + .dlg-btn { border-left: 1px solid var(--border); color: var(--accent); font-weight: 600; }
+    .dlg-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption"><strong>渔路</strong> · iOS · 商品详情</div>
+    <div class="device" data-od-id="device">
+      <span class="btn-rail left-1" aria-hidden></span>
+      <span class="btn-rail left-2" aria-hidden></span>
+      <span class="btn-rail left-3" aria-hidden></span>
+      <span class="btn-rail right-1" aria-hidden></span>
+      <span class="island" aria-hidden></span>
+      <div class="screen">
+        <div class="statusbar">
+          <span class="num">9:41</span>
+          <span class="right">
+            <svg viewBox="0 0 17 11" aria-hidden><rect x="0" y="7" width="3" height="4" rx="0.6"/><rect x="4" y="5" width="3" height="6" rx="0.6"/><rect x="8" y="3" width="3" height="8" rx="0.6"/><rect x="12" y="0" width="3" height="11" rx="0.6"/></svg>
+            <svg viewBox="0 0 17 11" aria-hidden><path d="M8.5 1.5C5.5 1.5 2.7 2.6 0.5 4.6L2 6.1C3.8 4.5 6.1 3.6 8.5 3.6c2.4 0 4.7 0.9 6.5 2.5l1.5-1.5c-2.2-2-5-3.1-8-3.1zM3.5 7.6L5 9.1c1-0.9 2.2-1.4 3.5-1.4 1.3 0 2.5 0.5 3.5 1.4l1.5-1.5c-1.4-1.3-3.1-2-5-2-1.9 0-3.6 0.7-5 2zM6.5 10.6l2 2 2-2c-0.5-0.5-1.2-0.8-2-0.8s-1.5 0.3-2 0.8z"/></svg>
+            <svg class="battery" viewBox="0 0 25 11" aria-hidden><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.45"/><rect x="22" y="3.5" width="1.5" height="4" rx="0.4" fill="currentColor" fill-opacity="0.45"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
+          </span>
+        </div>
+
+        <main class="content" data-od-id="content">
+          <!-- 商品大图（SVG 示意：路亚竿 + 水面） -->
+          <div class="gallery" data-od-id="product-gallery">
+            <svg class="scene" viewBox="0 0 390 330" preserveAspectRatio="xMidYMid slice" aria-label="碧溪路亚竿商品图">
+              <rect width="390" height="330" fill="#eef3ef"/>
+              <path d="M0 236 C 70 224, 140 246, 210 236 S 330 228, 390 240 L 390 330 L 0 330 Z" fill="#d7e6dd"/>
+              <path d="M0 258 C 70 248, 140 268, 210 258 S 330 252, 390 262" stroke="#bcd6c9" stroke-width="2" fill="none"/>
+              <g transform="rotate(-24 195 150)">
+                <rect x="30" y="140" width="330" height="9" rx="4.5" fill="#2a4a40"/>
+                <rect x="30" y="140" width="118" height="9" rx="4.5" fill="#1d3b33"/>
+                <rect x="150" y="141.5" width="5" height="6" rx="2" fill="#b8860b"/>
+                <circle cx="60" cy="149" r="4" fill="#7d938a"/>
+                <circle cx="104" cy="149" r="4" fill="#7d938a"/>
+                <circle cx="148" cy="149" r="4" fill="#7d938a"/>
+                <circle cx="330" cy="140" r="5" fill="#b8860b"/>
+              </g>
+              <circle cx="86" cy="64" r="26" fill="none" stroke="#dce2dc" stroke-width="3"/>
+              <circle cx="86" cy="64" r="9" fill="#f3ede0"/>
+              <text x="330" y="60" text-anchor="end" font-family="Georgia, serif" font-size="13" fill="#647a70">YULU · TACKLE</text>
+            </svg>
+            <span class="flag">新品</span>
+            <div class="dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+          </div>
+
+          <!-- 商品信息 -->
+          <div class="info-card" data-od-id="product-info">
+            <div class="price-row">
+              <span class="price"><span class="cur">¥</span>329</span>
+              <span class="sold num">已售 2,100+ · 评分 4.8</span>
+            </div>
+            <p class="p-name">碧溪路亚竿 · M调直柄</p>
+            <p class="p-sub">碳素 40T · 全长 2.1m · 饵重 7-18g · 快调泛用，碧溪湾翘嘴鲈鱼通杀</p>
+            <div class="p-tags">
+              <span class="ptag">正品保障</span>
+              <span class="ptag">7天无理由</span>
+              <span class="ptag">顺丰包邮</span>
+            </div>
+          </div>
+
+          <!-- 规格与数量 -->
+          <div class="sect" data-od-id="product-spec">
+            <p class="sect-title">规格</p>
+            <div class="spec-chips" role="group" aria-label="竿长规格">
+              <button class="spec-chip active" type="button" data-spec="2.1m">2.1m · M调</button>
+              <button class="spec-chip" type="button" data-spec="2.4m">2.4m · M调 <span class="num" style="font-size:11px;">+¥40</span></button>
+            </div>
+            <div style="height:12px;"></div>
+            <div class="qty-row">
+              <span style="font-size:15px; font-weight:600;">数量</span>
+              <div class="qty-ctl">
+                <button class="qty-btn" id="qMinus" type="button" aria-label="减少数量" disabled>−</button>
+                <span class="qty-val" id="qVal">1</span>
+                <button class="qty-btn" id="qPlus" type="button" aria-label="增加数量">+</button>
+              </div>
+            </div>
+            <p class="stock num">库存 126 件 · 此规格 30 天内售出 412 件</p>
+          </div>
+
+          <!-- 参数 -->
+          <div class="sect" data-od-id="product-params">
+            <p class="sect-title">产品参数</p>
+            <table class="spec-table">
+              <tr><td>调性</td><td>M 调（中调）· 快调性</td></tr>
+              <tr><td>全长 / 自重</td><td>2.1m / 118g</td></tr>
+              <tr><td>饵重范围</td><td>7-18g（最佳 10-14g）</td></tr>
+              <tr><td>材质</td><td>40T 碳布 · 两节收缩设计</td></tr>
+              <tr><td>导环 / 轮座</td><td>不锈钢框架陶磁导环 · 直柄轮座</td></tr>
+              <tr><td>适用场景</td><td>湖泊水库 · 翘嘴 / 鲈鱼 / 鳜鱼</td></tr>
+            </table>
+          </div>
+
+          <!-- 评价 -->
+          <div class="sect" data-od-id="product-reviews">
+            <p class="sect-title">钓友评价（326）<span class="rate-all num">好评率 97% ›</span></p>
+            <div class="review">
+              <div class="rv-head">
+                <span class="rv-ava" aria-hidden="true">张</span>
+                <span class="rv-name">老张</span>
+                <span class="rv-stars" aria-label="5 星">★★★★★</span>
+              </div>
+              <p class="rv-text">在碧溪湾用了三次，10g 的 VIB 抛得又远又稳，中了两条 50+ 的翘嘴，腰力足够。</p>
+              <p class="rv-meta num">规格：2.1m · M调 · 2026-10-14</p>
+            </div>
+            <div class="review">
+              <div class="rv-head">
+                <span class="rv-ava" aria-hidden="true">王</span>
+                <span class="rv-name">小王</span>
+                <span class="rv-stars" aria-label="4 星">★★★★<span style="color:var(--border);">★</span></span>
+              </div>
+              <p class="rv-text">手感很轻，全天抛投不累。导环略小，建议上 0.8 编以下的 PE 线更顺滑。</p>
+              <p class="rv-meta num">规格：2.4m · M调 · 2026-10-02</p>
+            </div>
+          </div>
+          <div style="height: 20px;"></div>
+        </main>
+
+        <!-- 顶部导航浮层 -->
+        <div class="navbar" data-od-id="product-navbar">
+          <span class="nav-side">
+            <a class="back-btn" href="ios-mall.html">
+              <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>商城
+            </a>
+          </span>
+          <span class="nav-title">商品详情</span>
+          <span class="nav-side right">
+            <a class="cart-entry" href="ios-cart.html" aria-label="进入购物车，已加入 2 件">
+              <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              <span class="cart-badge num" id="cartBadge">2</span>
+            </a>
+          </span>
+        </div>
+
+        <!-- 购买栏 -->
+        <div class="buybar" data-od-id="buy-bar">
+          <button class="cart-btn" id="addCart" type="button">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            加入购物车
+          </button>
+          <button class="buy-btn" id="buyNow" type="button">立即购买</button>
+        </div>
+
+        <!-- 下单确认 -->
+        <dialog class="confirm" id="buyDlg" data-od-id="buy-dialog">
+          <div class="dlg-body">
+            <p class="dlg-title">确认下单</p>
+            <p class="dlg-text" id="buyText">碧溪路亚竿 · 2.1m M调 × 1，应付 ¥329</p>
+          </div>
+          <div class="dlg-btns">
+            <button class="dlg-btn" id="buyCancel" type="button">再想想</button>
+            <button class="dlg-btn" id="buyOk" type="button">去支付</button>
+          </div>
+        </dialog>
+
+        <!-- toast -->
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="toastText">已加入购物车</span>
+        </div>
+
+        <div class="home-indicator" aria-hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var toast = document.getElementById('toast');
+      var toastText = document.getElementById('toastText');
+      var toastTimer = null;
+      function showToast(msg) {
+        toastText.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+      }
+
+      /* 规格 */
+      var specPrice = { '2.1m': 329, '2.4m': 369 };
+      var spec = '2.1m';
+      document.querySelectorAll('.spec-chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          document.querySelectorAll('.spec-chip').forEach(function (c) { c.classList.remove('active'); });
+          chip.classList.add('active');
+          spec = chip.getAttribute('data-spec');
+          updatePrice();
+        });
+      });
+
+      /* 数量 */
+      var qty = 1;
+      var qVal = document.getElementById('qVal');
+      var qMinus = document.getElementById('qMinus');
+      var qPlus = document.getElementById('qPlus');
+      qMinus.addEventListener('click', function () { if (qty > 1) { qty--; syncQty(); } });
+      qPlus.addEventListener('click', function () { if (qty < 5) { qty++; syncQty(); } else showToast('每位钓友限购 5 件'); });
+      function syncQty() {
+        qVal.textContent = String(qty);
+        qMinus.disabled = qty <= 1;
+        qPlus.disabled = false;
+        updatePrice();
+      }
+
+      function updatePrice() {
+        document.querySelector('.price').innerHTML =
+          '<span class="cur">¥</span>' + specPrice[spec] * qty + (qty > 1 ? ' <span style="font-size:13px; color:var(--muted); font-weight:400;">¥' + specPrice[spec] + ' × ' + qty + '</span>' : '');
+      }
+
+      /* 加购 */
+      var cartCount = 2;
+      var cartBadge = document.getElementById('cartBadge');
+      document.getElementById('addCart').addEventListener('click', function () {
+        cartCount += qty;
+        cartBadge.textContent = String(cartCount);
+        cartBadge.animate([{ transform: 'scale(1.5)' }, { transform: 'scale(1)' }], { duration: 250 });
+        showToast('已加入购物车 · 共 ' + cartCount + ' 件');
+      });
+
+      /* 立即购买 */
+      var buyDlg = document.getElementById('buyDlg');
+      var buyBtn = document.getElementById('buyNow');
+      var paying = false;
+      buyBtn.addEventListener('click', function () {
+        document.getElementById('buyText').textContent =
+          '碧溪路亚竿 · ' + spec + ' M调 × ' + qty + '，应付 ¥' + specPrice[spec] * qty;
+        buyDlg.showModal();
+      });
+      document.getElementById('buyCancel').addEventListener('click', function () { buyDlg.close(); buyBtn.focus(); });
+      document.getElementById('buyOk').addEventListener('click', function () {
+        if (paying) return;
+        paying = true;
+        document.getElementById('buyOk').textContent = '支付中…';
+        setTimeout(function () {
+          buyDlg.close();
+          paying = false;
+          document.getElementById('buyOk').textContent = '去支付';
+          showToast('支付成功，已生成订单');
+          setTimeout(function () { window.location.href = 'ios-orders.html'; }, 900);
+        }, 1000);
+      });
+      buyDlg.addEventListener('cancel', function (e) { e.preventDefault(); buyDlg.close(); buyBtn.focus(); });
+    })();
+  </script>
+</body>
+</html>

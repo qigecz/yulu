@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>渔路 · 我的订单 · iOS</title>
+  <style>
+    :root {
+      --bg: #f3f5f2; --surface: #ffffff; --fg: #1a2420; --muted: #647a70; --border: #dce2dc; --accent: #2a8f7a;
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft: color-mix(in oklch, var(--fg) 6%, transparent);
+      --gold: #b8860b;
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      --radius-card: 18px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: radial-gradient(60% 80% at 50% 0%, color-mix(in oklch, var(--accent) 6%, var(--bg)) 0%, var(--bg) 60%);
+      color: var(--fg); font-family: var(--font-body); font-size: 15px;
+      line-height: 1.4; -webkit-font-smoothing: antialiased;
+      display: grid; place-items: center; padding: 32px;
+    }
+    .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .caption { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .caption strong { color: var(--fg); font-weight: 500; }
+    .device {
+      position: relative; width: 390px; height: 844px; border-radius: 56px; padding: 12px;
+      background: linear-gradient(160deg, #2a2a2c 0%, #1a1a1c 50%, #0e0e10 100%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 0 2px #000 inset, 0 28px 60px -12px rgba(0,0,0,0.45);
+      isolation: isolate;
+    }
+    .device::before, .device::after {
+      content: ''; position: absolute; width: 3px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 8%, transparent 16%, transparent 84%, rgba(255,255,255,0.04) 92%, transparent);
+      top: 100px; bottom: 100px; pointer-events: none;
+    }
+    .device::before { left: -1px; } .device::after { right: -1px; }
+    .island { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 124px; height: 36px; background: #000; border-radius: 999px; z-index: 60; }
+    .btn-rail { position: absolute; width: 4px; background: #0a0a0c; border-radius: 2px; }
+    .btn-rail.left-1 { left: -3px; top: 174px; height: 32px; }
+    .btn-rail.left-2 { left: -3px; top: 220px; height: 60px; }
+    .btn-rail.left-3 { left: -3px; top: 290px; height: 60px; }
+    .btn-rail.right-1 { right: -3px; top: 250px; height: 100px; }
+    .screen { position: relative; width: 100%; height: 100%; background: var(--bg); border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; }
+    .statusbar { flex: 0 0 47px; padding: 18px 26px 0; display: flex; align-items: flex-start; justify-content: space-between; font-size: 15px; font-weight: 600; }
+    .statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
+    .statusbar svg { width: 17px; height: 11px; fill: var(--fg); }
+    .statusbar .battery { width: 25px; }
+    .content { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+    .content::-webkit-scrollbar { display: none; }
+    .home-indicator { flex: 0 0 28px; position: relative; z-index: 40; }
+    .home-indicator::after { content: ''; position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); width: 134px; height: 5px; background: var(--fg); border-radius: 999px; opacity: 0.85; }
+    .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    .navbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px 10px; }
+    .nav-side { width: 84px; display: flex; align-items: center; }
+    .nav-side.right { justify-content: flex-end; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: none; cursor: pointer; padding: 6px 4px 6px 0;
+      color: var(--accent); font-size: 15px; font-family: var(--font-body); text-decoration: none;
+    }
+    .back-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nav-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+
+    /* status tabs */
+    .tabs { display: flex; margin: 2px 16px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 2px; }
+    .tab-btn {
+      flex: 1; border: none; background: none; cursor: pointer;
+      padding: 7px 0; border-radius: 999px;
+      font-size: 12px; color: var(--muted); font-family: var(--font-body);
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    }
+    .tab-btn.active { background: var(--fg); color: #fff; font-weight: 600; }
+    .tab-btn:focus-visible, .od-btn:focus-visible, .pay-btn:focus-visible, .track-btn:focus-visible, .dlg-btn:focus-visible {
+      outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px;
+    }
+    .tab-dot { width: 14px; height: 14px; border-radius: 999px; background: #d86a5a; color: #fff; font-size: 9px; line-height: 14px; }
+
+    /* order card */
+    .order { margin: 0 16px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 13px 15px; }
+    .od-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--muted); }
+    .od-status { font-size: 12px; font-weight: 600; }
+    .od-status.shipping { color: var(--accent); }
+    .od-status.unpaid { color: #d86a5a; }
+    .od-status.done { color: var(--muted); }
+    .od-items { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+    .od-img { width: 52px; height: 52px; border-radius: 10px; background: var(--accent-soft); display: grid; place-items: center; flex-shrink: 0; }
+    .od-img svg { width: 24px; height: 24px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+    .od-info { flex: 1; min-width: 0; }
+    .od-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .od-spec { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .od-price { text-align: right; flex-shrink: 0; }
+    .od-p { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+    .od-qty { font-size: 11px; color: var(--muted); }
+    .od-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 10px; }
+    .od-total { font-size: 12px; color: var(--muted); }
+    .od-total strong { font-family: var(--font-display); font-size: 16px; color: var(--fg); font-weight: 600; }
+    .od-acts { display: flex; gap: 8px; }
+    .track-btn, .od-btn {
+      padding: 7px 13px; border-radius: 999px; cursor: pointer; font-size: 12px; font-family: var(--font-body);
+      background: var(--surface); border: 1px solid var(--border); color: var(--fg);
+    }
+    .od-btn:hover { border-color: var(--muted); }
+    .pay-btn {
+      padding: 7px 16px; border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 600;
+      background: var(--accent); border: none; color: #fff; font-family: var(--font-body);
+    }
+    .pay-btn[disabled] { opacity: 0.6; cursor: default; }
+    .spinner {
+      width: 11px; height: 11px; border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.35); border-top-color: #fff;
+      animation: spin 0.7s linear infinite; display: inline-block; vertical-align: -1px; margin-right: 3px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* logistics strip */
+    .logi { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: var(--accent-soft); font-size: 11px; color: var(--accent); }
+    .logi svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; flex-shrink: 0; }
+
+    /* empty */
+    .empty { margin: 60px 40px; text-align: center; }
+    .empty svg { width: 60px; height: 60px; stroke: var(--border); fill: none; stroke-width: 1.4; }
+    .empty p { font-size: 14px; color: var(--muted); margin: 12px 0 16px; }
+    .empty a { display: inline-block; padding: 9px 22px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; }
+
+    /* dialog */
+    dialog.confirm {
+      border: none; border-radius: 18px; padding: 0; width: 272px;
+      background: var(--surface); box-shadow: 0 18px 50px -12px rgba(0,0,0,0.35);
+      color: var(--fg); font-family: var(--font-body);
+    }
+    dialog.confirm::backdrop { background: rgba(10, 14, 12, 0.45); }
+    .dlg-body { padding: 20px 18px 14px; text-align: center; }
+    .dlg-title { font-size: 16px; font-weight: 600; margin: 0; }
+    .dlg-text { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+    .dlg-btns { display: flex; border-top: 1px solid var(--border); }
+    .dlg-btn { flex: 1; padding: 13px 0; background: none; border: none; cursor: pointer; font-size: 15px; color: var(--muted); font-family: var(--font-body); }
+    .dlg-btn + .dlg-btn { border-left: 1px solid var(--border); color: var(--accent); font-weight: 600; }
+
+    /* toast */
+    .toast {
+      position: absolute; left: 50%; bottom: 90px; z-index: 55;
+      transform: translate(-50%, 16px);
+      background: var(--fg); color: #fff; padding: 10px 18px; border-radius: 999px;
+      font-size: 13px; box-shadow: 0 6px 20px -6px rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none; transition: all 0.3s;
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast svg { width: 14px; height: 14px; stroke: #7dd8c3; fill: none; stroke-width: 2.2; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption"><strong>渔路</strong> · iOS · 我的订单</div>
+    <div class="device" data-od-id="device">
+      <span class="btn-rail left-1" aria-hidden></span>
+      <span class="btn-rail left-2" aria-hidden></span>
+      <span class="btn-rail left-3" aria-hidden></span>
+      <span class="btn-rail right-1" aria-hidden></span>
+      <span class="island" aria-hidden></span>
+      <div class="screen">
+        <div class="statusbar">
+          <span class="num">9:41</span>
+          <span class="right">
+            <svg viewBox="0 0 17 11" aria-hidden><rect x="0" y="7" width="3" height="4" rx="0.6"/><rect x="4" y="5" width="3" height="6" rx="0.6"/><rect x="8" y="3" width="3" height="8" rx="0.6"/><rect x="12" y="0" width="3" height="11" rx="0.6"/></svg>
+            <svg viewBox="0 0 17 11" aria-hidden><path d="M8.5 1.5C5.5 1.5 2.7 2.6 0.5 4.6L2 6.1C3.8 4.5 6.1 3.6 8.5 3.6c2.4 0 4.7 0.9 6.5 2.5l1.5-1.5c-2.2-2-5-3.1-8-3.1zM3.5 7.6L5 9.1c1-0.9 2.2-1.4 3.5-1.4 1.3 0 2.5 0.5 3.5 1.4l1.5-1.5c-1.4-1.3-3.1-2-5-2-1.9 0-3.6 0.7-5 2zM6.5 10.6l2 2 2-2c-0.5-0.5-1.2-0.8-2-0.8s-1.5 0.3-2 0.8z"/></svg>
+            <svg class="battery" viewBox="0 0 25 11" aria-hidden><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.45"/><rect x="22" y="3.5" width="1.5" height="4" rx="0.4" fill="currentColor" fill-opacity="0.45"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
+          </span>
+        </div>
+
+        <main class="content" data-od-id="content">
+          <div class="navbar" data-od-id="orders-navbar">
+            <span class="nav-side">
+              <a class="back-btn" href="ios-profile.html">
+                <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>我的
+              </a>
+            </span>
+            <span class="nav-title">我的订单</span>
+            <span class="nav-side right"></span>
+          </div>
+
+          <a href="ios-address.html" style="display:flex; align-items:center; gap:10px; margin:0 16px 12px; padding:12px 14px; background:var(--surface); border:1px solid var(--border); border-radius:16px; text-decoration:none; color:var(--fg);">
+            <span style="width:32px; height:32px; border-radius:9px; background:var(--accent-soft); display:grid; place-items:center;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="1.6"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </span>
+            <span style="flex:1; min-width:0;">
+              <span style="display:block; font-size:14px; font-weight:600;">路亚阿杰 138****6688</span>
+              <span style="display:block; font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">浙江省 杭州市 滨江区 · 江南大道 588 号滨江钓具城…</span>
+            </span>
+            <span style="font-size:12px; color:var(--accent); flex-shrink:0;">管理 ›</span>
+          </a>
+
+          <div class="tabs" role="group" aria-label="订单状态筛选" data-od-id="order-tabs">
+            <button class="tab-btn active" type="button" data-f="all">全部</button>
+            <button class="tab-btn" type="button" data-f="unpaid">待付款</button>
+            <button class="tab-btn" type="button" data-f="shipping">待收货 <span class="tab-dot num" id="shipDot">1</span></button>
+            <button class="tab-btn" type="button" data-f="done">已完成</button>
+          </div>
+
+          <div id="orderList" data-od-id="order-list"></div>
+
+          <div class="empty" id="orderEmpty" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
+            <p>这个状态下还没有订单</p>
+            <a href="ios-mall.html">去商城逛逛</a>
+          </div>
+
+          <div style="height: 16px;"></div>
+        </main>
+
+        <!-- 确认收货 -->
+        <dialog class="confirm" id="recvDlg" data-od-id="recv-dialog">
+          <div class="dlg-body">
+            <p class="dlg-title">确认收货？</p>
+            <p class="dlg-text" id="recvText">请确认已收到商品且无质量问题。</p>
+          </div>
+          <div class="dlg-btns">
+            <button class="dlg-btn" id="recvCancel" type="button">再等等</button>
+            <button class="dlg-btn" id="recvOk" type="button">确认收货</button>
+          </div>
+        </dialog>
+
+        <!-- toast -->
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="toastText">已完成</span>
+        </div>
+
+        <div class="home-indicator" aria-hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // 与「我的」页徽章一致：待收货 1 笔
+      var ORDERS = [
+        {
+          id: 'OD10261024', status: 'shipping', statusLabel: '待收货 · 运输中',
+          name: '碧溪路亚竿 · M调直柄', spec: '2.1m · M调 × 1', price: 329, icon: 'rod',
+          logi: '顺丰速运 · 已到【杭州转运中心】，预计明日送达',
+          time: '2026-10-24 下单'
+        },
+        {
+          id: 'OD10261018', status: 'unpaid', statusLabel: '待付款',
+          name: '金属VIB亮片 · 7g 六件套', spec: '夜光/金色/银色 各 2 × 2', price: 90, icon: 'fish',
+          time: '2026-10-18 下单 · 剩余 22:41:05 自动关闭'
+        },
+        {
+          id: 'OD10260930', status: 'done', statusLabel: '已完成',
+          name: '钓鱼防晒衣 · UPF50+', spec: '冰感 · 连帽款 · L码 × 1', price: 129, icon: 'shirt',
+          time: '2026-09-30 下单 · 10-03 签收'
+        },
+        {
+          id: 'OD10260912', status: 'done', statusLabel: '已完成',
+          name: '折叠钓椅 · 带靠背', spec: '承重 150kg · 1.9kg × 1', price: 98, icon: 'chair',
+          time: '2026-09-12 下单 · 09-14 签收'
+        }
+      ];
+      var ICONS = {
+        rod: '<svg viewBox="0 0 24 24"><path d="M3 21L21 3"/><path d="M3 21l2-6M21 3l-6 2"/></svg>',
+        fish: '<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="15" cy="12" r="1.2"/></svg>',
+        shirt: '<svg viewBox="0 0 24 24"><path d="M12 2l4 3 5 2-2 5-2-1v11H7V11l-2 1-2-5 5-2z"/></svg>',
+        chair: '<svg viewBox="0 0 24 24"><path d="M6 11V4h12v7"/><path d="M4 11h16v3H4zM6 14v6M18 14v6"/></svg>'
+      };
+
+      var filter = 'all';
+      var listEl = document.getElementById('orderList');
+      var emptyEl = document.getElementById('orderEmpty');
+      var shipDot = document.getElementById('shipDot');
+      var recvDlg = document.getElementById('recvDlg');
+      var recvOk = document.getElementById('recvOk');
+      var toast = document.getElementById('toast');
+      var toastText = document.getElementById('toastText');
+      var toastTimer = null;
+      var paying = false;
+
+      function showToast(msg) {
+        toastText.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1900);
+      }
+
+      function render() {
+        var arr = filter === 'all' ? ORDERS : ORDERS.filter(function (o) { return o.status === filter; });
+        listEl.innerHTML = '';
+        arr.forEach(function (o) {
+          var card = document.createElement('div');
+          card.className = 'order';
+          card.innerHTML =
+            '<div class="od-head"><span class="num"></span><span class="od-status ' + o.status + '"></span></div>' +
+            '<div class="od-items">' +
+              '<div class="od-img" aria-hidden="true">' + ICONS[o.icon] + '</div>' +
+              '<div class="od-info"><p class="od-name"></p><p class="od-spec"></p></div>' +
+              '<div class="od-price"><div class="od-p num"></div><div class="od-qty num"></div></div>' +
+            '</div>' +
+            (o.logi ? '<div class="logi"><svg viewBox="0 0 24 24"><rect x="1" y="6" width="15" height="11" rx="1.5"/><path d="M16 9h4l3 4v4h-7"/><circle cx="5.5" cy="19" r="1.6"/><circle cx="19" cy="19" r="1.6"/></svg><span class="logi-txt"></span></div>' : '') +
+            '<div class="od-foot">' +
+              '<span class="od-total">共 <strong class="num"></strong> 元</span>' +
+              '<span class="od-acts"></span>' +
+            '</div>';
+          card.querySelector('.od-head .num').textContent = '订单号 ' + o.id + ' · ' + o.time;
+          card.querySelector('.od-status').textContent = o.statusLabel;
+          card.querySelector('.od-name').textContent = o.name;
+          card.querySelector('.od-spec').textContent = o.spec;
+          card.querySelector('.od-p').textContent = '¥' + o.price;
+          card.querySelector('.od-qty').textContent = '含运费';
+          card.querySelector('.od-total strong').textContent = String(o.price);
+          if (o.logi) card.querySelector('.logi-txt').textContent = o.logi;
+
+          var acts = card.querySelector('.od-acts');
+          if (o.status === 'shipping') {
+            var track = document.createElement('button');
+            track.className = 'track-btn'; track.type = 'button'; track.textContent = '查看物流';
+            track.addEventListener('click', function () { showToast(o.logi); });
+            var recv = document.createElement('button');
+            recv.className = 'pay-btn'; recv.type = 'button'; recv.textContent = '确认收货';
+            recv.addEventListener('click', function () {
+              document.getElementById('recvText').textContent = '「' + o.name + '」请确认已收到且无质量问题。';
+              recvDlg.showModal();
+              recvOk.onclick = function () {
+                o.status = 'done';
+                o.statusLabel = '已完成';
+                o.time += ' · 今日签收';
+                delete o.logi;
+                recvDlg.close();
+                showToast('确认收货成功');
+                syncDot();
+                render();
+              };
+            });
+            acts.append(track, recv);
+          } else if (o.status === 'unpaid') {
+            var cancel = document.createElement('button');
+            cancel.className = 'track-btn'; cancel.type = 'button'; cancel.textContent = '取消订单';
+            cancel.addEventListener('click', function () {
+              o.status = 'done'; o.statusLabel = '已取消';
+              o.time = '2026-10-18 下单 · 已取消';
+              showToast('订单已取消');
+              render();
+            });
+            var pay = document.createElement('button');
+            pay.className = 'pay-btn'; pay.type = 'button'; pay.textContent = '去支付';
+            pay.addEventListener('click', function () {
+              if (paying) return;
+              paying = true;
+              pay.innerHTML = '<span class="spinner"></span>支付中';
+              setTimeout(function () {
+                paying = false;
+                pay.textContent = '去支付';
+                o.status = 'shipping'; o.statusLabel = '待收货 · 已发货';
+                o.time = '2026-10-18 下单 · 今日发货';
+                o.logi = '顺丰速运 · 已揽收，等待运输';
+                showToast('支付成功，商家已发货');
+                syncDot();
+                render();
+              }, 1000);
+            });
+            acts.append(cancel, pay);
+          } else {
+            var again = document.createElement('button');
+            again.className = 'od-btn'; again.type = 'button'; again.textContent = '再次购买';
+            again.addEventListener('click', function () { window.location.href = 'ios-mall.html'; });
+            var review = document.createElement('button');
+            review.className = 'od-btn'; review.type = 'button'; review.textContent = '评价晒单';
+            review.addEventListener('click', function () { showToast('原型中评价晒单为示意入口'); });
+            acts.append(again, review);
+          }
+          listEl.appendChild(card);
+        });
+        emptyEl.hidden = arr.length !== 0;
+      }
+
+      function syncDot() {
+        var n = ORDERS.filter(function (o) { return o.status === 'shipping'; }).length;
+        shipDot.textContent = String(n);
+        shipDot.style.display = n ? '' : 'none';
+      }
+
+      document.querySelectorAll('.tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          filter = btn.getAttribute('data-f');
+          render();
+        });
+      });
+      document.getElementById('recvCancel').addEventListener('click', function () { recvDlg.close(); });
+      recvDlg.addEventListener('cancel', function (e) { e.preventDefault(); recvDlg.close(); });
+
+      syncDot();
+      render();
+    })();
+  </script>
+</body>
+</html>

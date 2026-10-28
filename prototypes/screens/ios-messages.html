@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>渔路 · 消息中心 · iOS</title>
+  <style>
+    :root {
+      --bg: #f3f5f2; --surface: #ffffff; --fg: #1a2420; --muted: #647a70; --border: #dce2dc; --accent: #2a8f7a;
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft: color-mix(in oklch, var(--fg) 6%, transparent);
+      --gold: #b8860b; --danger: #d86a5a;
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      --radius-card: 18px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: radial-gradient(60% 80% at 50% 0%, color-mix(in oklch, var(--accent) 6%, var(--bg)) 0%, var(--bg) 60%);
+      color: var(--fg); font-family: var(--font-body); font-size: 15px;
+      line-height: 1.4; -webkit-font-smoothing: antialiased;
+      display: grid; place-items: center; padding: 32px;
+    }
+    .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .caption { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .caption strong { color: var(--fg); font-weight: 500; }
+    .device {
+      position: relative; width: 390px; height: 844px; border-radius: 56px; padding: 12px;
+      background: linear-gradient(160deg, #2a2a2c 0%, #1a1a1c 50%, #0e0e10 100%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 0 2px #000 inset, 0 28px 60px -12px rgba(0,0,0,0.45);
+      isolation: isolate;
+    }
+    .device::before, .device::after {
+      content: ''; position: absolute; width: 3px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 8%, transparent 16%, transparent 84%, rgba(255,255,255,0.04) 92%, transparent);
+      top: 100px; bottom: 100px; pointer-events: none;
+    }
+    .device::before { left: -1px; } .device::after { right: -1px; }
+    .island { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 124px; height: 36px; background: #000; border-radius: 999px; z-index: 60; }
+    .btn-rail { position: absolute; width: 4px; background: #0a0a0c; border-radius: 2px; }
+    .btn-rail.left-1 { left: -3px; top: 174px; height: 32px; }
+    .btn-rail.left-2 { left: -3px; top: 220px; height: 60px; }
+    .btn-rail.left-3 { left: -3px; top: 290px; height: 60px; }
+    .btn-rail.right-1 { right: -3px; top: 250px; height: 100px; }
+    .screen { position: relative; width: 100%; height: 100%; background: var(--bg); border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; }
+    .statusbar { flex: 0 0 47px; padding: 18px 26px 0; display: flex; align-items: flex-start; justify-content: space-between; font-size: 15px; font-weight: 600; }
+    .statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
+    .statusbar svg { width: 17px; height: 11px; fill: var(--fg); }
+    .statusbar .battery { width: 25px; }
+    .content { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+    .content::-webkit-scrollbar { display: none; }
+    .home-indicator { flex: 0 0 28px; position: relative; z-index: 40; }
+    .home-indicator::after { content: ''; position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); width: 134px; height: 5px; background: var(--fg); border-radius: 999px; opacity: 0.85; }
+    .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    .navbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px 10px; }
+    .nav-side { width: 84px; display: flex; align-items: center; }
+    .nav-side.right { justify-content: flex-end; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: none; cursor: pointer; padding: 6px 4px 6px 0;
+      color: var(--accent); font-size: 15px; font-family: var(--font-body); text-decoration: none;
+    }
+    .back-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .nav-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+    .readall-btn { background: none; border: none; cursor: pointer; font-size: 13px; color: var(--accent); font-family: var(--font-body); padding: 6px 0; font-weight: 500; }
+
+    /* categories */
+    .cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0 16px 14px; }
+    .cat {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 12px 4px 10px; text-align: center; cursor: pointer; position: relative;
+      font-family: var(--font-body);
+    }
+    .cat:hover { border-color: var(--muted); }
+    .cat:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .cat svg { width: 21px; height: 21px; stroke: var(--accent); fill: none; stroke-width: 1.7; }
+    .cat .cat-name { display: block; font-size: 11px; margin-top: 5px; color: var(--fg); }
+    .cat .cat-badge {
+      position: absolute; top: 6px; right: calc(50% - 26px); min-width: 16px; height: 16px;
+      border-radius: 999px; background: var(--danger); color: #fff;
+      font-size: 10px; line-height: 16px; text-align: center; padding: 0 4px;
+      font-family: var(--font-mono); display: none;
+    }
+    .cat .cat-badge.show { display: block; }
+
+    /* message list */
+    .list-label { margin: 4px 20px 8px; font-size: 12px; font-weight: 600; color: var(--muted); }
+    .msg {
+      width: 100%; display: flex; gap: 11px; align-items: flex-start; text-align: left;
+      margin: 0 0 8px; padding: 12px 16px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      cursor: pointer; font-family: var(--font-body);
+    }
+    .msg:hover { border-color: var(--muted); }
+    .msg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .msg.unread { border-color: color-mix(in oklch, var(--accent) 40%, var(--border)); }
+    .msg-ava { width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; display: grid; place-items: center; }
+    .msg-ava svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 1.7; }
+    .msg-ava.bite { background: var(--accent); }
+    .msg-ava.star { background: var(--gold); }
+    .msg-ava.cmt { background: #5a7ba0; }
+    .msg-ava.sys { background: var(--muted); }
+    .msg-body { flex: 1; min-width: 0; }
+    .msg-head { display: flex; align-items: center; gap: 6px; }
+    .msg-cat { font-size: 10px; font-weight: 600; color: var(--muted); background: var(--fg-soft); border-radius: 999px; padding: 1px 7px; }
+    .msg-unread-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
+    .msg-title { font-size: 14px; font-weight: 600; margin-top: 4px; line-height: 1.35; }
+    .msg-text { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .msg-time { font-size: 10px; color: var(--muted); margin-top: 4px; font-family: var(--font-mono); }
+
+    .all-read-note { text-align: center; font-size: 11px; color: var(--muted); margin: 6px 0 20px; }
+
+    /* toast */
+    .toast {
+      position: absolute; left: 50%; bottom: 90px; z-index: 55;
+      transform: translate(-50%, 16px);
+      background: var(--fg); color: #fff; padding: 10px 18px; border-radius: 999px;
+      font-size: 13px; box-shadow: 0 6px 20px -6px rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none; transition: all 0.3s;
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast svg { width: 14px; height: 14px; stroke: #7dd8c3; fill: none; stroke-width: 2.2; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption"><strong>渔路</strong> · iOS · 消息中心</div>
+    <div class="device" data-od-id="device">
+      <span class="btn-rail left-1" aria-hidden></span>
+      <span class="btn-rail left-2" aria-hidden></span>
+      <span class="btn-rail left-3" aria-hidden></span>
+      <span class="btn-rail right-1" aria-hidden></span>
+      <span class="island" aria-hidden></span>
+      <div class="screen">
+        <div class="statusbar">
+          <span class="num">9:41</span>
+          <span class="right">
+            <svg viewBox="0 0 17 11" aria-hidden><rect x="0" y="7" width="3" height="4" rx="0.6"/><rect x="4" y="5" width="3" height="6" rx="0.6"/><rect x="8" y="3" width="3" height="8" rx="0.6"/><rect x="12" y="0" width="3" height="11" rx="0.6"/></svg>
+            <svg viewBox="0 0 17 11" aria-hidden><path d="M8.5 1.5C5.5 1.5 2.7 2.6 0.5 4.6L2 6.1C3.8 4.5 6.1 3.6 8.5 3.6c2.4 0 4.7 0.9 6.5 2.5l1.5-1.5c-2.2-2-5-3.1-8-3.1zM3.5 7.6L5 9.1c1-0.9 2.2-1.4 3.5-1.4 1.3 0 2.5 0.5 3.5 1.4l1.5-1.5c-1.4-1.3-3.1-2-5-2-1.9 0-3.6 0.7-5 2zM6.5 10.6l2 2 2-2c-0.5-0.5-1.2-0.8-2-0.8s-1.5 0.3-2 0.8z"/></svg>
+            <svg class="battery" viewBox="0 0 25 11" aria-hidden><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.45"/><rect x="22" y="3.5" width="1.5" height="4" rx="0.4" fill="currentColor" fill-opacity="0.45"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
+          </span>
+        </div>
+
+        <main class="content" data-od-id="content">
+          <div class="navbar" data-od-id="messages-navbar">
+            <span class="nav-side">
+              <a class="back-btn" href="../mobile-ios.html">
+                <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>首页
+              </a>
+            </span>
+            <span class="nav-title">消息中心</span>
+            <span class="nav-side right">
+              <button class="readall-btn" id="readAllBtn" type="button">全部已读</button>
+            </span>
+          </div>
+
+          <!-- 分类入口 -->
+          <div class="cats" data-od-id="message-cats">
+            <button class="cat" type="button" data-cat="bite">
+              <svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="15" cy="12" r="1.2"/></svg>
+              <span class="cat-name">出鱼提醒</span>
+              <span class="cat-badge num" id="badge-bite">3</span>
+            </button>
+            <button class="cat" type="button" data-cat="star">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+              <span class="cat-name">赞与收藏</span>
+              <span class="cat-badge num" id="badge-star">2</span>
+            </button>
+            <button class="cat" type="button" data-cat="cmt">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span class="cat-name">评论与@</span>
+              <span class="cat-badge num" id="badge-cmt">1</span>
+            </button>
+            <button class="cat" type="button" data-cat="sys">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span class="cat-name">系统通知</span>
+              <span class="cat-badge num" id="badge-sys">0</span>
+            </button>
+          </div>
+
+          <p class="list-label" id="listLabel">全部消息</p>
+          <div style="padding: 0 4px;" id="msgList" data-od-id="message-list"></div>
+
+          <p class="all-read-note" id="allReadNote" hidden>— 所有消息都已读 —</p>
+          <div style="height: 16px;"></div>
+        </main>
+
+        <!-- toast -->
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="toastText">已完成</span>
+        </div>
+
+        <div class="home-indicator" aria-hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // 数据与其他页面角色一致（老张 / 小王 / 龙溪筏客 / 路亚阿杰）
+      var MSGS = [
+        { id: 1, cat: 'bite', catName: '出鱼提醒', icon: 'bite',
+          title: '碧溪湾 16:00-18:00 进入出鱼窗口',
+          text: '当前水温 18.5℃，符合翘嘴活跃区间，你收藏的标点「碧溪湾东岸乱石区」预计半小时后开口。',
+          time: '3分钟前', unread: true },
+        { id: 2, cat: 'star', catName: '赞与收藏', icon: 'star',
+          title: '龙溪筏客 收藏了你的路线',
+          text: '你的路线「密云水库北岸环线（12 坑点）」被收藏，累计下载 2,148 次。',
+          time: '1小时前', unread: true },
+        { id: 3, cat: 'cmt', catName: '评论与@', icon: 'cmt',
+          title: '老张 评论了你的技巧《VIB 收线速度与水深的关系》',
+          text: '「收线速度那段讲得透，上周末照着钓，中层果然搜到翘嘴。」',
+          time: '2小时前', unread: true },
+        { id: 4, cat: 'bite', catName: '出鱼提醒', icon: 'bite',
+          title: '富春江钓台明日 05:30 迎来晨口窗口',
+          text: '根据近 7 天出鱼记录与气压变化，明晨窗口预计 05:30-07:00，记得提前到点打窝。',
+          time: '昨天 19:20', unread: false },
+        { id: 5, cat: 'sys', catName: '系统通知', icon: 'sys',
+          title: '渔路 v1.2.0 更新说明',
+          text: '新增坑点路线离线下载、出鱼窗口智能提醒；优化坑点地图缩放手感。',
+          time: '昨天 10:00', unread: false },
+        { id: 6, cat: 'star', catName: '赞与收藏', icon: 'star',
+          title: '小王 赞了你的动态',
+          text: '你的动态「千岛湖碧溪湾爆护全记录 · 86 尾」收到新的点赞。',
+          time: '2天前', unread: false }
+      ];
+      var ICONS = {
+        bite: '<svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="15" cy="12" r="1.2"/></svg>',
+        star: '<svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>',
+        cmt: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+        sys: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+      };
+      var CAT_NAMES = { bite: '出鱼提醒', star: '赞与收藏', cmt: '评论与@', sys: '系统通知' };
+
+      var filter = 'all';
+      var listEl = document.getElementById('msgList');
+      var labelEl = document.getElementById('listLabel');
+      var noteEl = document.getElementById('allReadNote');
+      var toast = document.getElementById('toast');
+      var toastText = document.getElementById('toastText');
+      var toastTimer = null;
+
+      function showToast(msg) {
+        toastText.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+      }
+
+      function syncBadges() {
+        ['bite', 'star', 'cmt', 'sys'].forEach(function (c) {
+          var n = MSGS.filter(function (m) { return m.cat === c && m.unread; }).length;
+          var b = document.getElementById('badge-' + c);
+          b.textContent = String(n);
+          b.classList.toggle('show', n > 0);
+        });
+      }
+
+      function render() {
+        var arr = filter === 'all' ? MSGS : MSGS.filter(function (m) { return m.cat === filter; });
+        listEl.innerHTML = '';
+        arr.forEach(function (m) {
+          var card = document.createElement('button');
+          card.type = 'button';
+          card.className = 'msg' + (m.unread ? ' unread' : '');
+          card.innerHTML =
+            '<span class="msg-ava ' + m.icon + '" aria-hidden="true">' + ICONS[m.icon] + '</span>' +
+            '<span class="msg-body" style="display:block;">' +
+              '<span class="msg-head" style="display:flex;">' +
+                '<span class="msg-cat"></span>' +
+                (m.unread ? '<span class="msg-unread-dot" aria-label="未读"></span>' : '') +
+              '</span>' +
+              '<span class="msg-title" style="display:block;"></span>' +
+              '<span class="msg-text" style="display:block;"></span>' +
+              '<span class="msg-time" style="display:block;"></span>' +
+            '</span>';
+          card.querySelector('.msg-cat').textContent = m.catName;
+          card.querySelector('.msg-title').textContent = m.title;
+          card.querySelector('.msg-text').textContent = m.text;
+          card.querySelector('.msg-time').textContent = m.time;
+          card.addEventListener('click', function () {
+            if (m.unread) {
+              m.unread = false;
+              syncBadges();
+              render();
+            }
+            if (m.cat === 'bite') {
+              window.location.href = 'ios-message-detail.html';
+            }
+          });
+          listEl.appendChild(card);
+        });
+        labelEl.textContent = filter === 'all' ? '全部消息' : CAT_NAMES[filter];
+        var anyUnread = MSGS.some(function (m) { return m.unread; });
+        noteEl.hidden = anyUnread;
+      }
+
+      document.querySelectorAll('.cat').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          filter = btn.getAttribute('data-cat');
+          render();
+        });
+      });
+
+      document.getElementById('readAllBtn').addEventListener('click', function () {
+        var had = MSGS.some(function (m) { return m.unread; });
+        if (!had) { showToast('没有未读消息'); return; }
+        MSGS.forEach(function (m) { m.unread = false; });
+        syncBadges();
+        render();
+        showToast('已全部标记为已读');
+      });
+
+      syncBadges();
+      render();
+    })();
+  </script>
+</body>
+</html>
