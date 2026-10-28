@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, Platform } from 'react-native';
 import { colors, fontSize, radius } from '../theme/tokens';
 
 interface SearchBarProps {
@@ -8,9 +8,10 @@ interface SearchBarProps {
   onChangeText?: (text: string) => void;
 }
 
+/** 搜索框：Android 用 Material 风格 28px 大圆角（mobile-android.html），iOS 用常规圆角。 */
 export function SearchBar({ placeholder = '搜索钓点、路线、教程…', value, onChangeText }: SearchBarProps) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, Platform.OS === 'android' && styles.containerMat]}>
       <TextInput
         style={styles.input}
         placeholder={placeholder}
@@ -33,6 +34,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.md,
   },
+  containerMat: { borderRadius: 28, paddingHorizontal: 16, paddingVertical: 12 },
   input: {
     flex: 1,
     fontSize: fontSize.body,

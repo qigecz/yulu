@@ -237,7 +237,7 @@ export function LearnScreen() {
 
       {/* Articles */}
       <View style={styles.pad}>
-        <SectionHeader title="精选文章" actionLabel="更多 →" />
+        <SectionHeader title="精选文章" actionLabel="更多 →" onAction={() => openArticleDetail('a2')} />
         <View style={{ height: 10 }} />
         {articles.map((art) => (
           <TouchableOpacity key={art.id} style={[styles.articleCard, styles.mx]} activeOpacity={0.75} onPress={() => openArticleDetail(art.id)}>

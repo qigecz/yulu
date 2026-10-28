@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Share } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Share, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius } from '@yulu/ui';
 import type { Route, RouteReview } from '@yulu/shared';
@@ -135,7 +135,23 @@ export function RouteDetailScreen({ route }: Props) {
 
   const startDownload = () => {
     if (progress !== 0) return;
-    download.mutate({ id: route.id, stub: route }, { onSuccess: () => {} });
+    // 真实下载通常瞬时完成：进度条是演示动画，onSuccess 立即收尾到 100%→完成态，
+    // onError 则中断动画并复位。
+    download.mutate(
+      { id: route.id, stub: route },
+      {
+        onSuccess: () => {
+          if (progressTimer.current) clearInterval(progressTimer.current);
+          setProgress(100);
+          setTimeout(() => setProgress(-1), 260);
+        },
+        onError: () => {
+          if (progressTimer.current) clearInterval(progressTimer.current);
+          setProgress(0);
+          Alert.alert('下载失败', '请检查网络后重试。');
+        },
+      },
+    );
     let p = 0;
     progressTimer.current = setInterval(() => {
       p = Math.min(100, p + 12 + Math.round(Math.random() * 10));
