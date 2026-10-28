@@ -74,10 +74,8 @@
     .head { display: flex; align-items: center; gap: 12px; margin: 10px 24px 0; }
     .logo-mini {
       width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0;
-      background: linear-gradient(155deg, #2a8f7a 0%, #1d6e5d 100%);
-      display: grid; place-items: center;
     }
-    .logo-mini svg { width: 24px; height: 24px; stroke: #eef6f3; fill: none; stroke-width: 1.7; }
+    .logo-mini img { width: 100%; height: 100%; border-radius: inherit; display: block; }
     .head h1 { font-family: var(--font-display); font-size: 21px; margin: 0; }
     .head p { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
 
@@ -218,8 +216,8 @@
 
           <!-- 品牌头 -->
           <div class="head" data-od-id="register-head">
-            <div class="logo-mini" aria-hidden>
-              <svg viewBox="0 0 24 24"><path d="M2.5 12.5c3-4.2 7-6.3 12-6.3 2.4 0 4.6 0.6 6.8 1.8l-2 4.5 2 4.5c-2.2 1.2-4.4 1.8-6.8 1.8-5 0-9-2.1-12-6.3z" transform="rotate(90 12 12) translate(0 -2)"/><circle cx="16" cy="9.5" r="0.6" fill="#eef6f3" stroke="none"/><path d="M4 18.5c2.5-1.5 5-1.5 7.5 0s5 1.5 7.5 0" transform="translate(0 1)"/></svg>
+            <div class="logo-mini">
+              <img src="../yulu-logo.png" alt="渔路 YULU logo" width="88" height="88" />
             </div>
             <div>
               <h1>加入渔路</h1>

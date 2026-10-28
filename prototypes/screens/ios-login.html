@@ -59,11 +59,9 @@
     .hero { text-align: center; padding: 26px 24px 8px; }
     .logo-mark {
       width: 68px; height: 68px; margin: 0 auto 12px; border-radius: 20px;
-      background: linear-gradient(155deg, #2a8f7a 0%, #1d6e5d 100%);
-      display: grid; place-items: center;
       box-shadow: 0 10px 24px -10px color-mix(in oklch, var(--accent) 55%, transparent);
     }
-    .logo-mark svg { width: 38px; height: 38px; stroke: #eef6f3; fill: none; stroke-width: 1.7; }
+    .logo-mark img { width: 100%; height: 100%; border-radius: inherit; display: block; }
     .hero h1 { font-family: var(--font-display); font-size: 27px; margin: 0; letter-spacing: 0.02em; }
     .hero h1 .en { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.42em; color: var(--accent); font-weight: 500; margin-top: 4px; text-transform: uppercase; }
     .hero .slogan { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
@@ -211,8 +209,8 @@
         <main class="content" data-od-id="content">
           <!-- 品牌区 -->
           <div class="hero" data-od-id="brand-hero">
-            <div class="logo-mark" aria-hidden>
-              <svg viewBox="0 0 24 24"><path d="M2.5 12.5c3-4.2 7-6.3 12-6.3 2.4 0 4.6 0.6 6.8 1.8l-2 4.5 2 4.5c-2.2 1.2-4.4 1.8-6.8 1.8-5 0-9-2.1-12-6.3z" transform="rotate(90 12 12) translate(0 -2)"/><circle cx="16" cy="9.5" r="0.6" fill="#eef6f3" stroke="none"/><path d="M4 18.5c2.5-1.5 5-1.5 7.5 0s5 1.5 7.5 0" transform="translate(0 1)"/></svg>
+            <div class="logo-mark">
+              <img src="../yulu-logo.png" alt="渔路 YULU logo" width="136" height="136" />
             </div>
             <h1>渔路<span class="en">YULU · Fishing Routes</span></h1>
             <p class="slogan">找坑点，走渔路 —— 和 12 万钓友一起出钓</p>

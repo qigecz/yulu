@@ -35,7 +35,9 @@
     }
     .topnav .logo {
       font-family: var(--font-display); font-size: 19px; font-weight: 600; letter-spacing: -0.01em;
+      display: inline-flex; align-items: center; gap: 9px;
     }
+    .topnav .logo img { width: 28px; height: 28px; border-radius: 7px; }
     .topnav .logo span { color: var(--accent); }
 
     .hero {
@@ -214,7 +216,7 @@
 <body>
   <header class="topnav">
     <div class="topnav-inner">
-      <span class="logo">渔路 <span>YULU</span></span>
+      <span class="logo"><img src="yulu-logo.png" alt="" aria-hidden="true" width="56" height="56" />渔路 <span>YULU</span></span>
       <span style="font-family:var(--font-mono); font-size:12px; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase;">设计总览</span>
     </div>
   </header>

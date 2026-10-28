@@ -59,7 +59,8 @@
     .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
     .topnav { position: sticky; top: 0; z-index: 10; background: color-mix(in oklch, var(--bg) 92%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
     .topnav-inner { display: flex; align-items: center; justify-content: space-between; padding-block: 14px; }
-    .topnav .logo { font-family: var(--font-display); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+    .topnav .logo { font-family: var(--font-display); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; display: inline-flex; align-items: center; gap: 9px; }
+    .topnav .logo img { width: 30px; height: 30px; border-radius: 8px; }
     .topnav nav { display: flex; gap: var(--gap-lg); }
     .topnav nav a { font-size: 14px; color: var(--muted); }
     .topnav nav a:hover { color: var(--fg); }
@@ -119,7 +120,7 @@
 <body>
   <header class="topnav" data-od-id="topnav">
     <div class="container topnav-inner">
-      <span class="logo">渔路 YULU</span>
+      <span class="logo"><img src="yulu-logo.png" alt="" aria-hidden="true" width="60" height="60" />渔路 YULU</span>
       <nav>
         <a href="#features">功能</a>
         <a href="#how">使用方式</a>
