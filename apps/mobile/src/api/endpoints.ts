@@ -207,7 +207,7 @@ export const commentsApi = {
     const { data } = await apiClient.get<{ data: Row[] }>('/comments', { params: { targetType, targetId } });
     return data.data.map(toComment);
   },
-  create: async (input: { targetType: CommentTargetType; targetId: string; content: string }) => {
+  create: async (input: { targetType: CommentTargetType; targetId: string; content: string; parentId?: string }) => {
     const { data } = await apiClient.post<Row>('/comments', input);
     return toComment(data as any);
   },

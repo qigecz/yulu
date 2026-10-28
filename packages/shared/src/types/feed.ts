@@ -45,6 +45,8 @@ export interface PostComment {
   content: string;
   likesCount: number;
   createdAt: string;
+  /** 被回复的评论 id（楼层渲染用）。 */
+  parentId?: string;
   /** Author's inline reply rendered nested under the comment. */
   reply?: { content: string };
 }

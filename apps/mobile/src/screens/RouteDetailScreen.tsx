@@ -341,6 +341,15 @@ export function RouteDetailScreen({ route }: Props) {
                     </View>
                     <Text style={styles.seqDesc}>{node.desc}</Text>
                     <Text style={styles.seqDist}>{node.dist}</Text>
+                    {/* 对照原型：每项「导航 → / 在地图查看」操作。 */}
+                    <View style={styles.seqCtas}>
+                      <TouchableOpacity style={styles.seqCta} onPress={() => openNavigation(route.id)} activeOpacity={0.7}>
+                        <Text style={styles.seqCtaT}>导航 →</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.seqCtaGhost} onPress={() => { close(); useUIStore.getState().setActiveTab('spots'); }} activeOpacity={0.7}>
+                        <Text style={styles.seqCtaGhostT}>在地图查看</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               ))}
@@ -566,6 +575,11 @@ const styles = StyleSheet.create({
   seqTagT: { fontSize: 9, color: colors.muted },
   seqDesc: { fontSize: 12, color: colors.muted, marginTop: 3, lineHeight: 17 },
   seqDist: { fontSize: 11, color: colors.accent, marginTop: 4 },
+  seqCtas: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  seqCta: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999, backgroundColor: colors.accent },
+  seqCtaT: { fontSize: 11, color: '#fff', fontWeight: '600' },
+  seqCtaGhost: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: colors.border },
+  seqCtaGhostT: { fontSize: 11, color: colors.muted },
 
   /* reviews */
   reviewScore: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingBottom: 14 },

@@ -14,6 +14,8 @@ interface Props {
   /** 真实视频源（如教程 videoUrl）；有源且 expo-av 可用时走真实播放，否则模拟。 */
   url?: string;
   onClose: () => void;
+  /** 关闭时上报当前播放进度（秒），供「继续学习」持久化。 */
+  onProgress?: (seconds: number) => void;
 }
 
 const RATES = ['1.0x', '1.25x', '1.5x', '0.75x'];
@@ -34,7 +36,7 @@ function fmt(sec: number): string {
  * 有 url 时用 expo-av 真实播放（进度/倍速/暂停联动）；expo-av 动态导入——
  * 旧 dev client 没带该原生模块时静默回退到模拟播放（按倍速推进的进度条）。
  */
-export function VideoPlayerOverlay({ visible, title, sub, duration, startSeconds = 0, url, onClose }: Props) {
+export function VideoPlayerOverlay({ visible, title, sub, duration, startSeconds = 0, url, onClose, onProgress }: Props) {
   const total = Math.max(1, parseDuration(duration));
   const [cur, setCur] = useState(Math.min(startSeconds, total));
   const [playing, setPlaying] = useState(true);
@@ -57,7 +59,11 @@ export function VideoPlayerOverlay({ visible, title, sub, duration, startSeconds
   const realVideo = !!(url && AV);
   const videoRate = parseFloat(RATES[rateIdx]);
 
-  // 打开时恢复到指定进度并自动播放。
+  // 关闭时上报当前进度（看过 95% 以上视为看完，重置到 0 便于重看）。
+  const handleClose = () => {
+    if (onProgress) onProgress(progress > 0.95 ? 0 : cur);
+    onClose();
+  };
   useEffect(() => {
     if (visible) {
       setCur(Math.min(startSeconds, total));
@@ -83,7 +89,7 @@ export function VideoPlayerOverlay({ visible, title, sub, duration, startSeconds
   const progress = Math.min(1, cur / total);
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={styles.backdrop}>
         {/* 顶栏：标题 + 关闭 */}
         <View style={styles.bar}>
@@ -91,7 +97,7 @@ export function VideoPlayerOverlay({ visible, title, sub, duration, startSeconds
             <Text style={styles.pTitle} numberOfLines={2}>{title}</Text>
             <Text style={styles.pSub}>{sub}</Text>
           </View>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.closeBtn} onPress={handleClose} activeOpacity={0.7}>
             <Ionicons name="close" size={16} color="#fff" />
           </TouchableOpacity>
         </View>

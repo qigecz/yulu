@@ -24,6 +24,7 @@ const catIcon = (c: MockMessage['cat']) => CATS.find((x) => x.key === c)?.icon ?
 export function MessagesScreen() {
   const close = useUIStore((s) => s.closeOverlay);
   const openMessageDetail = useUIStore((s) => s.openMessageDetail);
+  const setMessagesUnread = useUIStore((s) => s.setMessagesUnread);
   const [filter, setFilter] = useState<MsgCat>('all');
   // 已读状态本页内存维护（推送未接真实数据源）。
   const [read, setRead] = useState<Record<number, boolean>>({});
@@ -45,6 +46,9 @@ export function MessagesScreen() {
 
   const open = (m: MockMessage) => {
     setRead((r) => ({ ...r, [m.id]: true }));
+    // 读完最后一条未读时清掉首页红点。
+    const restAllRead = mockMessages.every((x) => x.id === m.id || read[x.id] || !x.unread);
+    if (restAllRead) setMessagesUnread(false);
     openMessageDetail(m.id);
   };
 
@@ -56,6 +60,7 @@ export function MessagesScreen() {
     const all: Record<number, boolean> = {};
     mockMessages.forEach((m) => { all[m.id] = true; });
     setRead(all);
+    setMessagesUnread(false);
     showToast('已全部标记为已读');
   };
 

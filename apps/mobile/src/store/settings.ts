@@ -17,10 +17,13 @@ interface SettingsState {
   notifySystem: boolean;
   /** 仅 Wi-Fi 下载离线内容，避免消耗蜂窝流量。 */
   wifiOnlyDownloads: boolean;
+  /** 学习页「继续学习」的上次播放进度（秒，featured 教程）。 */
+  resumeSeconds: number;
   setNotifyFishWindow: (v: boolean) => void;
   setNotifyFollowUpdates: (v: boolean) => void;
   setNotifySystem: (v: boolean) => void;
   setWifiOnlyDownloads: (v: boolean) => void;
+  setResumeSeconds: (v: number) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -30,10 +33,12 @@ export const useSettingsStore = create<SettingsState>()(
       notifyFollowUpdates: true,
       notifySystem: false,
       wifiOnlyDownloads: true,
+      resumeSeconds: 440,
       setNotifyFishWindow: (notifyFishWindow) => set({ notifyFishWindow }),
       setNotifyFollowUpdates: (notifyFollowUpdates) => set({ notifyFollowUpdates }),
       setNotifySystem: (notifySystem) => set({ notifySystem }),
       setWifiOnlyDownloads: (wifiOnlyDownloads) => set({ wifiOnlyDownloads }),
+      setResumeSeconds: (resumeSeconds) => set({ resumeSeconds }),
     }),
     {
       name: 'yulu-settings',

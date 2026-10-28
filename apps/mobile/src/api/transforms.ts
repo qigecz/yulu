@@ -151,5 +151,6 @@ export function toComment(row: Row): Comment {
     targetId: String(row.target_id ?? row.targetId),
     content: row.content,
     createdAt: row.created_at ?? '',
+    parentId: row.parent_id ? String(row.parent_id) : null,
   };
 }

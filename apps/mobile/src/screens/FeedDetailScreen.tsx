@@ -44,6 +44,10 @@ export function FeedDetailScreen() {
   const [followed, setFollowed] = useState(false);
   const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
   const [localComments, setLocalComments] = useState<PostComment[]>([]);
+  /** 当前回复目标（楼层输入栏联动）。 */
+  const [replyTo, setReplyTo] = useState<PostComment | null>(null);
+  /** 评论列表展开态（默认收起只显示前 3 楼）。 */
+  const [showAll, setShowAll] = useState(false);
 
   // In mock mode use the prototype comments; else real API data.
   const comments: PostComment[] = useMemo(() => {
@@ -58,11 +62,32 @@ export function FeedDetailScreen() {
           content: c.content,
           likesCount: 0,
           createdAt: c.createdAt,
+          parentId: c.parentId ?? undefined,
         })),
       ];
     }
     return [...mockPostComments.filter((c) => c.feedId === feedId), ...mine];
   }, [USE_MOCK, apiComments.data, feedId, localComments]);
+
+  /** 楼层组装：顶层评论 + 归并到根的回复（任意深度压平为两层）。 */
+  const threads = useMemo(() => {
+    const rootOf = (c: PostComment): PostComment => {
+      let cur = c;
+      while (cur.parentId) {
+        const p = comments.find((x) => x.id === cur.parentId);
+        if (!p) break;
+        cur = p;
+      }
+      return cur;
+    };
+    const tops = comments.filter((c) => !c.parentId);
+    const replies = comments.filter((c) => !!c.parentId);
+    return tops.map((t) => ({
+      top: t,
+      replies: replies.filter((r) => rootOf(r).id === t.id),
+    }));
+  }, [comments]);
+  const visibleThreads = showAll ? threads : threads.slice(0, 3);
 
   const submitComment = async () => {
     const text = draft.trim();
@@ -78,12 +103,15 @@ export function FeedDetailScreen() {
           content: text,
           likesCount: 0,
           createdAt: new Date().toISOString(),
+          parentId: replyTo?.id,
         },
       ]);
+      setReplyTo(null);
       return;
     }
     try {
-      await addComment.mutateAsync({ targetType: 'feed', targetId: feedId, content: text });
+      await addComment.mutateAsync({ targetType: 'feed', targetId: feedId, content: text, parentId: replyTo?.id });
+      setReplyTo(null);
     } catch {
       setDraft(text);
     }
@@ -266,38 +294,56 @@ export function FeedDetailScreen() {
         <View style={styles.pad}>
           <View style={styles.sectionLabelRow}>
             <Text style={styles.sectionLabel}>热门评论</Text>
-            <Text style={styles.more}>全部 {Math.max(feed.commentsCount ?? 0, comments.length)} 条 →</Text>
+            {threads.length > 3 && (
+              <Text style={styles.more} onPress={() => setShowAll((v) => !v)}>
+                {showAll ? '收起' : `查看全部 ${comments.length} 条 →`}
+              </Text>
+            )}
           </View>
           <View style={styles.card}>
-            {comments.map((c, i) => (
-              <View key={c.id} style={[styles.commentItem, i > 0 && styles.commentBorder]}>
+            {visibleThreads.map(({ top, replies }, i) => (
+              <View key={top.id} style={[styles.commentItem, i > 0 && styles.commentBorder]}>
                 <View style={styles.commentAvatar} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.cName}>{c.user.nickname}</Text>
-                  <Text style={styles.cText}>{c.content}</Text>
+                  <Text style={styles.cName}>{top.user.nickname}</Text>
+                  <Text style={styles.cText}>{top.content}</Text>
                   <View style={styles.cFoot}>
-                    <Text style={styles.cTime}>{formatRelativeTime(c.createdAt)}</Text>
+                    <Text style={styles.cTime}>{formatRelativeTime(top.createdAt)}</Text>
                     <TouchableOpacity
                       style={styles.cLike}
-                      onPress={() => setCommentLikes((m) => ({ ...m, [c.id]: !m[c.id] }))}
+                      onPress={() => setCommentLikes((m) => ({ ...m, [top.id]: !m[top.id] }))}
                       activeOpacity={0.7}
                     >
                       <Ionicons
-                        name={commentLikes[c.id] ? 'heart' : 'heart-outline'}
+                        name={commentLikes[top.id] ? 'heart' : 'heart-outline'}
                         size={12}
-                        color={commentLikes[c.id] ? colors.accent : colors.muted}
+                        color={commentLikes[top.id] ? colors.accent : colors.muted}
                       />
-                      <Text style={[styles.cLikeT, commentLikes[c.id] && { color: colors.accent }]}>
-                        {c.likesCount + (commentLikes[c.id] ? 1 : 0)}
+                      <Text style={[styles.cLikeT, commentLikes[top.id] && { color: colors.accent }]}>
+                        {top.likesCount + (commentLikes[top.id] ? 1 : 0)}
                       </Text>
                     </TouchableOpacity>
-                    <Text style={styles.cTime}>回复</Text>
+                    <TouchableOpacity onPress={() => setReplyTo(top)} activeOpacity={0.7}>
+                      <Text style={[styles.cTime, { color: colors.accent }]}>回复</Text>
+                    </TouchableOpacity>
                   </View>
-                  {c.reply && (
+                  {/* 楼层回复 */}
+                  {replies.map((r) => (
+                    <View key={r.id} style={styles.cReplyRow}>
+                      <Text style={styles.cReplyInline}>
+                        <Text style={styles.cReplyName}>{r.user.nickname}：</Text>
+                        {r.content}
+                      </Text>
+                      <TouchableOpacity onPress={() => setReplyTo(r)} activeOpacity={0.7}>
+                        <Text style={[styles.cTime, { color: colors.accent }]}>回复</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                  {top.reply && (
                     <View style={styles.cReply}>
                       <Text style={styles.cReplyText}>
                         <Text style={styles.cReplyName}>{feed.user?.nickname}：</Text>
-                        {c.reply.content}
+                        {top.reply.content}
                       </Text>
                     </View>
                   )}
@@ -306,18 +352,31 @@ export function FeedDetailScreen() {
             ))}
             {comments.length === 0 && <Text style={styles.empty}>还没有评论，来说点什么</Text>}
           </View>
-          <Text style={styles.metaCenter}>— 显示前 {comments.length} 条 · 查看全部 {Math.max(feed.commentsCount ?? 0, comments.length)} 条评论 —</Text>
+          {!showAll && threads.length > 3 && (
+            <Text style={styles.metaCenter} onPress={() => setShowAll(true)}>
+              — 显示前 {visibleThreads.length} 楼 · 查看全部 {comments.length} 条评论 —
+            </Text>
+          )}
         </View>
       </ScrollView>
 
       {/* Comment input bar */}
       <View style={styles.commentbar}>
         <View style={styles.cInputWrap}>
-          <Ionicons name="search" size={15} color={colors.muted} style={{ marginRight: 6 }} />
+          {replyTo ? (
+            <View style={styles.replyChip}>
+              <Text style={styles.replyChipT} numberOfLines={1}>回复 @{replyTo.user.nickname}</Text>
+              <TouchableOpacity onPress={() => setReplyTo(null)} activeOpacity={0.7} hitSlop={{ top: 6, left: 6, bottom: 6, right: 6 }}>
+                <Ionicons name="close" size={12} color={colors.muted} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <Ionicons name="search" size={15} color={colors.muted} style={{ marginRight: 6 }} />
+          )}
           <TextInput
             value={draft}
             onChangeText={setDraft}
-            placeholder="说点什么… 文明发言，理性交流"
+            placeholder={replyTo ? `回复 @${replyTo.user.nickname}…` : '说点什么… 文明发言，理性交流'}
             placeholderTextColor={colors.muted}
             maxLength={120}
             style={styles.cInput}
@@ -432,6 +491,17 @@ const styles = StyleSheet.create({
   cReply: { marginTop: 8, padding: 10, backgroundColor: 'rgba(26,36,32,0.06)', borderRadius: 10 },
   cReplyText: { fontSize: 12, lineHeight: 18, color: colors.fg },
   cReplyName: { color: colors.accent, fontWeight: '600' },
+  /* 楼层回复行（缩进、内联名+内容+回复按钮） */
+  cReplyRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 8,
+    marginTop: 7, paddingLeft: 9, borderLeftWidth: 2, borderLeftColor: colors.border,
+  },
+  cReplyInline: { flex: 1, fontSize: 12, color: colors.fg, lineHeight: 18 },
+  replyChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5, flexShrink: 1, maxWidth: 150,
+    backgroundColor: colors.accentSoft, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, marginRight: 6,
+  },
+  replyChipT: { fontSize: 11, color: colors.accent },
   metaCenter: { fontSize: 11, color: colors.muted, textAlign: 'center', paddingVertical: 12 },
   more: { fontSize: 13, color: colors.accent, fontWeight: '500' },
 

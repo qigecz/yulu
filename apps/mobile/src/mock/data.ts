@@ -396,6 +396,12 @@ export const mockPostComments: PostComment[] = [
     reply: { content: '湾口背风面没事，VIB 自重大风天反而更好抛。你可以站坑点 2 西侧试。' },
   },
   {
+    // 楼层回复示例：挂在 pc1 下的钓友回复。
+    id: 'pc1-r1', feedId: 'f1', parentId: 'pc1', user: { id: 'u6', nickname: '路亚小新' },
+    content: '确实，我上周也是站西侧，逆风也能打到乱石区边上。',
+    likesCount: 3, createdAt: new Date(Date.now() - 5400000).toISOString(),
+  },
+  {
     id: 'pc2', feedId: 'f1', user: { id: 'u3', nickname: '新手小王' },
     content: 'VIB 用的多少克？匀收速度有讲究吗，每次我收太快感觉没口。',
     likesCount: 8, createdAt: new Date(Date.now() - 3600000).toISOString(),

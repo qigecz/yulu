@@ -29,6 +29,9 @@ async function migrate() {
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS fishing_experience VARCHAR(10)`);
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS fishing_methods TEXT[] DEFAULT '{}'`);
   await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS target_species TEXT[] DEFAULT '{}'`);
+  // 评论楼层：parent_id 指向被回复的评论（顶层为 NULL）。
+  await query(`ALTER TABLE comments ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES comments(id) ON DELETE CASCADE`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_comments_parent ON comments(parent_id)`);
 
   await query(`
     CREATE TABLE IF NOT EXISTS spots (

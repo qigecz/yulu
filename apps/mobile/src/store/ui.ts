@@ -32,6 +32,9 @@ interface UIState {
   articleId: string | null;
   activeTab: TabKey;
   navRouteId: string | null;
+  /** 首页消息按钮红点（消息中心未读联动，进入并读完后清掉）。 */
+  messagesUnread: boolean;
+  setMessagesUnread: (v: boolean) => void;
   /** Optional coords to prefill the create-spot form (e.g. from "标记坑点"). */
   createSpotCoords: { latitude: number; longitude: number } | null;
   setActiveTab: (key: TabKey) => void;
@@ -76,6 +79,8 @@ export const useUIStore = create<UIState>((set) => ({
   articleId: null,
   activeTab: 'home',
   navRouteId: null,
+  messagesUnread: true,
+  setMessagesUnread: (messagesUnread) => set({ messagesUnread }),
   createSpotCoords: null,
   setActiveTab: (activeTab) => set({ activeTab }),
   openCreateSpot: () => set({ overlay: 'create-spot', createSpotCoords: null }),

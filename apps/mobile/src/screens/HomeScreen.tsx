@@ -30,6 +30,7 @@ export function HomeScreen() {
   const openFeedList = useUIStore((s) => s.openFeedList);
   const openSettings = useUIStore((s) => s.openSettings);
   const openMessages = useUIStore((s) => s.openMessages);
+  const messagesUnread = useUIStore((s) => s.messagesUnread);
   const openMall = useUIStore((s) => s.openMall);
   const toggleFeedLike = useToggleFeedLike();
   const toggleFavorite = useToggleFavorite();
@@ -61,7 +62,7 @@ export function HomeScreen() {
             onPress={openMessages}
           >
             <Ionicons name="notifications-outline" size={18} color={colors.fg} />
-            <View style={styles.msgDot} />
+            {messagesUnread && <View style={styles.msgDot} />}
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} onPress={openSettings}>
             <Ionicons name="settings-outline" size={18} color={colors.fg} />

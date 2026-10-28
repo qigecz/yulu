@@ -5,6 +5,7 @@ import { formatViewCount } from '@yulu/shared';
 import { useTutorials } from '../hooks/queries';
 import { QueryState } from '../components/QueryState';
 import { VideoPlayerOverlay } from '../components/VideoPlayerOverlay';
+import { useSettingsStore } from '../store/settings';
 import { useUIStore } from '../store/ui';
 
 const categories = ['全部', '路亚', '台钓', '传统钓', '筏钓', '绑钩 DIY'];
@@ -41,8 +42,8 @@ type FlatTutorial = {
 /** 播放浮层的参数（有 url 走 expo-av 真实播放，无 url 模拟播放）。 */
 type PlayerTarget = { title: string; sub: string; duration: string; start: number; url?: string };
 
-// 「继续学习」模拟进度： featured 课程 18:42，上次看到 07:20。
-const RESUME_START = 440;
+// 「继续学习」进度：featured 课程 18:42（1122s），恢复点持久化在 settings store。
+const FEATURED_TOTAL = 1122;
 
 export function LearnScreen() {
   const [activeCategory, setActiveCategory] = useState(0);
@@ -51,6 +52,7 @@ export function LearnScreen() {
   const tutorials = useTutorials();
   const openSearch = useUIStore((s) => s.openSearch);
   const openArticleDetail = useUIStore((s) => s.openArticleDetail);
+  const resumeSeconds = useSettingsStore((s) => s.resumeSeconds);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -132,7 +134,7 @@ export function LearnScreen() {
             activeOpacity={0.8}
             onPress={() => openLesson(
               { title: featured.title, authorName: featured.author?.nickname || '', cat: featured.category ?? '路亚', views: featured.viewsCount, duration: featured.duration || '', url: featured.videoUrl },
-              RESUME_START,
+              resumeSeconds,
             )}
           >
             <View style={styles.resumeThumb}>
@@ -143,10 +145,12 @@ export function LearnScreen() {
               <Text style={styles.resumeTitle} numberOfLines={2}>{featured.title}</Text>
               <Text style={styles.resumeMeta}>{featured.author?.nickname} · 第 2 节 / 共 5 节</Text>
               <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: '39%' }]} />
+                <View style={[styles.progressFill, { width: `${Math.min(100, Math.round((resumeSeconds / FEATURED_TOTAL) * 100))}%` }]} />
               </View>
               <View style={styles.progressTimes}>
-                <Text style={styles.progressTime}>07:20</Text>
+                <Text style={styles.progressTime}>
+                  {String(Math.floor(resumeSeconds / 60)).padStart(2, '0')}:{String(resumeSeconds % 60).padStart(2, '0')}
+                </Text>
                 <Text style={styles.progressTime}>{featured.duration}</Text>
               </View>
             </View>
@@ -256,6 +260,7 @@ export function LearnScreen() {
         startSeconds={player?.start ?? 0}
         url={player?.url}
         onClose={() => setPlayer(null)}
+        onProgress={(sec) => useSettingsStore.getState().setResumeSeconds(Math.round(sec))}
       />
     </ScrollView>
   );

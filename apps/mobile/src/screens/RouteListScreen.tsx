@@ -48,7 +48,7 @@ export function RouteListScreen() {
           <Text style={styles.hTitle}>最新路线</Text>
           <TouchableOpacity
             style={styles.iconBtn}
-            onPress={() => useUIStore.getState().openNavigation('')}
+            onPress={() => useUIStore.getState().setActiveTab('spots')}
             activeOpacity={0.7}
           >
             <Ionicons name="map-outline" size={18} color={colors.fg} />

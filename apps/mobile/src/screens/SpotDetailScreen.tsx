@@ -47,6 +47,7 @@ export function SpotDetailScreen({ spot }: Props) {
   const close = useUIStore((s) => s.closeOverlay);
   const openNavigation = useUIStore((s) => s.openNavigation);
   const openFeedDetail = useUIStore((s) => s.openFeedDetail);
+  const openComposeFeed = useUIStore((s) => s.openComposeFeed);
   const toggleFavorite = useToggleFavorite();
   const downloadRoute = useOfflineStore((s) => s.downloadRoute);
   const hasOfflineRoute = useOfflineStore((s) => s.has);
@@ -294,7 +295,10 @@ export function SpotDetailScreen({ spot }: Props) {
                     <Text style={styles.pitName}>{pit.name}</Text>
                     <Text style={styles.pitDesc}>{pit.desc}</Text>
                   </View>
-                  <Text style={styles.pitCta}>导航 →</Text>
+                  {/* 坑点无独立坐标：导航到所属钓点（单航点合成路线）。 */}
+                  <TouchableOpacity onPress={onNavigateHere} activeOpacity={0.7}>
+                    <Text style={styles.pitCta}>导航 →</Text>
+                  </TouchableOpacity>
                 </View>
               ))}
               {(spot.pits ?? []).length === 0 && (
@@ -327,6 +331,14 @@ export function SpotDetailScreen({ spot }: Props) {
             {spotFeeds.length > 0 && (
               <Text style={styles.metaCenter}>— 已加载全部 {spotFeeds.length} 条动态 —</Text>
             )}
+            <TouchableOpacity
+              style={styles.composeEntry}
+              onPress={() => { openComposeFeed(); }}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="add" size={15} color="#fff" />
+              <Text style={styles.composeEntryT}>发布动态 →</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -527,6 +539,11 @@ const styles = StyleSheet.create({
   pitName: { fontSize: 14, fontWeight: '600', color: colors.fg },
   pitDesc: { fontSize: 12, color: colors.muted, marginTop: 2 },
   pitCta: { fontSize: 12, color: colors.accent, fontWeight: '500' },
+  composeEntry: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    minHeight: 42, borderRadius: 999, backgroundColor: colors.accent, marginTop: 10,
+  },
+  composeEntryT: { color: '#fff', fontSize: 13.5, fontWeight: '600' },
   metaCenter: { fontSize: 11, color: colors.muted, textAlign: 'center', paddingVertical: 12 },
   empty: { fontSize: 13, color: colors.muted, textAlign: 'center', paddingVertical: 20 },
 

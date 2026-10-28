@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@yulu/ui';
 import type { Feed } from '@yulu/shared';
@@ -155,9 +155,17 @@ function FeedCard({ feed, onPress, onAuthor }: { feed: Feed; onPress: () => void
           <Ionicons name="chatbubble-outline" size={14} color={colors.muted} />
           <Text style={styles.fStatT}>{feed.commentsCount ?? 0}</Text>
         </View>
-        <View style={styles.fStat}>
+        <TouchableOpacity
+          style={styles.fStat}
+          activeOpacity={0.7}
+          onPress={() =>
+            void Share.share({
+              message: `${feed.user?.nickname ?? '钓友'}的动态：「${(feed.content ?? '').slice(0, 40)}…」 — 来自渔路 YULU（链接：yulu://feed/${feed.id}）`,
+            }).catch(() => {})
+          }
+        >
           <Ionicons name="share-social-outline" size={14} color={colors.muted} />
-        </View>
+        </TouchableOpacity>
         <Text style={styles.fMore}>详情 →</Text>
       </View>
     </TouchableOpacity>

@@ -374,7 +374,7 @@ export function useFeedComments(feedId: string | null) {
 export function useAddComment() {
   const qc = useQueryClient();
   const user = useAuthStore((s) => s.user);
-  return useMutation<Comment, Error, { targetType: CommentTargetType; targetId: string; content: string }>({
+  return useMutation<Comment, Error, { targetType: CommentTargetType; targetId: string; content: string; parentId?: string }>({
     mutationFn: async (input) => {
       const comment: Comment = {
         id: makeId('c'),
@@ -384,6 +384,7 @@ export function useAddComment() {
         targetId: input.targetId,
         content: input.content,
         createdAt: new Date().toISOString(),
+        parentId: input.parentId ?? null,
       };
       if (USE_MOCK) return comment;
       return commentsApi.create(input);
