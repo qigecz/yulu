@@ -8,10 +8,13 @@ import { useCartStore } from '../store/cart';
 
 const STAR_COLOR = '#e8a33d';
 
-/** 商品详情页（对照 ios-product-detail.html）：大图、信息卡、规格数量、参数、评价、购买栏。 */
+/** 商品详情页（对照 ios-product-detail.html）：navbar（返回商城/标题/购物车入口）、
+ *  大图、信息卡、规格数量、参数、评价、购买栏。 */
 export function ProductDetailScreen({ product }: { product: MallProduct }) {
   const close = useUIStore((s) => s.closeOverlay);
   const openOrders = useUIStore((s) => s.openOrders);
+  const openCart = useUIStore((s) => s.openCart);
+  const cartCount = useCartStore((s) => s.items.reduce((n, i) => n + i.qty, 0));
   const addToCartStore = useCartStore((s) => s.add);
 
   // 规格档位：只有原型里的路亚竿有双规格，其余商品单规格。
@@ -34,6 +37,7 @@ export function ProductDetailScreen({ product }: { product: MallProduct }) {
   };
 
   const price = product.price + specs[specIdx].extra;
+  const totalPrice = price * qty;
 
   const params: [string, string][] =
     product.id === 'm1'
@@ -53,13 +57,14 @@ export function ProductDetailScreen({ product }: { product: MallProduct }) {
 
   const onAddCart = () => {
     addToCartStore(product.id, qty);
-    showToast(`已加入购物车 · 共 ${qty} 件`);
+    const totalAfter = useCartStore.getState().items.reduce((n, i) => n + i.qty, 0);
+    showToast(`已加入购物车 · 共 ${totalAfter} 件`);
   };
 
   const onBuyNow = () => {
     Alert.alert(
       '确认下单',
-      `${product.name} · ${specs[specIdx].label} × ${qty}，应付 ¥${price * qty}`,
+      `${product.name} · ${specs[specIdx].label} × ${qty}，应付 ¥${totalPrice}`,
       [
         { text: '再想想', style: 'cancel' },
         {
@@ -75,6 +80,24 @@ export function ProductDetailScreen({ product }: { product: MallProduct }) {
 
   return (
     <View style={styles.wrapper}>
+      {/* Navbar（对照原型：返回商城 / 标题 / 购物车入口带角标） */}
+      <View style={styles.navbar}>
+        <TouchableOpacity style={styles.navSide} onPress={close} activeOpacity={0.7}>
+          <Ionicons name="chevron-back" size={18} color={colors.accent} />
+          <Text style={styles.backText}>商城</Text>
+        </TouchableOpacity>
+        <Text style={styles.navTitle}>商品详情</Text>
+        <View style={styles.navSideRight}>
+          <TouchableOpacity style={styles.cartEntry} onPress={openCart} activeOpacity={0.7}>
+            <Ionicons name="cart-outline" size={19} color={colors.fg} />
+            {cartCount > 0 && (
+              <View style={styles.cartEntryBadge}>
+                <Text style={styles.cartEntryBadgeT}>{cartCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* 商品大图（View 拼绘示意，对照原型 SVG） */}
         <View style={styles.gallery}>
@@ -89,14 +112,21 @@ export function ProductDetailScreen({ product }: { product: MallProduct }) {
               <Text style={styles.gFlagT}>{product.flag}</Text>
             </View>
           )}
+          {/* 轮播指示点（对照原型 3 枚，当前项加长） */}
+          <View style={styles.gDots}>
+            <View style={[styles.gDot, styles.gDotOn]} />
+            <View style={styles.gDot} />
+            <View style={styles.gDot} />
+          </View>
         </View>
 
-        {/* 商品信息卡 */}
+        {/* 商品信息卡（上叠大图，对照原型负 margin） */}
         <View style={[styles.infoCard, styles.mx]}>
           <View style={styles.priceRow}>
             <Text style={styles.price}>
               <Text style={styles.priceCur}>¥</Text>
-              {price}
+              {totalPrice}
+              {qty > 1 && <Text style={styles.priceSub}> · ¥{price} × {qty}</Text>}
             </Text>
             <Text style={styles.sold}>
               已售 {product.sold >= 1000 ? `${(product.sold / 1000).toFixed(1).replace(/\.0$/, '')}k` : product.sold}+ · 评分 4.8
@@ -174,6 +204,9 @@ export function ProductDetailScreen({ product }: { product: MallProduct }) {
           ].map((rv) => (
             <View key={rv.name} style={styles.review}>
               <View style={styles.rvRow}>
+                <View style={styles.rvAva}>
+                  <Text style={styles.rvAvaT}>{rv.name.charAt(0)}</Text>
+                </View>
                 <Text style={styles.rvName}>{rv.name}</Text>
                 <Text style={styles.rvStars}>
                   <Text style={{ color: STAR_COLOR }}>{'★'.repeat(rv.stars)}</Text>
@@ -211,6 +244,21 @@ export function ProductDetailScreen({ product }: { product: MallProduct }) {
 const styles = StyleSheet.create({
   wrapper: { flex: 1 },
   container: { flex: 1, backgroundColor: colors.bg },
+  navbar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 12, paddingTop: 10, paddingBottom: 8, backgroundColor: colors.bg,
+  },
+  navSide: { flexDirection: 'row', alignItems: 'center', width: 74, paddingHorizontal: 4 },
+  navSideRight: { flexDirection: 'row', justifyContent: 'flex-end', width: 74, paddingRight: 8 },
+  backText: { color: colors.accent, fontSize: 15 },
+  navTitle: { fontFamily: 'Georgia', fontSize: 17, fontWeight: '600', color: colors.fg },
+  cartEntry: { position: 'relative', width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+  cartEntryBadge: {
+    position: 'absolute', top: 0, right: -2, minWidth: 16, height: 16,
+    borderRadius: 999, backgroundColor: colors.accent, borderWidth: 2, borderColor: colors.bg,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3,
+  },
+  cartEntryBadgeT: { color: '#fff', fontSize: 10, fontWeight: '600', fontFamily: 'monospace' },
   mx: { marginHorizontal: 20 },
   gallery: { height: 300, overflow: 'hidden', position: 'relative' },
   gSky: { ...StyleSheet.absoluteFillObject, backgroundColor: '#eef3ef' },
@@ -230,10 +278,16 @@ const styles = StyleSheet.create({
     borderRadius: 8, backgroundColor: colors.accent,
   },
   gFlagT: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  infoCard: { marginTop: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16 },
+  /* 轮播指示点 */
+  gDots: { position: 'absolute', bottom: 14, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 5 },
+  gDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.75)' },
+  gDotOn: { width: 16, backgroundColor: '#fff' },
+  /* 信息卡上叠大图（对照原型负 margin） */
+  infoCard: { marginTop: -18, zIndex: 2, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  price: { fontFamily: 'Georgia', fontSize: 28, fontWeight: '700', color: colors.fg },
+  price: { fontFamily: 'Georgia', fontSize: 28, fontWeight: '700', color: colors.accent },
   priceCur: { fontSize: 16 },
+  priceSub: { fontSize: 12, fontWeight: '400', color: colors.muted, fontFamily: 'monospace' },
   sold: { fontSize: 12, color: colors.muted, fontFamily: 'monospace' },
   pName: { fontSize: 17, fontWeight: '600', color: colors.fg, marginTop: 6 },
   pSub: { fontSize: 13, color: colors.muted, marginTop: 4, lineHeight: 19 },
@@ -267,7 +321,12 @@ const styles = StyleSheet.create({
   rateAll: { fontSize: 12, color: colors.accent, fontFamily: 'monospace' },
   review: { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 12, paddingTop: 12 },
   rvRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rvName: { fontSize: 13, fontWeight: '600', color: colors.fg },
+  rvAva: {
+    width: 26, height: 26, borderRadius: 13, backgroundColor: colors.accentSoft,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  rvAvaT: { fontSize: 12, fontWeight: '600', color: colors.accent },
+  rvName: { fontSize: 13, fontWeight: '600', color: colors.fg, flex: 1, marginLeft: 8 },
   rvStars: { fontSize: 12 },
   rvText: { fontSize: 13.5, color: colors.fg, lineHeight: 21, marginTop: 5 },
   rvMeta: { fontSize: 11, color: colors.muted, marginTop: 5, fontFamily: 'monospace' },

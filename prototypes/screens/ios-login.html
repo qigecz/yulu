@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>渔路 · 登录 · iOS</title>
+  <style>
+    :root {
+      --bg: #f3f5f2; --surface: #ffffff; --fg: #1a2420; --muted: #647a70; --border: #dce2dc; --accent: #2a8f7a;
+      --accent-soft: color-mix(in oklch, var(--accent) 14%, transparent);
+      --fg-soft: color-mix(in oklch, var(--fg) 6%, transparent);
+      --gold: #b8860b; --danger: #b03a2e;
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+      --radius-card: 18px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      background: radial-gradient(60% 80% at 50% 0%, color-mix(in oklch, var(--accent) 6%, var(--bg)) 0%, var(--bg) 60%);
+      color: var(--fg); font-family: var(--font-body); font-size: 15px;
+      line-height: 1.4; -webkit-font-smoothing: antialiased;
+      display: grid; place-items: center; padding: 32px;
+    }
+    .stage { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .caption { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .caption strong { color: var(--fg); font-weight: 500; }
+    .device {
+      position: relative; width: 390px; height: 844px; border-radius: 56px; padding: 12px;
+      background: linear-gradient(160deg, #2a2a2c 0%, #1a1a1c 50%, #0e0e10 100%);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 0 0 2px #000 inset, 0 28px 60px -12px rgba(0,0,0,0.45);
+      isolation: isolate;
+    }
+    .device::before, .device::after {
+      content: ''; position: absolute; width: 3px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 8%, transparent 16%, transparent 84%, rgba(255,255,255,0.04) 92%, transparent);
+      top: 100px; bottom: 100px; pointer-events: none;
+    }
+    .device::before { left: -1px; } .device::after { right: -1px; }
+    .island { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); width: 124px; height: 36px; background: #000; border-radius: 999px; z-index: 60; }
+    .btn-rail { position: absolute; width: 4px; background: #0a0a0c; border-radius: 2px; }
+    .btn-rail.left-1 { left: -3px; top: 174px; height: 32px; }
+    .btn-rail.left-2 { left: -3px; top: 220px; height: 60px; }
+    .btn-rail.left-3 { left: -3px; top: 290px; height: 60px; }
+    .btn-rail.right-1 { right: -3px; top: 250px; height: 100px; }
+    .screen { position: relative; width: 100%; height: 100%; background: var(--bg); border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; }
+    .statusbar { flex: 0 0 47px; padding: 18px 26px 0; display: flex; align-items: flex-start; justify-content: space-between; font-size: 15px; font-weight: 600; }
+    .statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
+    .statusbar svg { width: 17px; height: 11px; fill: var(--fg); }
+    .statusbar .battery { width: 25px; }
+    .content { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+    .content::-webkit-scrollbar { display: none; }
+    .home-indicator { flex: 0 0 28px; position: relative; z-index: 40; }
+    .home-indicator::after { content: ''; position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); width: 134px; height: 5px; background: var(--fg); border-radius: 999px; opacity: 0.85; }
+    .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    /* 品牌区 */
+    .hero { text-align: center; padding: 26px 24px 8px; }
+    .logo-mark {
+      width: 68px; height: 68px; margin: 0 auto 12px; border-radius: 20px;
+      background: linear-gradient(155deg, #2a8f7a 0%, #1d6e5d 100%);
+      display: grid; place-items: center;
+      box-shadow: 0 10px 24px -10px color-mix(in oklch, var(--accent) 55%, transparent);
+    }
+    .logo-mark svg { width: 38px; height: 38px; stroke: #eef6f3; fill: none; stroke-width: 1.7; }
+    .hero h1 { font-family: var(--font-display); font-size: 27px; margin: 0; letter-spacing: 0.02em; }
+    .hero h1 .en { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.42em; color: var(--accent); font-weight: 500; margin-top: 4px; text-transform: uppercase; }
+    .hero .slogan { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+
+    /* 方式切换 */
+    .tabs {
+      display: flex; margin: 22px 24px 0; background: var(--fg-soft);
+      border-radius: 12px; padding: 3px; gap: 3px;
+    }
+    .tab {
+      flex: 1; border: none; background: none; cursor: pointer; border-radius: 9px;
+      padding: 9px 0; font-family: var(--font-body); font-size: 14px; font-weight: 500;
+      color: var(--muted); min-height: 44px;
+    }
+    .tab[aria-selected="true"] { background: var(--surface); color: var(--fg); font-weight: 600; box-shadow: 0 2px 8px -2px rgba(0,0,0,0.12); }
+    .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+    /* 表单 */
+    .form { margin: 16px 24px 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-card); }
+    .field { display: flex; align-items: center; gap: 10px; padding: 0 16px; min-height: 56px; }
+    .field + .field { border-top: 1px solid var(--border); }
+    .field .pre { font-size: 14px; color: var(--muted); font-family: var(--font-mono); flex-shrink: 0; }
+    .field input {
+      flex: 1; border: none; background: none; outline: none; min-width: 0;
+      font-family: var(--font-body); font-size: 16px; color: var(--fg); padding: 12px 0;
+    }
+    .field input::placeholder { color: color-mix(in oklch, var(--muted) 65%, transparent); }
+    .code-btn {
+      border: none; cursor: pointer; background: var(--accent-soft); color: var(--accent);
+      font-family: var(--font-body); font-size: 13px; font-weight: 600;
+      border-radius: 999px; padding: 8px 13px; flex-shrink: 0; min-height: 36px;
+    }
+    .code-btn:hover { background: color-mix(in oklch, var(--accent) 22%, transparent); }
+    .code-btn[disabled] { color: var(--muted); cursor: default; background: var(--fg-soft); }
+    .eye-btn {
+      border: none; background: none; cursor: pointer; padding: 8px; flex-shrink: 0;
+      display: grid; place-items: center; border-radius: 8px;
+    }
+    .eye-btn svg { width: 19px; height: 19px; stroke: var(--muted); fill: none; stroke-width: 1.8; }
+    .eye-btn:hover svg { stroke: var(--fg); }
+    .eye-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+    /* 行内错误 */
+    .err { display: none; margin: 7px 26px 0; font-size: 12px; color: var(--danger); }
+    .err.show { display: flex; align-items: baseline; gap: 5px; }
+    .err .cause { font-weight: 600; flex-shrink: 0; }
+    .field.invalid input { color: var(--danger); }
+
+    /* 协议 */
+    .agree {
+      display: flex; align-items: flex-start; gap: 9px; margin: 16px 26px 0;
+      cursor: pointer; user-select: none; -webkit-user-select: none;
+    }
+    .agree input { position: absolute; opacity: 0; pointer-events: none; }
+    .box {
+      width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border);
+      background: var(--surface); flex-shrink: 0; margin-top: 1px;
+      display: grid; place-items: center; transition: background 0.15s, border-color 0.15s;
+    }
+    .box svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 3; opacity: 0; }
+    .agree input:checked + .box { background: var(--accent); border-color: var(--accent); }
+    .agree input:checked + .box svg { opacity: 1; }
+    .agree input:focus-visible + .box { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .agree.agree-shake { animation: shake 0.35s; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-3px); }
+    }
+    @media (prefers-reduced-motion: reduce) { .agree.agree-shake { animation: none; } }
+    .agree span.txt { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .agree a { color: var(--accent); text-decoration: none; font-weight: 500; }
+
+    /* 主按钮 */
+    .login-btn {
+      display: block; width: calc(100% - 48px); margin: 20px 24px 0;
+      padding: 14px 0; border-radius: 14px; border: none; cursor: pointer;
+      background: var(--accent); color: #fff; font-family: var(--font-body);
+      font-size: 16px; font-weight: 600; min-height: 48px;
+      box-shadow: 0 8px 20px -8px color-mix(in oklch, var(--accent) 60%, transparent);
+    }
+    .login-btn:hover { background: color-mix(in oklch, var(--accent) 88%, #000); }
+    .login-btn:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+    .login-btn[disabled] { opacity: 0.75; cursor: default; }
+    .spin {
+      display: inline-block; width: 15px; height: 15px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+      vertical-align: -2px; margin-right: 7px;
+      animation: rot 0.7s linear infinite;
+    }
+    @keyframes rot { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spin { animation-duration: 1.6s; } }
+
+    /* 第三方登录 */
+    .alt { text-align: center; margin-top: 26px; }
+    .alt .lbl { display: flex; align-items: center; gap: 12px; margin: 0 40px; color: var(--muted); font-size: 12px; }
+    .alt .lbl::before, .alt .lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .alt-btns { display: flex; justify-content: center; gap: 28px; margin-top: 16px; }
+    .alt-btn {
+      width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--border);
+      background: var(--surface); cursor: pointer; display: grid; place-items: center;
+    }
+    .alt-btn:hover { border-color: var(--muted); }
+    .alt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .alt-btn svg { width: 24px; height: 24px; }
+
+    /* 注册入口 */
+    .to-register { text-align: center; margin: 26px 0 28px; font-size: 14px; color: var(--muted); }
+    .to-register a { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .to-register a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+    /* toast */
+    .toast {
+      position: absolute; left: 50%; bottom: 90px; z-index: 55;
+      transform: translate(-50%, 16px);
+      background: var(--fg); color: #fff;
+      padding: 10px 18px; border-radius: 999px;
+      font-size: 13px; box-shadow: 0 6px 20px -6px rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none; transition: all 0.3s;
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast svg { width: 14px; height: 14px; stroke: #7dd8c3; fill: none; stroke-width: 2.2; }
+    .toast.warn svg { stroke: #e8b34a; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption"><strong>渔路</strong> · iOS · 登录</div>
+    <div class="device" data-od-id="device">
+      <span class="btn-rail left-1" aria-hidden></span>
+      <span class="btn-rail left-2" aria-hidden></span>
+      <span class="btn-rail left-3" aria-hidden></span>
+      <span class="btn-rail right-1" aria-hidden></span>
+      <span class="island" aria-hidden></span>
+      <div class="screen">
+        <div class="statusbar">
+          <span class="num">9:41</span>
+          <span class="right">
+            <svg viewBox="0 0 17 11" aria-hidden><rect x="0" y="7" width="3" height="4" rx="0.6"/><rect x="4" y="5" width="3" height="6" rx="0.6"/><rect x="8" y="3" width="3" height="8" rx="0.6"/><rect x="12" y="0" width="3" height="11" rx="0.6"/></svg>
+            <svg viewBox="0 0 17 11" aria-hidden><path d="M8.5 1.5C5.5 1.5 2.7 2.6 0.5 4.6L2 6.1C3.8 4.5 6.1 3.6 8.5 3.6c2.4 0 4.7 0.9 6.5 2.5l1.5-1.5c-2.2-2-5-3.1-8-3.1zM3.5 7.6L5 9.1c1-0.9 2.2-1.4 3.5-1.4 1.3 0 2.5 0.5 3.5 1.4l1.5-1.5c-1.4-1.3-3.1-2-5-2-1.9 0-3.6 0.7-5 2zM6.5 10.6l2 2 2-2c-0.5-0.5-1.2-0.8-2-0.8s-1.5 0.3-2 0.8z"/></svg>
+            <svg class="battery" viewBox="0 0 25 11" aria-hidden><rect x="0.5" y="0.5" width="21" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-opacity="0.45"/><rect x="22" y="3.5" width="1.5" height="4" rx="0.4" fill="currentColor" fill-opacity="0.45"/><rect x="2" y="2" width="18" height="7" rx="1.4"/></svg>
+          </span>
+        </div>
+
+        <main class="content" data-od-id="content">
+          <!-- 品牌区 -->
+          <div class="hero" data-od-id="brand-hero">
+            <div class="logo-mark" aria-hidden>
+              <svg viewBox="0 0 24 24"><path d="M2.5 12.5c3-4.2 7-6.3 12-6.3 2.4 0 4.6 0.6 6.8 1.8l-2 4.5 2 4.5c-2.2 1.2-4.4 1.8-6.8 1.8-5 0-9-2.1-12-6.3z" transform="rotate(90 12 12) translate(0 -2)"/><circle cx="16" cy="9.5" r="0.6" fill="#eef6f3" stroke="none"/><path d="M4 18.5c2.5-1.5 5-1.5 7.5 0s5 1.5 7.5 0" transform="translate(0 1)"/></svg>
+            </div>
+            <h1>渔路<span class="en">YULU · Fishing Routes</span></h1>
+            <p class="slogan">找坑点，走渔路 —— 和 12 万钓友一起出钓</p>
+          </div>
+
+          <!-- 登录方式切换 -->
+          <div class="tabs" role="tablist" aria-label="登录方式" data-od-id="login-tabs">
+            <button class="tab" id="tabCode" role="tab" aria-selected="true" aria-controls="panelCode" type="button">验证码登录</button>
+            <button class="tab" id="tabPwd" role="tab" aria-selected="false" aria-controls="panelPwd" type="button">密码登录</button>
+          </div>
+
+          <!-- 验证码登录 -->
+          <div class="form" id="panelCode" role="tabpanel" aria-labelledby="tabCode" data-od-id="code-panel">
+            <div class="field">
+              <span class="pre">+86</span>
+              <input id="phoneCode" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入手机号" autocomplete="tel" />
+            </div>
+            <div class="field">
+              <span class="pre">验证码</span>
+              <input id="smsCode" type="text" inputmode="numeric" maxlength="6" placeholder="6 位短信验证码" class="num" autocomplete="one-time-code" />
+              <button class="code-btn" id="sendBtn" type="button">获取验证码</button>
+            </div>
+          </div>
+          <p class="err" id="errPhoneCode"><span class="cause"></span><span class="remedy"></span></p>
+          <p class="err" id="errSms"><span class="cause"></span><span class="remedy"></span></p>
+
+          <!-- 密码登录 -->
+          <div class="form" id="panelPwd" role="tabpanel" aria-labelledby="tabPwd" hidden data-od-id="pwd-panel">
+            <div class="field">
+              <span class="pre">+86</span>
+              <input id="phonePwd" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入手机号" autocomplete="tel" />
+            </div>
+            <div class="field">
+              <span class="pre">密码</span>
+              <input id="pwd" type="password" placeholder="请输入密码" autocomplete="current-password" />
+              <button class="eye-btn" id="eyeBtn" type="button" aria-label="显示密码">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <p class="err" id="errPhonePwd"><span class="cause"></span><span class="remedy"></span></p>
+          <p class="err" id="errPwd"><span class="cause"></span><span class="remedy"></span></p>
+
+          <!-- 协议 -->
+          <label class="agree" id="agreeRow" data-od-id="agree-row">
+            <input type="checkbox" id="agreeChk" />
+            <span class="box" aria-hidden><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <span class="txt">我已阅读并同意 <a href="ios-learn.html" onclick="return false;">《用户协议》</a>和<a href="ios-learn.html" onclick="return false;">《隐私政策》</a>，并同意接收出鱼提醒通知</span>
+          </label>
+
+          <button class="login-btn" id="loginBtn" type="button">登 录</button>
+
+          <!-- 第三方登录 -->
+          <div class="alt" data-od-id="alt-login">
+            <div class="lbl">其他登录方式</div>
+            <div class="alt-btns">
+              <button class="alt-btn" type="button" aria-label="微信登录" title="微信登录">
+                <svg viewBox="0 0 24 24" fill="#2aae67"><path d="M9.3 4c-3.7 0-6.7 2.5-6.7 5.6 0 1.8 1 3.3 2.6 4.4l-.7 2.1 2.4-1.2c.7.2 1.5.3 2.3.3h.5c-.2-.5-.3-1.1-.3-1.6 0-3 2.9-5.4 6.5-5.4h.4C15.6 5.8 12.7 4 9.3 4zM7.1 8.3c-.5 0-.9-.4-.9-.9s.4-.9.9-.9.9.4.9.9-.4.9-.9.9zm4.6 0c-.5 0-.9-.4-.9-.9s.4-.9.9-.9.9.4.9.9-.4.9-.9.9z"/><path d="M22 13.5c0-2.6-2.6-4.7-5.7-4.7s-5.7 2.1-5.7 4.7 2.6 4.7 5.7 4.7c.7 0 1.3-.1 1.9-.3l2 1-.6-1.8c1.5-.9 2.4-2.2 2.4-3.6zm-7.6-.7c-.4 0-.8-.3-.8-.8s.3-.8.8-.8.8.3.8.8-.4.8-.8.8zm3.9 0c-.4 0-.8-.3-.8-.8s.3-.8.8-.8.8.3.8.8-.4.8-.8.8z"/></svg>
+              </button>
+              <button class="alt-btn" type="button" aria-label="通过 Apple 登录" title="通过 Apple 登录">
+                <svg viewBox="0 0 24 24" fill="#1a2420"><path d="M16.7 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.8-3.5.8-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.3 2.9 2.3 1.2 0 1.6-.7 3-.7 1.4 0 1.8.7 3 .7 1.2 0 2-1.1 2.8-2.2.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.8zM14.4 5.6c.6-.8 1.1-1.9 1-3-1 0-2.1.6-2.8 1.4-.6.7-1.2 1.8-1 2.9 1.1 0 2.1-.6 2.8-1.3z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 注册入口 -->
+          <p class="to-register">还没有账号？<a href="ios-register.html">创建渔路账号</a></p>
+        </main>
+
+        <!-- toast -->
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="toastText">已完成</span>
+        </div>
+
+        <div class="home-indicator" aria-hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var toast = document.getElementById('toast');
+      var toastText = document.getElementById('toastText');
+      var toastTimer = null;
+
+      function showToast(msg, warn) {
+        toastText.textContent = msg;
+        toast.classList.toggle('warn', !!warn);
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1800);
+      }
+
+      /* ---------- Tab 切换 ---------- */
+      var tabCode = document.getElementById('tabCode');
+      var tabPwd = document.getElementById('tabPwd');
+      var panelCode = document.getElementById('panelCode');
+      var panelPwd = document.getElementById('panelPwd');
+
+      function switchTab(toCode) {
+        tabCode.setAttribute('aria-selected', String(toCode));
+        tabPwd.setAttribute('aria-selected', String(!toCode));
+        panelCode.hidden = !toCode;
+        panelPwd.hidden = toCode;
+        /* 切换时清掉另一面板的报错 */
+        if (toCode) { hideErr(errPhonePwd); hideErr(errPwd); }
+        else { hideErr(errPhoneCode); hideErr(errSms); }
+      }
+      tabCode.addEventListener('click', function () { switchTab(true); });
+      tabPwd.addEventListener('click', function () { switchTab(false); });
+
+      /* ---------- 行内错误 ---------- */
+      function showErr(el, cause, remedy) {
+        el.querySelector('.cause').textContent = cause;
+        el.querySelector('.remedy').textContent = remedy;
+        el.classList.add('show');
+        var input = document.getElementById(el.dataset.for);
+        if (input) input.closest('.field').classList.add('invalid');
+      }
+      function hideErr(el) {
+        el.classList.remove('show');
+        var input = document.getElementById(el.dataset.for);
+        if (input) input.closest('.field').classList.remove('invalid');
+      }
+      var errPhoneCode = document.getElementById('errPhoneCode');
+      var errSms = document.getElementById('errSms');
+      var errPhonePwd = document.getElementById('errPhonePwd');
+      var errPwd = document.getElementById('errPwd');
+      errPhoneCode.dataset.for = 'phoneCode'; errSms.dataset.for = 'smsCode';
+      errPhonePwd.dataset.for = 'phonePwd'; errPwd.dataset.for = 'pwd';
+
+      var phoneCode = document.getElementById('phoneCode');
+      var smsCode = document.getElementById('smsCode');
+      var phonePwd = document.getElementById('phonePwd');
+      var pwd = document.getElementById('pwd');
+
+      function validPhone(v) { return /^1\d{10}$/.test(v); }
+
+      /* ---------- 失焦校验 ---------- */
+      phoneCode.addEventListener('blur', function () {
+        var v = phoneCode.value.trim();
+        if (v === '') showErr(errPhoneCode, '手机号未填写', '请输入 11 位大陆手机号再获取验证码');
+        else if (!validPhone(v)) showErr(errPhoneCode, '手机号格式不对', '应以 1 开头、共 11 位数字，请检查后重输');
+        else hideErr(errPhoneCode);
+      });
+      smsCode.addEventListener('blur', function () {
+        var v = smsCode.value.trim();
+        if (v === '') showErr(errSms, '验证码未填写', '请先获取验证码，并输入短信中的 6 位数字');
+        else if (!/^\d{6}$/.test(v)) showErr(errSms, '验证码是 6 位数字', '请核对短信中的验证码后重新输入');
+        else hideErr(errSms);
+      });
+      phonePwd.addEventListener('blur', function () {
+        var v = phonePwd.value.trim();
+        if (v === '') showErr(errPhonePwd, '手机号未填写', '请输入注册渔路时使用的手机号');
+        else if (!validPhone(v)) showErr(errPhonePwd, '手机号格式不对', '应以 1 开头、共 11 位数字，请检查后重输');
+        else hideErr(errPhonePwd);
+      });
+      pwd.addEventListener('blur', function () {
+        var v = pwd.value;
+        if (v === '') showErr(errPwd, '密码未填写', '请输入账号密码；忘记密码可联系客服重置');
+        else if (v.length < 6) showErr(errPwd, '密码至少 6 位', '请输入完整密码后重试');
+        else hideErr(errPwd);
+      });
+      /* 重新输入时撤销错误态 */
+      [ [phoneCode, errPhoneCode], [smsCode, errSms], [phonePwd, errPhonePwd], [pwd, errPwd] ].forEach(function (pair) {
+        pair[0].addEventListener('input', function () { hideErr(pair[1]); });
+      });
+
+      /* ---------- 获取验证码（60s 倒计时） ---------- */
+      var sendBtn = document.getElementById('sendBtn');
+      var cdTimer = null;
+      sendBtn.addEventListener('click', function () {
+        if (sendBtn.disabled) return;
+        var v = phoneCode.value.trim();
+        if (v === '') { showErr(errPhoneCode, '手机号未填写', '请输入 11 位大陆手机号再获取验证码'); phoneCode.focus(); return; }
+        if (!validPhone(v)) { showErr(errPhoneCode, '手机号格式不对', '应以 1 开头、共 11 位数字，请检查后重输'); phoneCode.focus(); return; }
+        hideErr(errPhoneCode);
+        var left = 60;
+        sendBtn.disabled = true;
+        sendBtn.textContent = left + 's 后重发';
+        showToast('验证码已发送至 ' + v.slice(0, 3) + '****' + v.slice(7));
+        smsCode.focus();
+        cdTimer = setInterval(function () {
+          left--;
+          if (left <= 0) {
+            clearInterval(cdTimer);
+            sendBtn.disabled = false;
+            sendBtn.textContent = '重新获取';
+          } else {
+            sendBtn.textContent = left + 's 后重发';
+          }
+        }, 1000);
+      });
+
+      /* ---------- 密码显示/隐藏 ---------- */
+      var eyeBtn = document.getElementById('eyeBtn');
+      eyeBtn.addEventListener('click', function () {
+        var show = pwd.type === 'password';
+        pwd.type = show ? 'text' : 'password';
+        eyeBtn.setAttribute('aria-label', show ? '隐藏密码' : '显示密码');
+        pwd.focus();
+      });
+
+      /* ---------- 协议 ---------- */
+      var agreeRow = document.getElementById('agreeRow');
+      var agreeChk = document.getElementById('agreeChk');
+      function nudgeAgree() {
+        agreeRow.classList.remove('agree-shake');
+        void agreeRow.offsetWidth;
+        agreeRow.classList.add('agree-shake');
+        showToast('请先勾选同意《用户协议》和《隐私政策》', true);
+      }
+
+      /* ---------- 登录 ---------- */
+      var loginBtn = document.getElementById('loginBtn');
+      var busy = false;
+      loginBtn.addEventListener('click', function () {
+        if (busy) return;
+        var firstBad = null;
+
+        if (!agreeChk.checked) { nudgeAgree(); return; }
+
+        if (!panelCode.hidden) {
+          var p = phoneCode.value.trim();
+          if (p === '') { showErr(errPhoneCode, '手机号未填写', '请输入 11 位大陆手机号再获取验证码'); firstBad = phoneCode; }
+          else if (!validPhone(p)) { showErr(errPhoneCode, '手机号格式不对', '应以 1 开头、共 11 位数字，请检查后重输'); firstBad = phoneCode; }
+          else {
+            var c = smsCode.value.trim();
+            if (c === '') { showErr(errSms, '验证码未填写', '请先获取验证码，并输入短信中的 6 位数字'); firstBad = smsCode; }
+            else if (!/^\d{6}$/.test(c)) { showErr(errSms, '验证码是 6 位数字', '请核对短信中的验证码后重新输入'); firstBad = smsCode; }
+          }
+        } else {
+          var p2 = phonePwd.value.trim();
+          if (p2 === '') { showErr(errPhonePwd, '手机号未填写', '请输入注册渔路时使用的手机号'); firstBad = phonePwd; }
+          else if (!validPhone(p2)) { showErr(errPhonePwd, '手机号格式不对', '应以 1 开头、共 11 位数字，请检查后重输'); firstBad = phonePwd; }
+          else {
+            var w = pwd.value;
+            if (w === '') { showErr(errPwd, '密码未填写', '请输入账号密码；忘记密码可联系客服重置'); firstBad = pwd; }
+            else if (w.length < 6) { showErr(errPwd, '密码至少 6 位', '请输入完整密码后重试'); firstBad = pwd; }
+          }
+        }
+
+        if (firstBad) { firstBad.focus(); return; }
+
+        busy = true;
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span class="spin" aria-hidden></span>登录中…';
+        setTimeout(function () {
+          showToast('欢迎回来，路亚阿杰');
+          setTimeout(function () { window.location.href = '../mobile-ios.html'; }, 900);
+        }, 1100);
+      });
+
+      /* ---------- 第三方登录（示意） ---------- */
+      document.querySelectorAll('.alt-btn').forEach(function (b) {
+        b.addEventListener('click', function () {
+          showToast('原型示意：' + b.getAttribute('title') + ' 暂未接入');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

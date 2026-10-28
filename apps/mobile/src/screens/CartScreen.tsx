@@ -6,6 +6,14 @@ import { useUIStore } from '../store/ui';
 import { useCartStore } from '../store/cart';
 import { mockMallProducts } from '../mock/data';
 
+/** 商品图标块（对照原型 ci-img）：按品类映射图标。 */
+function productIcon(p: { category: string; name: string }): React.ComponentProps<typeof Ionicons>['name'] {
+  if (p.category === '假饵' || p.name.includes('VIB') || p.name.includes('米诺')) return 'fish-outline';
+  if (p.category === '渔轮') return 'disc-outline';
+  if (p.name.includes('防晒衣')) return 'shirt-outline';
+  return 'color-filter-outline';
+}
+
 /**
  * 购物车页（对照 ios-cart.html）：勾选/数量/删除、结算栏（全选 + 合计 +
  * 去结算 N 件）、空态。下单成功后跳订单页并清掉已勾选商品。
@@ -83,6 +91,9 @@ export function CartScreen() {
                 <TouchableOpacity style={[styles.ck, it.selected && styles.ckOn]} onPress={() => toggle(it.id)} activeOpacity={0.7}>
                   {it.selected && <Ionicons name="checkmark" size={13} color="#fff" />}
                 </TouchableOpacity>
+                <View style={styles.ciImg}>
+                  <Ionicons name={productIcon(product)} size={24} color={colors.accent} />
+                </View>
                 <View style={styles.ciBody}>
                   <Text style={styles.ciName} numberOfLines={1}>{product.name}</Text>
                   <Text style={styles.ciSpec} numberOfLines={1}>{product.spec}</Text>
@@ -104,7 +115,7 @@ export function CartScreen() {
                     </View>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.delBtn} onPress={() => remove(it.id)} activeOpacity={0.7}>
+                <TouchableOpacity style={styles.delBtn} onPress={() => { remove(it.id); showToast(`已移除「${product.name}」`); }} activeOpacity={0.7}>
                   <Ionicons name="trash-outline" size={15} color={colors.danger} />
                 </TouchableOpacity>
               </View>
@@ -172,11 +183,15 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg,
   },
   ckOn: { backgroundColor: colors.accent, borderColor: colors.accent },
+  ciImg: {
+    width: 64, height: 64, borderRadius: 12, backgroundColor: colors.accentSoft,
+    alignItems: 'center', justifyContent: 'center',
+  },
   ciBody: { flex: 1, minWidth: 0 },
   ciName: { fontSize: 14, fontWeight: '500', color: colors.fg },
   ciSpec: { fontSize: 11, color: colors.muted, marginTop: 2 },
   ciFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 },
-  ciPrice: { fontFamily: 'Georgia', fontSize: 17, fontWeight: '700', color: colors.fg },
+  ciPrice: { fontFamily: 'Georgia', fontSize: 17, fontWeight: '700', color: colors.accent },
   qtyCtl: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, overflow: 'hidden' },
   qtyBtn: { width: 30, height: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   qtyBtnOff: { opacity: 0.4 },
@@ -194,7 +209,7 @@ const styles = StyleSheet.create({
   selAll: { fontSize: 13, color: colors.fg },
   totalWrap: { flex: 1, marginLeft: 6 },
   totalLine: { fontSize: 13, color: colors.muted },
-  totalPrice: { fontFamily: 'Georgia', fontSize: 20, fontWeight: '700', color: colors.fg },
+  totalPrice: { fontFamily: 'Georgia', fontSize: 20, fontWeight: '700', color: colors.accent },
   totalSub: { fontSize: 10, color: colors.muted, marginTop: 1 },
   checkoutBtn: {
     paddingHorizontal: 22, paddingVertical: 11, borderRadius: 999, backgroundColor: colors.accent,
