@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { usersApi } from '../api/endpoints';
+import { useSettingsStore } from '../store/settings';
 import { dispatchDeepLink, buildDeepLink } from '../utils/deeplink';
 
 /**
@@ -17,9 +18,15 @@ import { dispatchDeepLink, buildDeepLink } from '../utils/deeplink';
  */
 export function usePushNotifications(authenticated: boolean): void {
   const registered = useRef(false);
+  // All notification preferences off → the user wants no pushes at all, so
+  // skip permission request and token registration entirely.
+  const anyNotify =
+    useSettingsStore((s) => s.notifyFishWindow) ||
+    useSettingsStore((s) => s.notifyFollowUpdates) ||
+    useSettingsStore((s) => s.notifySystem);
 
   useEffect(() => {
-    if (!authenticated) {
+    if (!authenticated || !anyNotify) {
       registered.current = false;
       return;
     }
@@ -86,5 +93,5 @@ export function usePushNotifications(authenticated: boolean): void {
       mounted = false;
       if (cleanup) cleanup();
     };
-  }, [authenticated]);
+  }, [authenticated, anyNotify]);
 }

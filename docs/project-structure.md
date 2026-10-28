@@ -107,9 +107,11 @@ apps/mobile/
     │   └── endpoints.ts     # authApi/spotsApi/routesApi/tutorialsApi/feedsApi/
     │                        # weatherApi/uploadsApi/usersApi/commentsApi/favoritesApi/searchApi
     ├── store/
-    │   ├── auth.ts    # zustand 认证：login/register/logout/hydrate/refreshAccessToken
-    │   ├── ui.ts      # zustand overlay 状态（含 feedId/userId payload）
-    │   └── offline.ts # zustand persist + AsyncStorage 离线路线缓存
+    │   ├── auth.ts     # zustand 认证：login/register/logout/hydrate/refreshAccessToken
+    │   ├── ui.ts       # zustand overlay 状态（含 feedId/userId/productId 等载荷）
+    │   ├── settings.ts # zustand persist 应用设置（通知三开关、仅 Wi-Fi 下载）
+    │   ├── cart.ts     # zustand persist 本地购物车（商城未接后端）
+    │   └── offline.ts  # zustand persist + AsyncStorage 离线路线缓存
     ├── hooks/
     │   └── queries.ts # React Query 查询 + mutation hooks（USE_MOCK 分支 + 乐观更新）
     ├── components/
@@ -131,6 +133,15 @@ apps/mobile/
     │   ├── UserScreen.tsx       # 用户主页 + 关注 + 其动态
     │   ├── FavoritesScreen.tsx  # 我的收藏（钓点/动态）
     │   ├── SearchScreen.tsx     # 全局搜索 overlay（防抖 + 钓点/路线/教程分组）
+    │   ├── SettingsScreen.tsx   # 设置（对照 ios-settings：账号安全/通知/偏好/关于/退出）
+    │   ├── ProductDetailScreen.tsx # 商品详情（规格/数量/参数/评价 + 加购/立即购买）
+    │   ├── CartScreen.tsx       # 购物车（勾选/数量/结算栏 → 订单页）
+    │   ├── OrdersScreen.tsx     # 我的订单（状态 Tab + 去支付/确认收货 + 地址入口）
+    │   ├── AddressScreen.tsx    # 收货地址管理（增删改/设默认）
+    │   ├── MessagesScreen.tsx   # 消息中心（四分类角标筛选 + 全部已读）
+    │   ├── MessageDetailScreen.tsx # 消息详情（出鱼提醒加强版 + 导航前往）
+    │   ├── TipsListScreen.tsx   # 我的技巧分享列表（分类筛选/热门徽标）
+    │   ├── ArticleDetailScreen.tsx # 精选文章详情（正文块渲染 + 相关课程）
     │   └── OfflineRoutesScreen.tsx # 离线路线列表 + 删除
     └── mock/
         └── data.ts    # Mock 数据（USE_MOCK=true 时作为数据源）

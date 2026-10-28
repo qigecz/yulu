@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, Image, ScrollView, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize, radius } from '@yulu/ui';
 import { formatRelativeTime } from '@yulu/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Feed, PostComment } from '@yulu/shared';
-import { useFeedComments, useAddComment, useToggleFeedLike, useToggleFavorite } from '../hooks/queries';
+import { useFeedComments, useAddComment, useToggleFeedLike, useToggleFavorite, useToggleFollow } from '../hooks/queries';
 import { useUIStore } from '../store/ui';
 import { USE_MOCK } from '../config';
 import { mockPostComments } from '../mock/data';
@@ -39,6 +39,7 @@ export function FeedDetailScreen() {
   const addComment = useAddComment();
   const toggleLike = useToggleFeedLike();
   const toggleFavorite = useToggleFavorite();
+  const toggleFollow = useToggleFollow();
   const [draft, setDraft] = useState('');
   const [followed, setFollowed] = useState(false);
   const [commentLikes, setCommentLikes] = useState<Record<string, boolean>>({});
@@ -126,7 +127,11 @@ export function FeedDetailScreen() {
           </View>
           <TouchableOpacity
             style={[styles.auFollow, followed && styles.auFollowOn]}
-            onPress={() => setFollowed((v) => !v)}
+            onPress={() => {
+              if (!feed?.user?.id) return;
+              setFollowed((v) => !v);
+              toggleFollow.mutate({ id: feed.user.id, following: followed });
+            }}
             activeOpacity={0.7}
           >
             <Text style={[styles.auFollowT, followed && styles.auFollowTOn]}>{followed ? '已关注' : '+ 关注'}</Text>
@@ -239,10 +244,18 @@ export function FeedDetailScreen() {
             >
               <Ionicons name={feed.favorited ? 'star' : 'star-outline'} size={18} color={feed.favorited ? colors.accent : colors.muted} />
               <Text style={[styles.actionNum, feed.favorited && { color: colors.accent }]}>
-                {89 + (feed.favorited ? 1 : 0)}
+                {(feed.favoritesCount ?? 89) + (feed.favorited ? 1 : 0)}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionItem} onPress={() => {}} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={() =>
+                void Share.share({
+                  message: `${feed.user?.nickname ?? '钓友'}的动态：「${(feed.content ?? '').slice(0, 40)}…」 — 来自渔路 YULU（链接：yulu://feed/${feed.id}）`,
+                }).catch(() => {})
+              }
+              activeOpacity={0.7}
+            >
               <Ionicons name="share-social-outline" size={18} color={colors.muted} />
               <Text style={styles.actionNum}>{feed.sharesCount ?? 12}</Text>
             </TouchableOpacity>

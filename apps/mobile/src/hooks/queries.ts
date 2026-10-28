@@ -284,7 +284,7 @@ export function useToggleFavorite() {
     onMutate: ({ type, id, favorited }) => {
       const next = !favorited;
       if (type === 'feed') patchFeedInCache(qc, id, { favorited: next });
-      else patchSpotInCache(qc, id, { favorited: next });
+      else if (type === 'spot') patchSpotInCache(qc, id, { favorited: next });
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['favorites'] });
@@ -453,6 +453,59 @@ export function useDownloadRoute() {
       }
       useOfflineStore.getState().downloadRoute(route);
       return route;
+    },
+  });
+}
+
+/** 发布面板「分享路线」：real 模式 POST /routes 后刷新列表；mock 模式本地合成。 */
+export function useCreateRoute() {
+  const qc = useQueryClient();
+  return useMutation<Route, Error, { name: string; description: string; tags: string[] }>({
+    mutationFn: async (input) => {
+      if (USE_MOCK) {
+        return {
+          id: `local-r-${Date.now()}`,
+          name: input.name,
+          description: input.description,
+          tags: input.tags,
+          uploaderId: 'me',
+          downloadsCount: 0,
+          likesCount: 0,
+          featured: false,
+          spots: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      return routesApi.create(input);
+    },
+    onSettled: () => {
+      if (!USE_MOCK) qc.invalidateQueries({ queryKey: ['routes'] });
+    },
+  });
+}
+
+/** 发布面板「技巧分享」：real 模式 POST /tutorials 后刷新列表；mock 模式本地合成。 */
+export function useCreateTutorial() {
+  const qc = useQueryClient();
+  return useMutation<Tutorial, Error, { title: string; content: string; category: string }>({
+    mutationFn: async (input) => {
+      if (USE_MOCK) {
+        return {
+          id: `local-t-${Date.now()}`,
+          title: input.title,
+          category: input.category,
+          author: undefined,
+          viewsCount: 0,
+          likesCount: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } as Tutorial;
+      }
+      return tutorialsApi.create(input);
+    },
+    onSettled: () => {
+      if (!USE_MOCK) qc.invalidateQueries({ queryKey: ['tutorials'] });
     },
   });
 }

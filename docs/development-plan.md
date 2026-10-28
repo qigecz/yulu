@@ -36,6 +36,15 @@
 - ✅ **iOS Widget 骨架**（`apps/mobile/ios-widget/`，Swift/WidgetKit）：Medium+Small 两尺寸、读 weather/附近钓点、`widgetURL` 深链；对照 `widget-ios.html`。**待 Mac/Xcode 编译验证**（见该目录 README）
 - ⬜ TestFlight/上架 — 发布流程，需 Apple 开发者账号 + Xcode + App Store Connect
 
+### ✅ Phase 5：对照原型补全（2026-10-28）
+- ✅ **设置页**（对照 ios-settings.html）：通知三开关/仅 Wi-Fi 下载持久化（settings store，推送注册联动）、清除离线缓存、检查更新、退出登录；修改密码（后端 `POST /auth/change-password` + 表单弹层）、账号注销（后端 `DELETE /users/me` 手动清理子表 + 确认流程）；用户协议/隐私政策复用文章详情页（模板草案文案）。
+- ✅ **原型空缺页 8 个**（对照 10-28 新原型）：商品详情、购物车（持久化 cart store）、订单（去支付/确认收货/状态 Tab）、收货地址（增删改/默认）、消息中心（四分类角标/全部已读）、消息详情（出鱼提醒加强版+导航前往）、我的技巧列表、文章详情（含协议/隐私）。
+- ✅ **坑点页真地图**：SpotsScreen 弃用 View 拼绘地形图，接 SpotsMap（高德街道瓦片）：真实坐标出鱼率气泡 pin（热门红/选中高亮）、真实路线折线叠加（可开关）、缩放/定位按钮驱动真相机、用户定位点。
+- ✅ **发布面板全栈**：后端 `POST /routes`、`POST /tutorials`（article 型直接发布，自动算阅读时长）；PublishSheet real 模式走 API + 列表失效刷新，mock 模式本地合成。
+- ✅ **动态详情修正**：关注按钮接 follow API；分享调系统面板带 `yulu://feed/:id` 深链；收藏数改用 `feed.favoritesCount`（shared 类型补字段）。
+- ✅ **视频真实播放**：接入 `expo-av`（~14.0.7），VideoPlayerOverlay 有 `url` 时真实播放（倍速/暂停/续播联动），旧 dev client 无该原生模块时动态导入失败自动回退模拟播放；mock t1 挂 w3.org 示例视频源验证链路。
+- ⚠ 依赖：node_modules 因项目目录迁移需 `pnpm install` 重链（已完成，hoisted 布局保留）。
+
 > 详细集成设计见 `docs/mobile-api-integration.md`。
 
 ---

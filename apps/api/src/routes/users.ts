@@ -44,6 +44,28 @@ router.patch('/me', authMiddleware, validate(updateProfileSchema), async (req: A
 });
 
 /** User profile with personalized follow state and following count. */
+/**
+ * Delete my account (设置 → 账号注销). Most FKs lack ON DELETE CASCADE, so
+ * dependent rows are removed explicitly, in child→parent order.
+ */
+router.delete('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
+  const uid = req.userId;
+  await query(`DELETE FROM comments WHERE user_id = $1 OR (target_type = 'feed' AND target_id IN (SELECT id FROM feeds WHERE user_id = $1))`, [uid]);
+  await query(`DELETE FROM favorites WHERE user_id = $1 OR (target_type = 'spot' AND target_id IN (SELECT id FROM spots WHERE uploader_id = $1))`, [uid]);
+  await query(`DELETE FROM spot_likes WHERE user_id = $1 OR spot_id IN (SELECT id FROM spots WHERE uploader_id = $1)`, [uid]);
+  await query(`DELETE FROM route_downloads WHERE user_id = $1`, [uid]);
+  await query(`DELETE FROM route_spots WHERE route_id IN (SELECT id FROM routes WHERE uploader_id = $1)`, [uid]);
+  await query(`DELETE FROM push_tokens WHERE user_id = $1`, [uid]);
+  await query(`DELETE FROM route_spots WHERE spot_id IN (SELECT id FROM spots WHERE uploader_id = $1)`, [uid]);
+  await query(`DELETE FROM feeds WHERE user_id = $1`, [uid]);
+  await query(`DELETE FROM tutorials WHERE author_id = $1`, [uid]);
+  await query(`DELETE FROM routes WHERE uploader_id = $1`, [uid]);
+  await query(`DELETE FROM spots WHERE uploader_id = $1`, [uid]);
+  await query(`DELETE FROM follows WHERE follower_id = $1 OR following_id = $1`, [uid]);
+  await query(`DELETE FROM users WHERE id = $1`, [uid]);
+  res.json({ ok: true });
+});
+
 router.get('/:id', optionalAuth, async (req: AuthRequest, res: Response) => {
   const result = await query(
     `SELECT u.id, u.nickname, u.avatar_url, u.bio, u.location,

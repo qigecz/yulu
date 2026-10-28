@@ -30,6 +30,10 @@ export const authApi = {
     const { data } = await apiClient.post<{ accessToken: string }>('/auth/refresh', { refreshToken });
     return data;
   },
+  /** 设置 → 修改密码。 */
+  changePassword: async (oldPassword: string, newPassword: string) => {
+    await apiClient.post('/auth/change-password', { oldPassword, newPassword });
+  },
 };
 
 export interface NearbySpotsParams {
@@ -84,12 +88,22 @@ export const routesApi = {
   download: async (id: string) => {
     await apiClient.post(`/routes/${id}/download`);
   },
+  /** 发布面板「分享路线」。 */
+  create: async (input: { name: string; description?: string; tags?: string[] }) => {
+    const { data } = await apiClient.post<Row>('/routes', input);
+    return toRoute(data as any);
+  },
 };
 
 export const tutorialsApi = {
   list: async (params: { type?: string; category?: string } = {}) => {
     const { data } = await apiClient.get<{ data: Row[] }>('/tutorials', { params });
     return data.data.map(toTutorial);
+  },
+  /** 发布面板「技巧分享」（article 型直接发布）。 */
+  create: async (input: { title: string; content: string; category?: string }) => {
+    const { data } = await apiClient.post<Row>('/tutorials', input);
+    return toTutorial(data as any);
   },
 };
 
@@ -115,7 +129,8 @@ export const feedsApi = {
   },
 };
 
-export type FavoriteType = 'spot' | 'feed';
+/** 后端支持 spot/feed/route 的收藏增删；route 的收藏列表暂未提供。 */
+export type FavoriteType = 'spot' | 'feed' | 'route';
 
 export const favoritesApi = {
   add: async (targetType: FavoriteType, targetId: string) => {
@@ -180,6 +195,10 @@ export const usersApi = {
   /** Register the device's Expo push token so the server can send pushes. */
   registerPushToken: async (token: string, platform: 'ios' | 'android' | 'web') => {
     await apiClient.post('/users/push-token', { token, platform });
+  },
+  /** 设置 → 账号注销（后端清理全部关联数据）。 */
+  deleteAccount: async () => {
+    await apiClient.delete('/users/me');
   },
 };
 

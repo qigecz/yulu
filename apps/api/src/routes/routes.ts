@@ -34,6 +34,23 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
   res.json({ ...routeRes.rows[0], spots: spotsRes.rows });
 });
 
+/** Create a route (发布面板「分享路线」). Body: { name, description?, tags? } */
+router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
+  const { name, description, tags } = req.body as {
+    name?: string; description?: string; tags?: string[];
+  };
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
+    return res.status(400).json({ error: '路线名称至少 2 个字' });
+  }
+  const result = await query(
+    `INSERT INTO routes (name, description, tags, uploader_id)
+     VALUES ($1, $2, $3, $4)
+     RETURNING *`,
+    [name.trim(), description?.trim() || null, tags?.length ? tags : '{}', req.userId]
+  );
+  res.status(201).json(result.rows[0]);
+});
+
 router.post('/:id/download', authMiddleware, async (req: AuthRequest, res: Response) => {
   await query(
     `INSERT INTO route_downloads (user_id, route_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,

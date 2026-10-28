@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@yulu/ui';
@@ -11,6 +11,8 @@ interface Props {
   duration: string;
   /** 起播秒数（继续学习从上次进度恢复）。 */
   startSeconds?: number;
+  /** 真实视频源（如教程 videoUrl）；有源且 expo-av 可用时走真实播放，否则模拟。 */
+  url?: string;
   onClose: () => void;
 }
 
@@ -29,15 +31,31 @@ function fmt(sec: number): string {
 
 /**
  * 教程视频播放浮层（对照 ios-learn.html 的 player overlay）。
- * 当前为模拟播放：进度按倍速推进，真实播放器接入 react-native-video 后替换 stage。
+ * 有 url 时用 expo-av 真实播放（进度/倍速/暂停联动）；expo-av 动态导入——
+ * 旧 dev client 没带该原生模块时静默回退到模拟播放（按倍速推进的进度条）。
  */
-export function VideoPlayerOverlay({ visible, title, sub, duration, startSeconds = 0, onClose }: Props) {
+export function VideoPlayerOverlay({ visible, title, sub, duration, startSeconds = 0, url, onClose }: Props) {
   const total = Math.max(1, parseDuration(duration));
   const [cur, setCur] = useState(Math.min(startSeconds, total));
   const [playing, setPlaying] = useState(true);
   const [rateIdx, setRateIdx] = useState(0);
   const [saved, setSaved] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
+
+  // expo-av 按需加载（一次性）；加载失败（旧构建无原生模块）保持 null 走模拟。
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [AV, setAV] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const videoRef = useRef<any>(null);
+  const avFailed = useRef(false);
+  useEffect(() => {
+    if (!visible || !url || AV || avFailed.current) return;
+    import('expo-av')
+      .then(setAV)
+      .catch(() => { avFailed.current = true; });
+  }, [visible, url, AV]);
+  const realVideo = !!(url && AV);
+  const videoRate = parseFloat(RATES[rateIdx]);
 
   // 打开时恢复到指定进度并自动播放。
   useEffect(() => {
@@ -48,9 +66,9 @@ export function VideoPlayerOverlay({ visible, title, sub, duration, startSeconds
     }
   }, [visible, startSeconds, total]);
 
-  // 模拟播放：按倍速每 500ms 推进，到片尾自动暂停。
+  // 模拟播放：按倍速每 500ms 推进，到片尾自动暂停（真实播放由 onPlaybackStatusUpdate 驱动）。
   useEffect(() => {
-    if (!visible || !playing) return;
+    if (!visible || !playing || realVideo) return;
     const rate = parseFloat(RATES[rateIdx]);
     const timer = setInterval(() => {
       setCur((c) => {
@@ -60,7 +78,7 @@ export function VideoPlayerOverlay({ visible, title, sub, duration, startSeconds
       });
     }, 500);
     return () => clearInterval(timer);
-  }, [visible, playing, rateIdx, total]);
+  }, [visible, playing, rateIdx, total, realVideo]);
 
   const progress = Math.min(1, cur / total);
 
@@ -78,11 +96,33 @@ export function VideoPlayerOverlay({ visible, title, sub, duration, startSeconds
           </TouchableOpacity>
         </View>
 
-        {/* 播放舞台（模拟画面） */}
+        {/* 播放舞台：真实视频或模拟画面 */}
         <View style={styles.stage}>
           <View style={styles.stageBadge}>
-            <Text style={styles.stageBadgeText}>高清 · 1080P</Text>
+            <Text style={styles.stageBadgeText}>{realVideo ? '高清 · 在线播放' : '高清 · 1080P'}</Text>
           </View>
+          {realVideo ? (
+            <AV.Video
+              source={{ uri: url }}
+              rate={videoRate}
+              volume={1.0}
+              resizeMode="contain"
+              shouldPlay={playing}
+              useNativeControls={false}
+              onLoad={(status: any) => {
+                if (status.durationMillis) {
+                  // 真实时长到位后跳到恢复进度。
+                  void videoRef.current?.setPositionAsync(Math.min(startSeconds * 1000, status.durationMillis - 200));
+                }
+              }}
+              onPlaybackStatusUpdate={(status: any) => {
+                if (status.positionMillis != null) setCur(status.positionMillis / 1000);
+                if (status.didJustFinish) setPlaying(false);
+              }}
+              ref={videoRef}
+              style={styles.video}
+            />
+          ) : null}
           <TouchableOpacity style={styles.stateIcon} onPress={() => setPlaying((p) => !p)} activeOpacity={0.8}>
             <Ionicons name={playing ? 'pause' : 'play'} size={24} color="#fff" />
           </TouchableOpacity>
@@ -142,6 +182,7 @@ const styles = StyleSheet.create({
     flex: 1, marginHorizontal: 16, borderRadius: 14, overflow: 'hidden',
     backgroundColor: '#1d3b33', alignItems: 'center', justifyContent: 'center',
   },
+  video: { ...StyleSheet.absoluteFillObject },
   stageBadge: {
     position: 'absolute', left: 10, top: 10,
     backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999,

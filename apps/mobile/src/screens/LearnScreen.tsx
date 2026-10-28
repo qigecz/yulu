@@ -35,11 +35,11 @@ const articles = [
 
 type FlatTutorial = {
   id: string; title: string; authorName: string; views: number;
-  duration: string; time: string; cat: string;
+  duration: string; time: string; cat: string; url?: string;
 };
 
-/** 播放浮层的参数（模拟播放，接真实视频源后加 url 字段）。 */
-type PlayerTarget = { title: string; sub: string; duration: string; start: number };
+/** 播放浮层的参数（有 url 走 expo-av 真实播放，无 url 模拟播放）。 */
+type PlayerTarget = { title: string; sub: string; duration: string; start: number; url?: string };
 
 // 「继续学习」模拟进度： featured 课程 18:42，上次看到 07:20。
 const RESUME_START = 440;
@@ -50,6 +50,7 @@ export function LearnScreen() {
   const [player, setPlayer] = useState<PlayerTarget | null>(null);
   const tutorials = useTutorials();
   const openSearch = useUIStore((s) => s.openSearch);
+  const openArticleDetail = useUIStore((s) => s.openArticleDetail);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -61,6 +62,7 @@ export function LearnScreen() {
   const fromData: FlatTutorial[] = (tutorials.data?.slice(1) ?? []).map((t) => ({
     id: t.id, title: t.title, authorName: t.author?.nickname || '',
     views: t.viewsCount, duration: t.duration || '', time: '1周前', cat: t.category ?? '路亚',
+    url: t.videoUrl,
   }));
   const list: FlatTutorial[] = [...fromData, ...extraTutorials];
   const filtered = useMemo(
@@ -68,12 +70,13 @@ export function LearnScreen() {
     [activeCategory, list],
   );
 
-  const openLesson = (lesson: { title: string; authorName: string; cat: string; views: number; duration: string }, start = 0) => {
+  const openLesson = (lesson: { title: string; authorName: string; cat: string; views: number; duration: string; url?: string }, start = 0) => {
     setPlayer({
       title: lesson.title,
       sub: `${lesson.authorName} · ${lesson.cat} · ${formatViewCount(lesson.views)} 次观看`,
       duration: lesson.duration,
       start,
+      url: lesson.url,
     });
   };
 
@@ -128,7 +131,7 @@ export function LearnScreen() {
             style={[styles.resumeCard, styles.mx]}
             activeOpacity={0.8}
             onPress={() => openLesson(
-              { title: featured.title, authorName: featured.author?.nickname || '', cat: featured.category ?? '路亚', views: featured.viewsCount, duration: featured.duration || '' },
+              { title: featured.title, authorName: featured.author?.nickname || '', cat: featured.category ?? '路亚', views: featured.viewsCount, duration: featured.duration || '', url: featured.videoUrl },
               RESUME_START,
             )}
           >
@@ -233,12 +236,12 @@ export function LearnScreen() {
         <SectionHeader title="精选文章" actionLabel="更多 →" />
         <View style={{ height: 10 }} />
         {articles.map((art) => (
-          <View key={art.id} style={[styles.articleCard, styles.mx]}>
+          <TouchableOpacity key={art.id} style={[styles.articleCard, styles.mx]} activeOpacity={0.75} onPress={() => openArticleDetail(art.id)}>
             <Text style={styles.articleEyebrow}>{art.eyebrow}</Text>
             <Text style={styles.articleTitle}>{art.title}</Text>
             <Text style={styles.articleExcerpt} numberOfLines={2}>{art.excerpt}</Text>
             <Text style={styles.articleMeta}>{art.meta}</Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
 
@@ -251,6 +254,7 @@ export function LearnScreen() {
         sub={player?.sub ?? ''}
         duration={player?.duration ?? '00:00'}
         startSeconds={player?.start ?? 0}
+        url={player?.url}
         onClose={() => setPlayer(null)}
       />
     </ScrollView>

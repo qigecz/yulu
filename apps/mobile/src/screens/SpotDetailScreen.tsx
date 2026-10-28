@@ -4,10 +4,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize, radius } from '@yulu/ui';
-import type { Spot, SpotReview } from '@yulu/shared';
+import type { Spot, SpotReview, Route } from '@yulu/shared';
 import { formatDistance, formatRelativeTime } from '@yulu/shared';
 import { useUIStore } from '../store/ui';
 import { useToggleFavorite } from '../hooks/queries';
+import { useOfflineStore } from '../store/offline';
 import { USE_MOCK } from '../config';
 import { mockFeeds, mockSpotReviews } from '../mock/data';
 
@@ -42,12 +43,42 @@ interface Props {
 
 export function SpotDetailScreen({ spot }: Props) {
   const [tab, setTab] = useState<DetailTab>('detail');
-  const [chipOn, setChipOn] = useState({ fav: false, remind: false, report: false });
+  const [chipOn, setChipOn] = useState({ fav: false, remind: false, report: false, offline: false });
   const close = useUIStore((s) => s.closeOverlay);
   const openNavigation = useUIStore((s) => s.openNavigation);
   const openFeedDetail = useUIStore((s) => s.openFeedDetail);
   const toggleFavorite = useToggleFavorite();
+  const downloadRoute = useOfflineStore((s) => s.downloadRoute);
+  const hasOfflineRoute = useOfflineStore((s) => s.has);
   const scrollRef = useMemo(() => React.createRef<ScrollView>(), []);
+
+  // 以该坑点为唯一航点合成一条“路线”，复用离线库与应用内导航（NavigationScreen
+  // 优先从离线库解析路线，因此存入后 yulu://nav 直接可用）。
+  const spotRouteId = `spot-${spot.id}`;
+  const buildSpotRoute = (): Route => ({
+    id: spotRouteId,
+    name: spot.name,
+    description: spot.description,
+    tags: spot.fishSpecies,
+    uploaderId: spot.uploaderId ?? '',
+    downloadsCount: 0,
+    likesCount: spot.likesCount ?? 0,
+    featured: false,
+    spots: [{ spot, sortOrder: 1, distance: 0 }],
+    createdAt: spot.createdAt,
+    updatedAt: spot.updatedAt,
+  });
+  const spotOfflineReady = chipOn.offline || hasOfflineRoute(spotRouteId);
+
+  const onOfflineSave = () => {
+    downloadRoute(buildSpotRoute());
+    setChipOn((s) => ({ ...s, offline: true }));
+  };
+
+  const onNavigateHere = () => {
+    downloadRoute(buildSpotRoute());
+    openNavigation(spotRouteId);
+  };
 
   const reviews = useMemo(
     () => (USE_MOCK ? mockSpotReviews.filter((r) => r.spotId === spot.id) : []),
@@ -360,11 +391,11 @@ export function SpotDetailScreen({ spot }: Props) {
           <Ionicons name={chipOn.fav ? 'star' : 'star-outline'} size={22} color={chipOn.fav ? colors.accent : colors.muted} />
           <Text style={[styles.actIconT, chipOn.fav && { color: colors.accent }]}>收藏</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actIcon} onPress={close} activeOpacity={0.7}>
-          <Ionicons name="layers-outline" size={22} color={colors.muted} />
-          <Text style={styles.actIconT}>离线</Text>
+        <TouchableOpacity style={styles.actIcon} onPress={onOfflineSave} activeOpacity={0.7}>
+          <Ionicons name={spotOfflineReady ? 'layers' : 'layers-outline'} size={22} color={spotOfflineReady ? colors.accent : colors.muted} />
+          <Text style={[styles.actIconT, spotOfflineReady && { color: colors.accent }]}>离线</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cta} onPress={close} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.cta} onPress={onNavigateHere} activeOpacity={0.85}>
           <Ionicons name="compass-outline" size={17} color="#fff" />
           <Text style={styles.ctaT}>导航到此</Text>
         </TouchableOpacity>

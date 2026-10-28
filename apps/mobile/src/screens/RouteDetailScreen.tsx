@@ -1,11 +1,11 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius } from '@yulu/ui';
 import type { Route, RouteReview } from '@yulu/shared';
 import { formatRelativeTime } from '@yulu/shared';
 import { useUIStore } from '../store/ui';
-import { useDownloadRoute } from '../hooks/queries';
+import { useDownloadRoute, useToggleFavorite } from '../hooks/queries';
 import { useOfflineStore } from '../store/offline';
 import { USE_MOCK } from '../config';
 import { mockRouteReviews } from '../mock/data';
@@ -103,12 +103,25 @@ interface Props {
 export function RouteDetailScreen({ route }: Props) {
   const [tab, setTab] = useState<DetailTab>('overview');
   const [followed, setFollowed] = useState(false);
+  const [favorited, setFavorited] = useState(false);
   const close = useUIStore((s) => s.closeOverlay);
   const openUser = useUIStore((s) => s.openUser);
   const openNavigation = useUIStore((s) => s.openNavigation);
   const download = useDownloadRoute();
+  const toggleFavorite = useToggleFavorite();
   const alreadyDownloaded = useOfflineStore((s) => s.has(route.id));
   const scrollRef = useRef<ScrollView>(null);
+
+  const onToggleFav = () => {
+    setFavorited((v) => !v);
+    toggleFavorite.mutate({ type: 'route', id: route.id, favorited });
+  };
+
+  const onShare = () => {
+    void Share.share({
+      message: `「${route.name}」${route.region ? ` · ${route.region}` : ''} — 好钓点路线分享自渔路 YULU（链接：yulu://route/${route.id}）`,
+    }).catch(() => {});
+  };
 
   const reviews = useMemo(
     () => (USE_MOCK ? mockRouteReviews.filter((r) => r.routeId === route.id) : []),
@@ -156,10 +169,10 @@ export function RouteDetailScreen({ route }: Props) {
               <Ionicons name="chevron-back" size={20} color={colors.fg} />
             </TouchableOpacity>
             <View style={styles.navGroup}>
-              <TouchableOpacity style={styles.floatBtn} onPress={close} activeOpacity={0.8}>
-                <Ionicons name="star-outline" size={17} color={colors.fg} />
+              <TouchableOpacity style={styles.floatBtn} onPress={onToggleFav} activeOpacity={0.8}>
+                <Ionicons name={favorited ? 'star' : 'star-outline'} size={17} color={favorited ? colors.accent : colors.fg} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.floatBtn} onPress={close} activeOpacity={0.8}>
+              <TouchableOpacity style={styles.floatBtn} onPress={onShare} activeOpacity={0.8}>
                 <Ionicons name="share-social-outline" size={16} color={colors.fg} />
               </TouchableOpacity>
             </View>
@@ -397,9 +410,9 @@ export function RouteDetailScreen({ route }: Props) {
 
       {/* ══ Bottom action bar ══ */}
       <View style={styles.actionbar}>
-        <TouchableOpacity style={styles.actIcon} onPress={close} activeOpacity={0.7}>
-          <Ionicons name="star-outline" size={22} color={colors.muted} />
-          <Text style={styles.actIconT}>收藏</Text>
+        <TouchableOpacity style={styles.actIcon} onPress={onToggleFav} activeOpacity={0.7}>
+          <Ionicons name={favorited ? 'star' : 'star-outline'} size={22} color={favorited ? colors.accent : colors.muted} />
+          <Text style={[styles.actIconT, favorited && { color: colors.accent }]}>收藏</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actIcon} onPress={() => openNavigation(route.id)} activeOpacity={0.7}>
           <Ionicons name="map-outline" size={22} color={colors.muted} />

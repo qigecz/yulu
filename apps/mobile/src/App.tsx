@@ -19,6 +19,7 @@ import { NavigationScreen } from './screens/NavigationScreen';
 import { LearnScreen } from './screens/LearnScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { ProfileEditScreen } from './screens/ProfileEditScreen';
+import { SettingsScreen } from './screens/SettingsScreen';
 import { CreateSpotScreen } from './screens/CreateSpotScreen';
 import { ComposeFeedScreen } from './screens/ComposeFeedScreen';
 import { FavoritesScreen } from './screens/FavoritesScreen';
@@ -32,6 +33,15 @@ import { FeedListScreen } from './screens/FeedListScreen';
 import { MallScreen } from './screens/MallScreen';
 import { SearchScreen } from './screens/SearchScreen';
 import { OfflineRoutesScreen } from './screens/OfflineRoutesScreen';
+import { ProductDetailScreen } from './screens/ProductDetailScreen';
+import { CartScreen } from './screens/CartScreen';
+import { OrdersScreen } from './screens/OrdersScreen';
+import { AddressScreen } from './screens/AddressScreen';
+import { MessagesScreen } from './screens/MessagesScreen';
+import { MessageDetailScreen } from './screens/MessageDetailScreen';
+import { TipsListScreen } from './screens/TipsListScreen';
+import { ArticleDetailScreen } from './screens/ArticleDetailScreen';
+import { mockMallProducts, mockMessages, mockArticles } from './mock/data';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const queryClient = new QueryClient({
@@ -144,6 +154,9 @@ function AppInner() {
         <RouteListLayer />
         <FeedListLayer />
         <MallLayer />
+        <ProductDetailLayer />
+        <MessageDetailLayer />
+        <ArticleDetailLayer />
         <Overlay />
       </View>
     </QueryClientProvider>
@@ -157,6 +170,48 @@ function MallLayer() {
   return (
     <View style={styles.spotDetailLayer}>
       <MallScreen />
+    </View>
+  );
+}
+
+/** Full-screen product detail (from mall product cards). */
+function ProductDetailLayer() {
+  const overlay = useUIStore((s) => s.overlay);
+  const productId = useUIStore((s) => s.productId);
+  if (overlay !== 'product-detail' || !productId) return null;
+  const product = mockMallProducts.find((p) => p.id === productId);
+  if (!product) return null;
+  return (
+    <View style={styles.spotDetailLayer}>
+      <ProductDetailScreen product={product} />
+    </View>
+  );
+}
+
+/** Full-screen message detail (from the messages list). */
+function MessageDetailLayer() {
+  const overlay = useUIStore((s) => s.overlay);
+  const messageId = useUIStore((s) => s.messageId);
+  if (overlay !== 'message-detail' || messageId == null) return null;
+  const message = mockMessages.find((m) => m.id === messageId);
+  if (!message) return null;
+  return (
+    <View style={styles.spotDetailLayer}>
+      <MessageDetailScreen message={message} />
+    </View>
+  );
+}
+
+/** Full-screen article detail (from learn-page article cards). */
+function ArticleDetailLayer() {
+  const overlay = useUIStore((s) => s.overlay);
+  const articleId = useUIStore((s) => s.articleId);
+  if (overlay !== 'article-detail' || !articleId) return null;
+  const article = mockArticles.find((a) => a.id === articleId);
+  if (!article) return null;
+  return (
+    <View style={styles.spotDetailLayer}>
+      <ArticleDetailScreen article={article} />
     </View>
   );
 }
@@ -252,6 +307,18 @@ function Overlay() {
         <UserScreen />
       ) : overlay === 'profile-edit' ? (
         <ProfileEditScreen />
+      ) : overlay === 'settings' ? (
+        <SettingsScreen />
+      ) : overlay === 'cart' ? (
+        <CartScreen />
+      ) : overlay === 'orders' ? (
+        <OrdersScreen />
+      ) : overlay === 'address' ? (
+        <AddressScreen />
+      ) : overlay === 'messages' ? (
+        <MessagesScreen />
+      ) : overlay === 'tips-list' ? (
+        <TipsListScreen />
       ) : null}
     </View>
   );

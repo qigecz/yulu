@@ -28,6 +28,8 @@ export interface Feed {
   /** Comment/share counts for the action row. */
   commentsCount?: number;
   sharesCount?: number;
+  /** Total favorites (action row); falls back to a display default. */
+  favoritesCount?: number;
   /* ── list-page fields (feed-list screen) ── */
   /** Content category for the feed list filter. */
   category?: '爆护' | '坑点报告' | '技巧分享';

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius } from '@yulu/ui';
 import type { Spot } from '@yulu/shared';
@@ -7,6 +7,7 @@ import { formatDistance } from '@yulu/shared';
 import { useNearbySpots, useWeather, useRoutes } from '../hooks/queries';
 import { useLocation } from '../hooks/useLocation';
 import { useUIStore } from '../store/ui';
+import { SpotsMap, type SpotsMapHandle } from '../components/map/SpotsMap';
 
 const METHODS = [
   { key: 'all', label: '全部' },
@@ -19,154 +20,6 @@ const METHODS = [
 const STAR_COLOR = '#b8860b';
 
 type SortKey = 'dist' | 'hot';
-
-/** 风格化地形图（近似原型的水系画风：湖体 + 湖湾 + 支流 + 道路 + 树林）。 */
-function TerrainScene() {
-  return (
-    <View pointerEvents="none" style={terrainStyles.scene}>
-      {/* 支流 */}
-      <View style={terrainStyles.stream1} />
-      <View style={terrainStyles.stream2} />
-      {/* 湖泊主体 */}
-      <View style={terrainStyles.lake} />
-      <View style={terrainStyles.lakeShine} />
-      {/* 湖湾细部 */}
-      <View style={terrainStyles.bay1} />
-      <View style={terrainStyles.bay2} />
-      {/* 道路 */}
-      <View style={terrainStyles.road1} />
-      <View style={terrainStyles.road2} />
-      {/* 树林 */}
-      {TREES.map(([x, y, r], i) => (
-        <View key={i} style={[terrainStyles.tree, { left: `${x}%`, top: `${y}%`, width: r * 2, height: r * 2, borderRadius: r }]} />
-      ))}
-    </View>
-  );
-}
-
-const TREES: [number, number, number][] = [
-  [9, 61, 3], [12.3, 63, 2.4], [7, 65, 2],
-  [84.5, 53, 3], [88, 55, 2.4], [83, 57, 2],
-  [38.5, 29, 3], [42, 31, 2.4], [36.5, 32.3, 2],
-  [77, 77, 3], [80.5, 79, 2.4], [75, 80.5, 2],
-];
-
-const terrainStyles = StyleSheet.create({
-  scene: { ...StyleSheet.absoluteFillObject, backgroundColor: '#eef4ef', overflow: 'hidden' },
-  stream1: {
-    position: 'absolute', left: -30, top: '48%', width: 190, height: 10,
-    backgroundColor: '#a9cfc6', borderRadius: 6, transform: [{ rotate: '6deg' }],
-  },
-  stream2: {
-    position: 'absolute', right: -20, top: '38%', width: 120, height: 9,
-    backgroundColor: '#a9cfc6', borderRadius: 5, transform: [{ rotate: '32deg' }],
-  },
-  lake: {
-    position: 'absolute', left: '16%', right: '16%', top: '38%', bottom: '26%',
-    backgroundColor: '#d5e8e2', borderTopLeftRadius: 120, borderTopRightRadius: 90,
-    borderBottomLeftRadius: 110, borderBottomRightRadius: 70,
-  },
-  lakeShine: {
-    position: 'absolute', left: '30%', right: '30%', top: '46%', height: 14,
-    backgroundColor: 'rgba(42,143,122,0.16)', borderRadius: 8, transform: [{ rotate: '-4deg' }],
-  },
-  bay1: {
-    position: 'absolute', left: '28%', top: '54%', width: 74, height: 34,
-    backgroundColor: '#bfdcd4', borderRadius: 20,
-  },
-  bay2: {
-    position: 'absolute', left: '56%', top: '61%', width: 82, height: 36,
-    backgroundColor: '#bfdcd4', borderRadius: 22,
-  },
-  road1: {
-    position: 'absolute', left: -10, right: -10, top: '38.5%', height: 7,
-    backgroundColor: '#fff', transform: [{ rotate: '-1.4deg' }],
-  },
-  road2: {
-    position: 'absolute', left: '15%', top: '34%', width: 8, bottom: '2%',
-    backgroundColor: '#fff', borderRadius: 4, transform: [{ rotate: '5deg' }],
-  },
-  tree: { position: 'absolute', backgroundColor: 'rgba(42,143,122,0.24)' },
-});
-
-/** 路线叠加层（两条示意路线 + 徽章），可整体隐藏。 */
-function RouteOverlay() {
-  return (
-    <View pointerEvents="none" style={routeStyles.layer}>
-      <View style={[routeStyles.line, routeStyles.ring]} />
-      <View style={[routeStyles.line, routeStyles.ringInner]} />
-      <View style={[routeStyles.line, routeStyles.curve]} />
-      <View style={routeStyles.badgeWrap1}>
-        <View style={routeStyles.badge}>
-          <View style={routeStyles.badgeDot} />
-          <Text style={routeStyles.badgeT}>北岸环线 · 12 坑点</Text>
-        </View>
-      </View>
-      <View style={routeStyles.badgeWrap2}>
-        <View style={routeStyles.badge}>
-          <View style={routeStyles.badgeDot} />
-          <Text style={routeStyles.badgeT}>东山半岛 · 8 坑点</Text>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-const routeStyles = StyleSheet.create({
-  layer: { ...StyleSheet.absoluteFillObject },
-  line: { position: 'absolute' },
-  ring: {
-    left: '24%', top: '51%', width: '32%', height: '17%',
-    borderWidth: 3.5, borderColor: colors.accent, borderRadius: 60, opacity: 0.85,
-    transform: [{ rotate: '-6deg' }],
-  },
-  ringInner: {
-    left: '26%', top: '52.5%', width: '28%', height: '13.5%',
-    borderWidth: 1.2, borderColor: 'rgba(255,255,255,0.95)', borderRadius: 50,
-    transform: [{ rotate: '-6deg' }],
-  },
-  curve: {
-    right: '14%', top: '39%', width: '12%', height: '12%',
-    borderWidth: 3.5, borderColor: colors.accent, opacity: 0.85,
-    borderTopLeftRadius: 0, borderTopRightRadius: 90, borderBottomLeftRadius: 30, borderBottomRightRadius: 90,
-    transform: [{ rotate: '18deg' }],
-  },
-  badgeWrap1: { position: 'absolute', left: '18%', top: '46.5%' },
-  badgeWrap2: { position: 'absolute', left: '62%', top: '36.5%' },
-  badge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.accent,
-    borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2,
-  },
-  badgeDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.accent },
-  badgeT: { fontSize: 9, fontWeight: '600', color: colors.accent },
-});
-
-/** 用户定位点：核心点 + 循环扩散脉冲（scale+opacity，原生驱动兼容）。 */
-function UserPulseDot() {
-  const pulse = useRef(new Animated.Value(0)).current;
-  React.useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(pulse, { toValue: 1, duration: 2400, useNativeDriver: true }),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [pulse]);
-  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.27, 1] });
-  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.7, 0] });
-  return (
-    <View pointerEvents="none" style={styles.userDot}>
-      <Animated.View
-        style={[
-          styles.userPulse,
-          { transform: [{ translateX: -26 }, { translateY: -26 }, { scale }] },
-          { opacity },
-        ]}
-      />
-      <View style={styles.userCore} />
-    </View>
-  );
-}
 
 export function SpotsScreen() {
   const openSearch = useUIStore((s) => s.openSearch);
@@ -185,16 +38,14 @@ export function SpotsScreen() {
   const [sort, setSort] = useState<SortKey>('dist');
   const [selected, setSelected] = useState<string | null>(null);
   const [routeOn, setRouteOn] = useState(true);
-  const [zoomIdx, setZoomIdx] = useState(0);
   const [located, setLocated] = useState(false);
 
-  const zoomAnim = useRef(new Animated.Value(1)).current;
-  const ZOOMS = [1, 1.25, 1.5];
+  const mapRef = useRef<SpotsMapHandle>(null);
   const railRef = useRef<ScrollView>(null);
 
-  // 图上钓点 = 有示意坐标的（与原型 6 点一致）
+  // 图上钓点 = 有真实经纬度的（SpotsMap 按坐标渲染 pin）。
   const mapSpots = useMemo(
-    () => (spots.data ?? []).filter((s) => s.mapX != null && s.mapY != null),
+    () => (spots.data ?? []).filter((s) => s.latitude != null && s.longitude != null),
     [spots.data],
   );
   const visible = useMemo(() => {
@@ -202,12 +53,6 @@ export function SpotsScreen() {
     arr.sort((a, b) => (sort === 'dist' ? (a.distance ?? 0) - (b.distance ?? 0) : (b.catchRate7d ?? 0) - (a.catchRate7d ?? 0)));
     return arr;
   }, [mapSpots, method, sort]);
-
-  const setZoom = (idx: number) => {
-    const clamped = Math.min(ZOOMS.length - 1, Math.max(0, idx));
-    setZoomIdx(clamped);
-    Animated.timing(zoomAnim, { toValue: ZOOMS[clamped], duration: 300, useNativeDriver: true }).start();
-  };
 
   const select = (id: string) => {
     const next = selected === id ? null : id;
@@ -218,45 +63,27 @@ export function SpotsScreen() {
     }
   };
 
+  const locate = () => {
+    setLocated(true);
+    if (coords) mapRef.current?.flyTo(coords.longitude, coords.latitude);
+  };
+
   const w = weather.data;
 
   return (
     <View style={styles.container}>
-      {/* ══ 地图画布 ══ */}
+      {/* ══ 地图画布（高德街道瓦片 + 真实坐标 pin + 路线叠加）══ */}
       <View style={styles.mapWrap}>
-        <Animated.View
-          style={[styles.mapLayer, { transform: [{ scale: zoomAnim }] }]}
-        >
-          <TerrainScene />
-          {routeOn && <RouteOverlay />}
-
-          {/* 用户定位点（脉冲动画） */}
-          <UserPulseDot />
-
-          {/* 坑点 pin */}
-          {visible.map((s) => {
-            const isSel = selected === s.id;
-            const hot = (s.catchRate7d ?? 0) >= 60;
-            return (
-              <TouchableOpacity
-                key={s.id}
-                style={[styles.pin, { left: `${s.mapX!}%`, top: `${s.mapY!}%` }]}
-                onPress={() => select(s.id)}
-                activeOpacity={0.85}
-                hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-              >
-                <View style={[styles.pinDot, isSel && styles.pinDotSel, hot && styles.pinDotHot]}>
-                  <Text style={[styles.pinCnt, isSel && styles.pinCntSel]}>{s.catchRate7d}</Text>
-                </View>
-                <View style={[styles.pinLabelWrap, isSel && styles.pinLabelWrapSel]}>
-                  <Text style={[styles.pinLabel, isSel && styles.pinLabelSel]} numberOfLines={1}>
-                    {s.name.split(' · ').pop()}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </Animated.View>
+        <SpotsMap
+          ref={mapRef}
+          style={StyleSheet.absoluteFillObject}
+          spots={visible}
+          routes={routes.data}
+          showRoutes={routeOn}
+          selectedId={selected}
+          userCoords={coords}
+          onSelect={(s) => select(s.id)}
+        />
 
         {/* 指北针 */}
         <View style={styles.north}>
@@ -311,17 +138,17 @@ export function SpotsScreen() {
           </TouchableOpacity>
         </ScrollView>
 
-        {/* 右侧地图控制 */}
+        {/* 右侧地图控制（驱动真地图相机） */}
         <View style={styles.mapCtl}>
-          <TouchableOpacity style={styles.ctlBtn} onPress={() => setZoom(zoomIdx + 1)} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.ctlBtn} onPress={() => mapRef.current?.zoomBy(1)} activeOpacity={0.8}>
             <Text style={styles.ctlT}>+</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.ctlBtn} onPress={() => setZoom(zoomIdx - 1)} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.ctlBtn} onPress={() => mapRef.current?.zoomBy(-1)} activeOpacity={0.8}>
             <Text style={styles.ctlT}>−</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.ctlBtn, located && styles.ctlBtnOn]}
-            onPress={() => { setLocated(true); setZoom(0); }}
+            onPress={locate}
             activeOpacity={0.8}
           >
             <Ionicons name="locate" size={16} color={located ? colors.accent : colors.fg} />
@@ -439,42 +266,6 @@ export function SpotsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   mapWrap: { flex: 1, overflow: 'hidden' },
-  mapLayer: { ...StyleSheet.absoluteFillObject, transformOrigin: '50% 42%' },
-
-  /* pins */
-  pin: { position: 'absolute', marginLeft: -13, marginTop: -13, alignItems: 'center', zIndex: 5 },
-  pinDot: {
-    width: 26, height: 26, borderRadius: 13, backgroundColor: colors.fg,
-    borderWidth: 3, borderColor: colors.surface,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOpacity: 0.22, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 3,
-  },
-  pinDotSel: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: colors.accent,
-    shadowColor: colors.accent, shadowOpacity: 0.55, shadowRadius: 6,
-  },
-  pinDotHot: { /* gold badge via absolute dot below */ },
-  pinCnt: { color: '#fff', fontSize: 10, fontWeight: '700' },
-  pinCntSel: {},
-  pinLabelWrap: {
-    marginTop: 3, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
-    paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6,
-    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 2,
-  },
-  pinLabelWrapSel: { borderColor: colors.accent },
-  pinLabel: { fontSize: 10, fontWeight: '600', color: colors.fg },
-  pinLabelSel: { color: colors.accent },
-
-  /* user dot */
-  userDot: { position: 'absolute', left: '46%', top: '44%', width: 14, height: 14, zIndex: 4 },
-  userPulse: {
-    position: 'absolute', left: 26, top: 26, width: 52, height: 52, borderRadius: 26,
-    backgroundColor: 'rgba(42,143,122,0.35)',
-  },
-  userCore: {
-    width: 14, height: 14, borderRadius: 7, backgroundColor: colors.accent,
-    borderWidth: 3, borderColor: colors.surface,
-  },
 
   /* north + top overlay */
   north: {

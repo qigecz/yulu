@@ -65,4 +65,19 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   res.json(result.rows[0]);
 });
 
+/** Change password (设置 → 账号与安全). Body: { oldPassword, newPassword }. */
+router.post('/change-password', authMiddleware, async (req: AuthRequest, res: Response) => {
+  const { oldPassword, newPassword } = req.body as { oldPassword?: string; newPassword?: string };
+  if (!oldPassword || !newPassword || newPassword.length < 6) {
+    return res.status(400).json({ error: '新密码至少 6 位' });
+  }
+  const result = await query('SELECT password_hash FROM users WHERE id = $1', [req.userId]);
+  if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+  const valid = await bcrypt.compare(oldPassword, result.rows[0].password_hash);
+  if (!valid) return res.status(400).json({ error: '原密码不正确' });
+  const hash = await bcrypt.hash(newPassword, 12);
+  await query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [hash, req.userId]);
+  res.json({ ok: true });
+});
+
 export default router;

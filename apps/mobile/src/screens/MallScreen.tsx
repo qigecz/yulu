@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@yulu/ui';
 import type { MallProduct } from '@yulu/shared';
 import { useUIStore } from '../store/ui';
+import { useCartStore } from '../store/cart';
 import { mockMallProducts } from '../mock/data';
 
 const CATS = ['全部', '路亚竿', '渔轮', '假饵', '台钓', '配件'];
@@ -15,10 +16,12 @@ function soldLabel(n: number): string {
 export function MallScreen() {
   const close = useUIStore((s) => s.closeOverlay);
   const openSearch = useUIStore((s) => s.openSearch);
+  const openCart = useUIStore((s) => s.openCart);
+  const openProductDetail = useUIStore((s) => s.openProductDetail);
+  const cartItems = useCartStore((s) => s.items);
+  const addToCartStore = useCartStore((s) => s.add);
 
   const [cat, setCat] = useState('全部');
-  const [cart, setCart] = useState<Record<string, boolean>>({});
-  const [cartCount, setCartCount] = useState(2);
   const toastOpacity = useRef(new Animated.Value(0)).current;
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -26,6 +29,9 @@ export function MallScreen() {
     () => (cat === '全部' ? mockMallProducts : mockMallProducts.filter((p) => p.category === cat)),
     [cat],
   );
+
+  // 购物车为持久化端上状态（store/cart.ts），角标随实际加入件数变化。
+  const cartCount = cartItems.reduce((n, i) => n + i.qty, 0);
 
   const showToast = (msg: string) => {
     // toast 内容通过状态渲染，这里只做动画
@@ -40,9 +46,7 @@ export function MallScreen() {
   const [toastMsg, setToastMsg] = useState('');
 
   const addToCart = (p: MallProduct) => {
-    if (cart[p.id]) return;
-    setCart((c) => ({ ...c, [p.id]: true }));
-    setCartCount((n) => n + 1);
+    addToCartStore(p.id);
     setToastMsg(`已加入购物车 · ${p.name}`);
     showToast(p.name);
   };
@@ -65,12 +69,14 @@ export function MallScreen() {
               <Ionicons name="search" size={18} color={colors.fg} />
             </TouchableOpacity>
             <View>
-              <TouchableOpacity style={styles.iconBtn} onPress={() => {}} activeOpacity={0.7}>
+              <TouchableOpacity style={styles.iconBtn} onPress={openCart} activeOpacity={0.7}>
                 <Ionicons name="cart-outline" size={18} color={colors.fg} />
               </TouchableOpacity>
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeT}>{cartCount}</Text>
-              </View>
+              {cartCount > 0 && (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeT}>{cartCount}</Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -113,7 +119,13 @@ export function MallScreen() {
         {/* Product grid */}
         <View style={styles.grid}>
           {list.map((p) => (
-            <ProductCard key={p.id} product={p} added={!!cart[p.id]} onAdd={() => addToCart(p)} />
+            <ProductCard
+              key={p.id}
+              product={p}
+              added={cartItems.some((i) => i.id === p.id)}
+              onAdd={() => addToCart(p)}
+              onOpen={() => openProductDetail(p.id)}
+            />
           ))}
         </View>
 
@@ -128,9 +140,9 @@ export function MallScreen() {
   );
 }
 
-function ProductCard({ product, added, onAdd }: { product: MallProduct; added: boolean; onAdd: () => void }) {
+function ProductCard({ product, added, onAdd, onOpen }: { product: MallProduct; added: boolean; onAdd: () => void; onOpen: () => void }) {
   return (
-    <View style={styles.pCard}>
+    <TouchableOpacity style={styles.pCard} onPress={onOpen} activeOpacity={0.75}>
       <View style={styles.pImg}>
         <Text style={styles.pImgT}>[商品图]</Text>
         {product.flag && (
@@ -159,7 +171,7 @@ function ProductCard({ product, added, onAdd }: { product: MallProduct; added: b
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

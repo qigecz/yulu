@@ -21,11 +21,12 @@ export function ProfileScreen() {
   const openCreateSpot = useUIStore((s) => s.openCreateSpot);
   const openFavorites = useUIStore((s) => s.openFavorites);
   const openOfflineRoutes = useUIStore((s) => s.openOfflineRoutes);
-  const openMall = useUIStore((s) => s.openMall);
   const openRouteDetail = useUIStore((s) => s.openRouteDetail);
   const openRouteList = useUIStore((s) => s.openRouteList);
   const openProfileEdit = useUIStore((s) => s.openProfileEdit);
-  const setActiveTab = useUIStore((s) => s.setActiveTab);
+  const openSettings = useUIStore((s) => s.openSettings);
+  const openOrders = useUIStore((s) => s.openOrders);
+  const openTipsList = useUIStore((s) => s.openTipsList);
   const routes = useRoutes();
   const tutorials = useTutorials();
   const favoriteSpots = useFavoriteSpots();
@@ -40,8 +41,8 @@ export function ProfileScreen() {
   const [routeBump, setRouteBump] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // 模拟视频播放浮层（与学习页一致，接真实视频源后加 url）。
-  const [player, setPlayer] = useState<{ title: string; sub: string; duration: string } | null>(null);
+  // 模拟/真实视频播放浮层（有 videoUrl 走 expo-av 真实播放）。
+  const [player, setPlayer] = useState<{ title: string; sub: string; duration: string; url?: string } | null>(null);
 
   const myRoutes = routes.data ?? [];
   const myTutorials = (tutorials.data ?? []).slice(0, 2);
@@ -64,6 +65,7 @@ export function ProfileScreen() {
       title: tut.title,
       sub: `${tut.author?.nickname ?? '钓友'} · ${tut.category ?? '路亚'} · ${formatViewCount(tut.viewsCount)} 次观看`,
       duration: tut.duration || '00:00',
+      url: tut.videoUrl,
     });
   };
 
@@ -80,10 +82,10 @@ export function ProfileScreen() {
   const menu = [
     { icon: 'bookmark-outline' as const, label: '我的收藏', count: favCount > 0 ? String(favCount) : undefined, onPress: openFavorites },
     { icon: 'download-outline' as const, label: '离线路线', count: offlineCount > 0 ? `${offlineCount} 已下载` : undefined, onPress: openOfflineRoutes },
-    { icon: 'receipt-outline' as const, label: '渔具商城订单', count: '待收货 1', onPress: openMall },
+    { icon: 'receipt-outline' as const, label: '渔具商城订单', count: '待收货 1', onPress: openOrders },
     {
       icon: 'settings-outline' as const, label: '设置', count: undefined,
-      onPress: () => Alert.alert('设置', '设置功能开发中，敬请期待'),
+      onPress: openSettings,
     },
   ];
 
@@ -182,8 +184,8 @@ export function ProfileScreen() {
 
       {/* My tips */}
       <View style={styles.pad}>
-        {/* 技巧列表页尚未单独开发，「全部」先跳到学习页教程列表。 */}
-        <SectionHeader title="我的技巧分享" actionLabel="全部 →" onAction={() => setActiveTab('learn')} />
+        {/* 技巧列表页：我的技巧分享（对照 ios-tips-list）。 */}
+        <SectionHeader title="我的技巧分享" actionLabel="全部 →" onAction={openTipsList} />
         <QueryState isLoading={tutorials.isLoading} isError={tutorials.isError} refetch={() => tutorials.refetch()} empty={myTutorials.length === 0 && localTips.length === 0} emptyText="暂无技巧分享">
           {localTips.map((item) => (
             <TouchableOpacity key={item.id} style={styles.myItem} activeOpacity={0.7} onPress={() => showToast('技巧已提交，详情功能即将上线')}>
@@ -272,6 +274,7 @@ export function ProfileScreen() {
         sub={player?.sub ?? ''}
         duration={player?.duration ?? '00:00'}
         startSeconds={0}
+        url={player?.url}
         onClose={() => setPlayer(null)}
       />
 

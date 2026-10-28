@@ -28,6 +28,8 @@ export function HomeScreen() {
   const openSpotList = useUIStore((s) => s.openSpotList);
   const openRouteList = useUIStore((s) => s.openRouteList);
   const openFeedList = useUIStore((s) => s.openFeedList);
+  const openSettings = useUIStore((s) => s.openSettings);
+  const openMessages = useUIStore((s) => s.openMessages);
   const openMall = useUIStore((s) => s.openMall);
   const toggleFeedLike = useToggleFeedLike();
   const toggleFavorite = useToggleFavorite();
@@ -53,12 +55,17 @@ export function HomeScreen() {
           <Text style={styles.title}>你好，钓友</Text>
         </View>
         <View style={styles.headerActions}>
-          <View style={styles.iconBtn}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            activeOpacity={0.7}
+            onPress={openMessages}
+          >
             <Ionicons name="notifications-outline" size={18} color={colors.fg} />
-          </View>
-          <View style={styles.iconBtn}>
+            <View style={styles.msgDot} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconBtn} activeOpacity={0.7} onPress={openSettings}>
             <Ionicons name="settings-outline" size={18} color={colors.fg} />
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -216,6 +223,11 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
     alignItems: 'center', justifyContent: 'center',
+  },
+  /** 消息按钮未读红点（有新消息时显示）。 */
+  msgDot: {
+    position: 'absolute', top: 6, right: 7, width: 7, height: 7, borderRadius: 4,
+    backgroundColor: colors.accent, borderWidth: 1.5, borderColor: colors.surface,
   },
   iconText: { fontSize: 16 },
   spacer: { height: 12 },

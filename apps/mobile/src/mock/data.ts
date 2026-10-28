@@ -329,6 +329,8 @@ export const mockTutorials: Tutorial[] = [
     id: 't1', type: 'video', title: '路亚入门必看：五种常用假饵的选择与操作手法',
     duration: '18:42', category: '路亚', tags: ['路亚', '新手', '假饵'],
     authorId: 'u1', author: { id: 'u1', nickname: '路亚阿杰' },
+    // 公共示例视频源（w3.org sintel 预告片）：验证 expo-av 真实播放链路用。
+    videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
     viewsCount: 21000, likesCount: 320, featured: true,
     publishedAt: '', createdAt: '', updatedAt: '',
   },
@@ -422,4 +424,245 @@ export const mockMallProducts: MallProduct[] = [
   { id: 'm8', name: 'PE 编织线 · 0.8 编 150m', spec: '8股 · 磨灰色', category: '配件', price: 56, sold: 2700 },
   { id: 'm9', name: '钓鱼防晒衣 · UPF50+', spec: '冰感 · 连帽款', category: '配件', price: 129, sold: 4600, flag: '热销' },
   { id: 'm10', name: '铝合金抄网 · 2m 伸缩', spec: '网口 45cm · 无结网布', category: '配件', price: 69, sold: 1500 },
+];
+
+/* ────────────────────────────────────────────────────────────
+ * 以下数据对照 2026-10-28 新增原型页（订单/地址/消息/技巧列表/
+ * 文章详情/购物车/商品详情），商城与消息链路暂为端上 mock。
+ * ──────────────────────────────────────────────────────────── */
+
+/** 商城订单（ios-orders.html）。icon 为 Ionicons 图标名。 */
+export interface MockOrder {
+  id: string;
+  status: 'unpaid' | 'shipping' | 'done';
+  statusLabel: string;
+  name: string;
+  spec: string;
+  price: number;
+  icon: string;
+  /** 物流信息（待收货显示）。 */
+  logi?: string;
+  time: string;
+}
+
+export const mockOrders: MockOrder[] = [
+  {
+    id: 'OD10261024', status: 'shipping', statusLabel: '待收货 · 运输中',
+    name: '碧溪路亚竿 · M调直柄', spec: '2.1m · M调 × 1', price: 329, icon: 'color-filter-outline',
+    logi: '顺丰速运 · 已到【杭州转运中心】，预计明日送达',
+    time: '2026-10-24 下单',
+  },
+  {
+    id: 'OD10261018', status: 'unpaid', statusLabel: '待付款',
+    name: '金属VIB亮片 · 7g 六件套', spec: '夜光/金色/银色 各 2 × 2', price: 90, icon: 'fish-outline',
+    time: '2026-10-18 下单 · 剩余 22:41:05 自动关闭',
+  },
+  {
+    id: 'OD10260930', status: 'done', statusLabel: '已完成',
+    name: '钓鱼防晒衣 · UPF50+', spec: '冰感 · 连帽款 · L码 × 1', price: 129, icon: 'shirt-outline',
+    time: '2026-09-30 下单 · 10-03 签收',
+  },
+  {
+    id: 'OD10260912', status: 'done', statusLabel: '已完成',
+    name: '折叠钓椅 · 带靠背', spec: '承重 150kg · 1.9kg × 1', price: 98, icon: 'chair-outline',
+    time: '2026-09-12 下单 · 09-14 签收',
+  },
+];
+
+/** 收货地址（ios-address.html）。 */
+export interface MockAddress {
+  id: number;
+  name: string;
+  tel: string;
+  region: string;
+  detail: string;
+  def: boolean;
+}
+
+export const mockAddresses: MockAddress[] = [
+  { id: 1, name: '路亚阿杰', tel: '13857666688', region: '浙江省 杭州市 滨江区', detail: '江南大道 588 号滨江钓具城 3 幢 210 室', def: true },
+  { id: 2, name: '路亚阿杰', tel: '13857666688', region: '浙江省 杭州市 淳安县', detail: '千岛湖镇秀水街 76 号（湖畔驿站代收）', def: false },
+];
+
+/** 消息中心（ios-messages.html）。cat: bite 出鱼提醒 / star 赞与收藏 / cmt 评论与@ / sys 系统通知。 */
+export interface MockMessage {
+  id: number;
+  cat: 'bite' | 'star' | 'cmt' | 'sys';
+  title: string;
+  text: string;
+  time: string;
+  unread: boolean;
+}
+
+export const mockMessages: MockMessage[] = [
+  {
+    id: 1, cat: 'bite', unread: true, time: '3分钟前',
+    title: '碧溪湾 16:00-18:00 进入出鱼窗口',
+    text: '当前水温 18.5℃，符合翘嘴活跃区间，你收藏的标点「碧溪湾东岸乱石区」预计半小时后开口。',
+  },
+  {
+    id: 2, cat: 'star', unread: true, time: '1小时前',
+    title: '龙溪筏客 收藏了你的路线',
+    text: '你的路线「密云水库北岸环线（12 坑点）」被收藏，累计下载 2,148 次。',
+  },
+  {
+    id: 3, cat: 'cmt', unread: true, time: '2小时前',
+    title: '老张 评论了你的技巧《VIB 收线速度与水深的关系》',
+    text: '「收线速度那段讲得透，上周末照着钓，中层果然搜到翘嘴。」',
+  },
+  {
+    id: 4, cat: 'bite', unread: false, time: '昨天 19:20',
+    title: '富春江钓台明日 05:30 迎来晨口窗口',
+    text: '根据近 7 天出鱼记录与气压变化，明晨窗口预计 05:30-07:00，记得提前到点打窝。',
+  },
+  {
+    id: 5, cat: 'sys', unread: false, time: '昨天 10:00',
+    title: '渔路 v1.2.0 更新说明',
+    text: '新增坑点路线离线下载、出鱼窗口智能提醒；优化坑点地图缩放手感。',
+  },
+  {
+    id: 6, cat: 'star', unread: false, time: '2天前',
+    title: '小王 赞了你的动态',
+    text: '你的动态「千岛湖碧溪湾爆护全记录 · 86 尾」收到新的点赞。',
+  },
+];
+
+/** 我的技巧分享列表（ios-tips-list.html）。 */
+export interface MockTip {
+  id: string;
+  cat: string;
+  title: string;
+  note: string;
+  fav: number;
+  cmt: number;
+  time: string;
+  hot: boolean;
+}
+
+export const mockMyTips: MockTip[] = [
+  { id: 'vib-speed', cat: '路亚', title: 'VIB 收线速度与水深的关系', hot: true, fav: 128, cmt: 42, time: '5天前', note: '匀速慢收藏底、抽停诱攻击，7g VIB 实测三档速度对应泳层' },
+  { id: 'bixi-log', cat: '路亚', title: '千岛湖碧溪湾爆护全记录', hot: false, fav: 86, cmt: 35, time: '2周前', note: '86 尾翘嘴的完整作钓日志：标点、饵色与窗口期复盘' },
+  { id: 'autumn-window', cat: '路亚', title: '秋季翘嘴窗口期作钓笔记', hot: false, fav: 54, cmt: 18, time: '3周前', note: '换季温差下早晚窗口的变化规律，附 10 月实测水温' },
+  { id: 'grass-hole', cat: '台钓', title: '长竿短线钓草洞的经验总结', hot: false, fav: 47, cmt: 12, time: '1月前', note: '草洞选位三要素与逗钓手法，跑鱼率直降一半' },
+  { id: 'night-light', cat: '装备', title: '夜钓灯选择与摆放位置', hot: false, fav: 33, cmt: 9, time: '1月前', note: '蓝光/白光/紫光的取舍，灯位与钓位的夹角讲究' },
+  { id: 'double-hook', cat: '绑钩', title: '子线双钩绑法图解', hot: false, fav: 61, cmt: 23, time: '2月前', note: '内绑式与外绑式的强度对比，新手一次成功率更高的绑法' },
+];
+
+/** 精选文章正文块（ios-article-detail.html / ios-article-night.html）。 */
+export type ArticleBlock =
+  | { type: 'p'; text: string }
+  | { type: 'h2'; text: string }
+  | { type: 'quote'; text: string }
+  | { type: 'table'; caption?: string; header: string[]; rows: string[][] };
+
+export interface MockArticle {
+  id: string;
+  eyebrow: string;
+  title: string;
+  author: string;
+  authorSub: string;
+  readMeta: string;
+  /** hero 示意类型：temp 水温鱼层 / night 夜钓场景。 */
+  heroKind: 'temp' | 'night';
+  blocks: ArticleBlock[];
+  related: { title: string; sub: string; dur: string }[];
+}
+
+export const mockArticles: MockArticle[] = [
+  {
+    id: 'a1', eyebrow: '经验分享', title: '如何通过水温判断当天鱼层位置',
+    author: '老张', authorSub: '台钓 12 年 · 碧溪湾常驻 · 89 篇分享',
+    readMeta: '阅读 5 分钟 · 3,200 次阅读', heroKind: 'temp',
+    blocks: [
+      { type: 'p', text: '水温是影响鱼层分布最关键的因素之一。多数钓友看天气、看风问，却常常忽略一件最简单的事：先测水温，再定钓深。本文结合碧溪湾全年的作钓记录，把不同温度区间的鱼层规律整理成一张表，帮你少走弯路。' },
+      { type: 'h2', text: '一、为什么水温决定鱼层' },
+      { type: 'p', text: '淡水鱼是变温动物，体温随水温浮动，水温直接决定它们的活性与停留水层。水温偏低时鱼会退向深水保温，偏高时又会浮向中上层避暑——鱼不是固定在某个水层，而是跟着舒适温度带移动。找到当天的舒适带，就找到了鱼层。' },
+      { type: 'h2', text: '二、三个关键温度区间' },
+      { type: 'table', caption: '碧溪湾全年记录整理 · 水面下 0.5m 测温', header: ['水温区间', '活跃鱼层', '建议钓法'], rows: [
+        ['8-12℃', '深层 3-4.5m', '慢节奏底层，饵料贴底'],
+        ['15-20℃', '中层 1.5-3m', '全泳层搜索，窗口最稳'],
+        ['25℃ 以上', '表层-上层 0-1.5m', '早晚窗口，浅水标点'],
+      ] },
+      { type: 'p', text: '15-20℃ 是碧溪湾一年中出鱼最稳的区间，几乎全天有口；两头的极端温度则要把重心压到早晚两个窗口。' },
+      { type: 'h2', text: '三、实战：把规律用起来' },
+      { type: 'p', text: '到钓点后先别急着开竿。用测温线组测三个深度：0.5m、2m、4m，哪一层最接近 16-19℃，就先把搜索重心放在哪一层。秋季降温期尤其明显——别迷信昨天的渔获水深，温差 3℃ 鱼层可能整层上移或下移一米。' },
+      { type: 'quote', text: '口诀：春钓滩、夏钓潭、秋钓荫、冬钓深——本质都是跟着水温的舒适带走。' },
+      { type: 'h2', text: '四、两个常见误区' },
+      { type: 'p', text: '误区一：只看气温。气温 28℃ 的晴天，深层水温可能才 16℃，鱼仍在深水。水温和气温经常相差 5℃ 以上，别被体感骗了。' },
+      { type: 'p', text: '误区二：一个钓深钓全天。上午出鱼的深度，午后往往就空了。水温随日照变化，鱼层也在变，两三个小时复测一次水温并不麻烦。' },
+      { type: 'p', text: '水温计几十块钱，却是回报率最高的一件小装备。下次出钓，先测水温、再定鱼层，祝你爆护。' },
+    ],
+    related: [
+      { title: '四季鱼情与水温关系详解', sub: '老张 · 专题课 · 1.2 万次学习', dur: '08:32' },
+      { title: '碧溪湾四季作钓全攻略', sub: '路亚阿杰 · 路亚系列 · 8,600 次学习', dur: '12:05' },
+    ],
+  },
+  {
+    id: 'a2', eyebrow: '装备指南', title: '夏季夜钓装备清单：从照明到安全防护',
+    author: '阿杰', authorSub: '路亚 8 年 · 千岛湖常驻 · 56 篇分享',
+    readMeta: '阅读 8 分钟 · 2,100 次阅读', heroKind: 'night',
+    blocks: [
+      { type: 'p', text: '夜钓是夏季最爽的作钓方式——白天躲人的大鱼敢靠边，水温回落鱼口更实。但夜间环境复杂，安全和装备缺一不可。这份清单按「照明、防蚊、安全、作钓」四类整理，照着备齐再出门。' },
+      { type: 'h2', text: '一、照明：一主二辅，蓝光为主' },
+      { type: 'p', text: '夜钓灯是夜钓的灵魂。建议蓝光为主灯（穿透好、不惊鱼、诱虫少），白光头灯做辅助（走位、解鱼、收线时用），再加一盏小型营地灯放在钓箱旁。蓝光注意选可调档位的产品，直射水面反而压口。' },
+      { type: 'p', text: '灯位讲究：钓灯放在侧后方，与浮漂呈 60° 左右夹角，既看得清漂又不把光柱砸在窝点上。' },
+      { type: 'h2', text: '二、防蚊防晒：别让蚊子毁了口' },
+      { type: 'p', text: '水边蚊虫傍晚最凶。长袖长裤是基础，驱蚊液选避蚊胺浓度 15% 以上的，每 3-4 小时补一次；钓位周围点一盘蚊香做底线。防晒别松懈——夏夜 18-19 点的紫外线依然能晒伤，防晒衣直接当夜钓外套穿，一举两得。' },
+      { type: 'h2', text: '三、安全防护：三条红线不能碰' },
+      { type: 'p', text: '红线一：救生衣。夜钓近水，落水看不见、喊不应，充气救生衣一百多块，比什么都值。红线二：防滑鞋。夜露让石头和苔藓像抹了油，溯溪鞋或钉底鞋必备。红线三：结伴或报备。独自夜钓要把钓位发给家人，手机充满电并带充电宝。' },
+      { type: 'h2', text: '四、完整清单（勾选版）' },
+      { type: 'table', header: ['类别', '装备', '要点'], rows: [
+        ['照明', '蓝光钓灯 · 头灯 · 营地灯', '必备 · 可调档、备用电池'],
+        ['安全', '充气救生衣 · 防滑鞋', '必备 · 近水红线'],
+        ['防蚊', '驱蚊液 · 蚊香 · 长袖长裤', '避蚊胺 ≥15%'],
+        ['作钓', '夜光漂 · 夜钓竿 · 备线组', '漂尾加亮豆更醒目'],
+        ['辅助', '充电宝 · 防水包 · 保温水壶', '手机防水袋别忘'],
+      ] },
+    ],
+    related: [
+      { title: '夜钓翘嘴：窗口与标点选择', sub: '龙溪筏客 · 实战系列 · 6,300 次学习', dur: '10:18' },
+    ],
+  },
+  /* ── 法律文案（设置页协议/隐私入口，模板草案，正式文案待法务审订） ── */
+  {
+    id: 'terms', eyebrow: '用户协议', title: '渔路 YULU 用户服务协议',
+    author: '渔路团队', authorSub: '更新日期 2026-10-28 · 模板草案',
+    readMeta: '阅读 3 分钟 · v0.1', heroKind: 'temp',
+    blocks: [
+      { type: 'p', text: '欢迎使用渔路 YULU。本协议是您与渔路团队之间关于使用本 App 所订立的契约。请您在注册与使用前仔细阅读，一旦注册或使用即视为同意本协议全部条款。' },
+      { type: 'h2', text: '一、账号与注册' },
+      { type: 'p', text: '您需使用真实有效的手机号注册，并妥善保管账号与密码。通过账号进行的一切操作均视为您本人行为。若发现账号被盗用，请立即联系客服处理。' },
+      { type: 'h2', text: '二、用户内容' },
+      { type: 'p', text: '您在渔路发布的坑点、路线、技巧与动态等内容，著作权归您所有；您授权渔路在提供服务的范围内展示与传播这些内容。请勿发布虚假钓况、违法信息或侵犯他人权益的内容，渔路有权对违规内容下架并对账号处置。' },
+      { type: 'h2', text: '三、安全提示' },
+      { type: 'p', text: '垂钓活动本身存在风险。渔路提供的钓点信息、天气与出鱼建议仅供参考，不构成安全保证。请在合法水域、遵守当地禁渔规定的前提下作钓，并注意人身安全。' },
+      { type: 'h2', text: '四、服务变更与终止' },
+      { type: 'p', text: '渔路可能对服务内容进行调整、暂停或终止。您可以随时注销账号；注销后您的数据将按隐私政策处理。' },
+      { type: 'quote', text: '本文案为模板草案，正式版本将由法务审订后在应用上架前发布。' },
+    ],
+    related: [],
+  },
+  {
+    id: 'privacy', eyebrow: '隐私政策', title: '渔路 YULU 隐私政策',
+    author: '渔路团队', authorSub: '更新日期 2026-10-28 · 模板草案',
+    readMeta: '阅读 4 分钟 · v0.1', heroKind: 'night',
+    blocks: [
+      { type: 'p', text: '渔路非常重视您的个人信息保护。本政策说明我们收集哪些信息、如何使用与保护它们。' },
+      { type: 'h2', text: '一、我们收集的信息' },
+      { type: 'table', header: ['信息类型', '内容', '用途'], rows: [
+        ['账号信息', '手机号、昵称、头像', '注册登录与身份识别'],
+        ['位置信息', '仅用于附近钓点与导航', '您可在系统设置中关闭'],
+        ['设备信息', '推送令牌、设备型号', '消息推送与故障排查'],
+        ['内容数据', '您发布的坑点/路线/动态', '按您的意愿公开展示'],
+      ] },
+      { type: 'h2', text: '二、信息的使用' },
+      { type: 'p', text: '我们仅在提供垂钓社区服务所必需的范围内使用您的信息：展示附近钓点、计算路线导航、推送您订阅的出鱼提醒与互动消息。我们不会将您的个人信息出售给任何第三方。' },
+      { type: 'h2', text: '三、信息的存储与保护' },
+      { type: 'p', text: '您的数据存储于境内的服务器，传输过程使用 HTTPS 加密。我们采取业界通行的安全措施防止数据泄露、篡改与丢失。' },
+      { type: 'h2', text: '四、您的权利' },
+      { type: 'p', text: '您可以在「设置」中修改资料、修改密码或注销账号。注销后我们将在合理期限内删除或匿名化您的个人信息，法律法规要求保留的除外。' },
+      { type: 'quote', text: '本文案为模板草案，正式版本将由法务审订后在应用上架前发布。' },
+    ],
+    related: [],
+  },
 ];

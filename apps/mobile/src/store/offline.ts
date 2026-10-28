@@ -12,6 +12,8 @@ interface OfflineState {
   routes: Route[];
   downloadRoute: (route: Route) => void;
   removeRoute: (id: string) => void;
+  /** Drop all downloaded routes (settings → clear offline cache). */
+  clearAll: () => void;
   has: (id: string) => boolean;
   get: (id: string) => Route | undefined;
 }
@@ -26,6 +28,7 @@ export const useOfflineStore = create<OfflineState>()(
           routes: [route, ...state.routes.filter((r) => r.id !== route.id)],
         })),
       removeRoute: (id) => set((state) => ({ routes: state.routes.filter((r) => r.id !== id) })),
+      clearAll: () => set({ routes: [] }),
       has: (id) => get().routes.some((r) => r.id === id),
       get: (id) => get().routes.find((r) => r.id === id),
     }),

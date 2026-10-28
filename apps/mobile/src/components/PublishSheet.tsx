@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius } from '@yulu/ui';
+import { useCreateRoute, useCreateTutorial } from '../hooks/queries';
+import { USE_MOCK } from '../config';
 
 export type PublishType = 'route' | 'tip';
 
@@ -9,7 +11,7 @@ interface Props {
   visible: boolean;
   initialType: PublishType;
   onClose: () => void;
-  /** 模拟发布成功后回调（真实接口接入前仅更新本地列表）。 */
+  /** 发布成功后回调（real 模式已完成 API 提交，mock 模式为本地合成）。 */
   onPublished: (type: PublishType, title: string) => void;
 }
 
@@ -32,8 +34,8 @@ const TYPE_CONF: Record<PublishType, { title: string; field: string; linkLabel: 
 
 /**
  * 「我的」页发布面板（对照 ios-profile.html 的 publisher sheet）。
- * 分享坑点走独立的 CreateSpotScreen；此面板承载 路线/技巧 两种模拟发布，
- * 后端 create-route/create-tutorial 接入后把提交改为真实 mutation。
+ * 分享坑点走独立的 CreateSpotScreen；此面板承载 路线/技巧 两种发布：
+ * real 模式走 create-route/create-tutorial API，mock 模式本地合成条目。
  */
 export function PublishSheet({ visible, initialType, onClose, onPublished }: Props) {
   const [type, setType] = useState<PublishType>(initialType);
@@ -41,6 +43,8 @@ export function PublishSheet({ visible, initialType, onClose, onPublished }: Pro
   const [linkIdx, setLinkIdx] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const createRoute = useCreateRoute();
+  const createTutorial = useCreateTutorial();
 
   // 每次打开重置表单（坑点类型从独立流程进入，不在 seg 中）。
   useEffect(() => {
@@ -61,14 +65,30 @@ export function PublishSheet({ visible, initialType, onClose, onPublished }: Pro
       setError('写点内容再发布吧，钓友们等着看呢');
       return;
     }
+    if (!USE_MOCK && content.trim().length < 10) {
+      setError('正文至少 10 个字才能发布');
+      return;
+    }
     setError(null);
     setSubmitting(true);
-    // 模拟网络延迟；接入真实 API 后替换为 mutateAsync。
-    await new Promise((r) => setTimeout(r, 900));
-    const text = content.trim();
-    onPublished(type, text.length > 16 ? `${text.slice(0, 16)}…` : text);
-    setSubmitting(false);
-    onClose();
+    try {
+      const text = content.trim();
+      const link = conf.links[linkIdx];
+      const shortTitle = text.length > 16 ? `${text.slice(0, 16)}…` : text;
+      if (type === 'route') {
+        // 路线：名称取正文开头，介绍保留全文，关联区域作为 tag。
+        await createRoute.mutateAsync({ name: shortTitle, description: text, tags: [link] });
+      } else {
+        // 技巧：标题取正文开头，正文保留全文，分类用所选 chip。
+        await createTutorial.mutateAsync({ title: shortTitle, content: text, category: link });
+      }
+      onPublished(type, shortTitle);
+      onClose();
+    } catch (e: any) {
+      Alert.alert('发布失败', e?.message ?? '网络异常，请稍后再试');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
