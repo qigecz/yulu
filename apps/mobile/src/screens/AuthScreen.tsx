@@ -38,28 +38,14 @@ export function AuthScreen() {
   const { login, register } = useAuthStore();
   const [mode, setMode] = useState<Mode>('login');
 
-  // 认证页局部 toast（页面无全局 toast 体系，模块级 toast() 触发）。
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    toastListener = (m) => {
-      if (toastTimer.current) clearTimeout(toastTimer.current);
-      setToastMsg(m);
-      toastTimer.current = setTimeout(() => setToastMsg(null), 2200);
-    };
-    return () => { toastListener = null; if (toastTimer.current) clearTimeout(toastTimer.current); };
-  }, []);
-
+  // 注意：toast 由独立的 ToastHost 渲染（模块级 toast() 触发）——若把 toast
+  // 状态放在本组件，内部定义的 LoginView/RegisterView 会因重渲染而整体
+  // remount，丢失表单输入。mode 是本组件唯一 state，仅在切换页面时变化。
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.flex}>
         {mode === 'login' ? <LoginView onGoRegister={() => setMode('register')} /> : <RegisterView onBack={() => setMode('login')} />}
-        {toastMsg && (
-          <View style={styles.toastWrap}>
-            <Ionicons name="checkmark" size={14} color="#7dd8c3" />
-            <Text style={styles.toastT}>{toastMsg}</Text>
-          </View>
-        )}
+        <ToastHost />
       </View>
     </KeyboardAvoidingView>
   );
@@ -591,8 +577,28 @@ const styles = StyleSheet.create({
   toastT: { fontSize: 12.5, color: '#fff', flexShrink: 1 },
 });
 
-/* Toast：模块级简单实现（认证页无全局 toast 体系）。 */
+/* Toast：模块级事件 + 独立渲染宿主（避免触发 AuthScreen 重渲染导致表单 remount）。 */
 let toastListener: ((msg: string) => void) | null = null;
 function toast(msg: string) {
   toastListener?.(msg);
+}
+
+function ToastHost() {
+  const [msg, setMsg] = useState<string | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    toastListener = (m) => {
+      if (timer.current) clearTimeout(timer.current);
+      setMsg(m);
+      timer.current = setTimeout(() => setMsg(null), 2200);
+    };
+    return () => { toastListener = null; if (timer.current) clearTimeout(timer.current); };
+  }, []);
+  if (!msg) return null;
+  return (
+    <View style={styles.toastWrap}>
+      <Ionicons name="checkmark" size={14} color="#7dd8c3" />
+      <Text style={styles.toastT}>{msg}</Text>
+    </View>
+  );
 }
